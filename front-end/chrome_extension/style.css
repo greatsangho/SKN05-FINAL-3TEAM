@@ -1,0 +1,124 @@
+body {
+    margin: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f4f4f4;
+}
+
+.chat-container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    padding: 20px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+    background-color: #ffffff;
+    max-width: 600px;
+    margin: auto;
+}
+
+h2 {
+    text-align: center;
+    color: #4a90e2;
+    margin-bottom: 20px;
+}
+
+.chat-box {
+    flex: 1;
+    overflow-y: auto;
+    border: 1px solid #ccc;
+    padding: 15px;
+    background: #f9f9f9;
+    margin-bottom: 15px;
+    border-radius: 8px;
+    max-height: 300px;
+}
+
+.chat-box div {
+    margin-bottom: 10px;
+}
+
+.input-container {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+#user-input {
+    flex: 1;
+    padding: 12px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    transition: border-color 0.3s;
+}
+
+#user-input:focus {
+    border-color: #4a90e2;
+    outline: none;
+}
+
+#file-input {
+    padding: 12px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+#send-btn, #clear-history-btn {
+    padding: 12px 20px;
+    background-color: #4a90e2;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+#send-btn:hover, #clear-history-btn:hover {
+    background-color: #357abd;
+}
+
+/* 스피너 */
+.spinner {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 30px;
+    height: 30px;
+    margin-left: -15px; /* 크기에 맞춰 중앙 정렬 */
+    margin-top: -15px;
+    border: 3px solid rgba(0, 0, 0, 0.2);
+    border-radius: 50%;
+    border-top-color: #4caf50; /* 메인 색상 */
+    animation: spin 0.8s linear infinite;
+    z-index: 1000; /* 최상단 레이어 */
+    display: none; /* 초기 숨김 */
+}
+
+/* 스피너 애니메이션 */
+@keyframes spin {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+}
+
+/* 로딩 중 배경 흐림 효과 */
+.chat-container.loading {
+    position: relative;
+    filter: blur(2px); /* 배경 흐림 처리 */
+    pointer-events: none; /* 로딩 중 클릭 방지 */
+    opacity: 0.6; /* 흐릿한 효과 */
+}
+
+@media (max-width: 600px) {
+    .input-container {
+        flex-direction: column;
+    }
+
+    #user-input, #file-input, #send-btn, #clear-history-btn {
+        width: 100%;
+    }
+}
+  
