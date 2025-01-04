@@ -8,12 +8,14 @@ body {
     display: flex;
     flex-direction: column;
     height: 100vh;
-    padding: 20px;
+    padding: 10px; 
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
     border-radius: 10px;
     background-color: #ffffff;
     max-width: 600px;
+    width: 100%; /* 부모 요소 기준 100% */
     margin: auto;
+    box-sizing: border-box; /* 패딩 포함 */
 }
 
 h2 {
@@ -28,9 +30,37 @@ h2 {
     border: 1px solid #ccc;
     padding: 15px;
     background: #f9f9f9;
-    margin-bottom: 15px;
+    margin-bottom: 60px; 
     border-radius: 8px;
-    max-height: 300px;
+    max-height: 410px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.chat-message {
+    max-width: 70%;
+    padding: 10px;
+    border-radius: 15px;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.chat-message.question {
+    background-color: #C9E6FC;
+    align-self: flex-end;
+    text-align: right;
+}
+
+.chat-message.answer {
+    align-self: flex-start;
+    text-align: left;
+}
+
+/* 가로 및 세로 스크롤 간격 */
+.chat-container {
+    padding-right: 10px; /* 세로 스크롤 간격 */
+    padding-bottom: 10px; /* 가로 스크롤 간격 */
 }
 
 .chat-box div {
@@ -40,41 +70,59 @@ h2 {
 .input-container {
     display: flex;
     gap: 10px;
-    flex-wrap: wrap;
+    margin-top: 10px;
+    width: 100%; /* 부모 요소 기준 100% */
 }
 
-#user-input {
-    flex: 1;
-    padding: 12px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    transition: border-color 0.3s;
-}
+/* 입력 필드와 버튼을 포함하는 래퍼 */
+.input-wrapper {
+    position: relative;
+    width: 100%; /* 부모 요소 기준으로 100% 크기 */
+    max-width: 700px; /* 원하는 최대 가로 길이로 조정 */
+    border: 1px solid #ddd;
+    border-radius: 50px;
+    background: #fff;
+    padding: 10px 15px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    display: flex;
+    align-items: center;
+  }
+  
+  /* 입력 필드 */
+  #user-input {
+    width: 100%; /* 래퍼의 너비를 따라감 */
+    border: none;
+    outline: none;
+    padding: 10px 50px 10px 15px; /* 오른쪽 버튼 공간 확보 */
+    border-radius: 50px;
+    font-size: 15px;
+    background: transparent;
+  }
 
 #user-input:focus {
-    border-color: #4a90e2;
+    border-color: #C9E6FC;
     outline: none;
 }
 
-#file-input {
-    padding: 12px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    cursor: pointer;
-}
-
-#send-btn, #clear-history-btn {
-    padding: 12px 20px;
-    background-color: #4a90e2;
+#send-btn {
+    position: absolute;
+    right: 10px; /* 입력창 오른쪽에 붙이기 */
+    width: 41px; /* 버튼의 너비 */
+    height: 41px; /* 버튼의 높이 */
+    background-color: #F1F4F8; /* 버튼 배경색 */
     color: white;
     border: none;
-    border-radius: 5px;
+    border-radius: 50%; /* 완전한 원형으로 만듦 */
     cursor: pointer;
-    transition: background-color 0.3s;
+    transition: background-color 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); /* 입체감 */
+    display: flex; /* 아이콘이나 텍스트를 가운데 정렬하기 위해 flexbox 사용 */
+    justify-content: center; /* 가로 정렬 */
+    align-items: center; /* 세로 정렬 */
 }
 
-#send-btn:hover, #clear-history-btn:hover {
-    background-color: #357abd;
+#send-btn:hover{
+    background-color: #DDE4EC;
 }
 
 /* 스피너 */
@@ -88,7 +136,8 @@ h2 {
     margin-top: -15px;
     border: 3px solid rgba(0, 0, 0, 0.2);
     border-radius: 50%;
-    border-top-color: #4caf50; /* 메인 색상 */
+    border-top-color: #4caf50; /* 메인 색상 */  
+    /* border-top-color: #4a90e2; */ /* 이거 파란색 계열로 바꿀지 의논 */
     animation: spin 0.8s linear infinite;
     z-index: 1000; /* 최상단 레이어 */
     display: none; /* 초기 숨김 */
@@ -112,13 +161,64 @@ h2 {
     opacity: 0.6; /* 흐릿한 효과 */
 }
 
-@media (max-width: 600px) {
+/* 반응형 설정 추가 */
+@media (max-width: 100px) {
+    /* 입력 컨테이너 및 래퍼 */
     .input-container {
-        flex-direction: column;
+        flex-direction: column; /* 세로 정렬 */
+        align-items: stretch; /* 너비가 부모에 맞게 조정 */
+        gap: 10px; /* 간격 추가 */
+        width: 100%; /* 부모 요소의 전체 너비 */
     }
 
-    #user-input, #file-input, #send-btn, #clear-history-btn {
-        width: 100%;
+    .chat-box {
+        width: 100%; /* 부모 요소 기준으로 100% */
+        max-width: 100%; /* 너비 제한 제거 */
+    }
+
+    .input-wrapper {
+        width: 100%; /* 부모 요소의 전체 너비 */
+        max-width: 100%; /* 너비 제한 제거 */
+        padding: 10px; /* 간격 조정 */
     }
 }
-  
+
+/* 스크롤 바 관련 css */
+/* 공통 스크롤바 스타일 */
+::-webkit-scrollbar {
+    width: 5px; /* 세로 스크롤바 너비 */
+    height: 5px; /* 가로 스크롤바 높이 */
+}
+
+::-webkit-scrollbar-track {
+    background: #f4f4f4; /* 스크롤 트랙 배경색 */
+    border-radius: 8px; /* 둥근 모서리 */
+}
+
+::-webkit-scrollbar-thumb {
+    background: #DADCE0; /* 스크롤바 색상 */
+    border-radius: 10px; /* 스크롤바 모서리 둥글게 */
+    transition: background 0.3s;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #81868A; /* 호버 시 스크롤바 색상 변경 */
+}
+
+::-webkit-scrollbar-corner {
+    background: transparent; /* 스크롤 모서리 투명 처리 */
+}
+
+/* 채팅 박스의 스크롤바 커스터마이징 */
+.chat-box::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.chat-box::-webkit-scrollbar-thumb {
+    background: #DADCE0; /* 채팅 박스 스크롤 색상 */
+}
+
+.chat-box::-webkit-scrollbar-thumb:hover {
+    background: #81868A; /* 호버 시 변경 */
+}

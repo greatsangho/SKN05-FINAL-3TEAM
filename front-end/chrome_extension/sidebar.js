@@ -71,13 +71,16 @@ document.getElementById("send-btn").addEventListener("click", async () => {
   const userInput = document.getElementById("user-input").value.trim();
   // 사용자 메시지가 비어있는 경우 중단
   if (!userInput) {
-    alert("메시지를 입력해주세요.");
+    alert("질문을 입력해주세요.");
     return;
   }
 
   const chatBox = document.getElementById("chat-box");
+
+  // 사용자 메시지 생성
   const userMessage = document.createElement("div");
-  userMessage.textContent = `🧑‍💻 ${userInput}`;
+  userMessage.classList.add("chat-message", "question"); // 사용자 메시지에 클래스 추가
+  userMessage.textContent = `${userInput}`; //🧑‍💻
   chatBox.appendChild(userMessage);
 
   // 로딩 스피너 표시
@@ -102,8 +105,13 @@ document.getElementById("send-btn").addEventListener("click", async () => {
     const data = await response.json();
     const botMessage = data.choices[0]?.message?.content || "GPT 응답 실패";
 
+    // GPT 응답 메시지 생성
     const botMessageElement = document.createElement("div");
-    botMessageElement.textContent = `🤖 ${botMessage}`;
+    botMessageElement.classList.add("chat-message", "answer"); // GPT 메시지에 클래스 추가
+    botMessageElement.innerHTML = `
+    <img src="icon_16.png" alt="FinPilot Icon" style="margin-right: 3px; vertical-align: middle;">
+    <span>${botMessage}</span>`;
+
     chatBox.appendChild(botMessageElement);
 
     await appendToGoogleDoc(botMessage); // Google Docs에 추가
