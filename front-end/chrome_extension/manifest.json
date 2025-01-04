@@ -1,0 +1,31 @@
+{
+  "manifest_version": 3,
+  "name": "FinPilot",
+  "version": "1.0",
+  "description": "Boost your productivity with FinPilot, an AI-powered assistant for creating and editing financial documents in Google Docs.",
+  "action": {
+    "default_icon": {
+      "16": "icon_16.png",
+      "32": "icon_32.png",
+      "48": "icon_48.png",
+      "64": "icon_64.png",
+      "128": "icon_128.png"
+    }
+  },
+  "permissions": ["sidePanel", "storage", "tabs", "identity"], 
+  "host_permissions": ["https://api.openai.com/*","https://docs.google.com/*"],
+  "side_panel": {
+    "default_path": "sidebar.html"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "commands": {
+    "_execute_action": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+K"
+      },
+      "description": "Open FinPilot Landing page"
+    }
+  }
+}
