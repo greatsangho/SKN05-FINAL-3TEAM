@@ -37,7 +37,7 @@ oauth.register(
     client_kwargs={
         'scope': 'openid email profile https://www.googleapis.com/auth/drive https://www.googleapis.com/auth/documents'
     },
-    redirect_uri="https://c2ad-59-15-177-240.ngrok-free.app/auth/google/callback"
+    redirect_uri=REDIRECT_URI
 )
 
 @app.get("/")
