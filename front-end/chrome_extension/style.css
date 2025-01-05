@@ -20,8 +20,22 @@ body {
 
 h2 {
     text-align: center;
-    color: #4a90e2;
+    /* color: #4a90e2; */
+    color: #020817;
     margin-bottom: 20px;
+    font-size: 35px;
+    margin-top: 5px;
+}
+
+/* 타이틀 아래에 멘트 스타일 */
+.subtitle {
+    text-align: center; /* 가운데 정렬 */
+    font-size: 10.2px; /* 글씨 크기 작게 */
+    color: #64748B; /* 회색 톤의 텍스트 */
+    margin-top: -20px; /* FinPilot과의 간격 조정 */
+    margin-bottom: 20px; /* 채팅박스와 간격 */
+    line-height: 1.4; /* 텍스트 줄 간격 */
+    font-weight: inherit;
 }
 
 .chat-box {
@@ -30,9 +44,9 @@ h2 {
     border: 1px solid #ccc;
     padding: 15px;
     background: #f9f9f9;
-    margin-bottom: 60px; 
-    border-radius: 8px;
-    max-height: 410px;
+    margin-bottom: 50px; 
+    border-radius: 20px;
+    max-height: 400px;
     display: flex;
     flex-direction: column;
     gap: 10px;
@@ -40,16 +54,16 @@ h2 {
 
 .chat-message {
     max-width: 70%;
-    padding: 10px;
-    border-radius: 15px;
     font-size: 14px;
-    line-height: 1.5;
+    line-height: 1.2;
 }
 
 .chat-message.question {
     background-color: #C9E6FC;
     align-self: flex-end;
     text-align: right;
+    padding: 10px;
+    border-radius: 15px;
 }
 
 .chat-message.answer {

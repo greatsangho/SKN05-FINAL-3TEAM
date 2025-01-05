@@ -109,8 +109,8 @@ document.getElementById("send-btn").addEventListener("click", async () => {
     const botMessageElement = document.createElement("div");
     botMessageElement.classList.add("chat-message", "answer"); // GPT 메시지에 클래스 추가
     botMessageElement.innerHTML = `
-    <img src="icon_16.png" alt="FinPilot Icon" style="margin-right: 3px; vertical-align: middle;">
-    <span>${botMessage}</span>`;
+    <img src="icon_circle.png" alt="FinPilot Icon" width="32" height="32" style="margin-right: 3px; vertical-align: middle;">
+    <span>${botMessage}</span>`; // FinPilot 로고
 
     chatBox.appendChild(botMessageElement);
 
@@ -125,6 +125,14 @@ document.getElementById("send-btn").addEventListener("click", async () => {
   }
 
   document.getElementById("user-input").value = ""; // 메시지 입력창 초기화
+});
+
+// "Enter" 키로 전송 이벤트 구현
+document.getElementById("user-input").addEventListener("keyup", (event) => {
+  if (event.key === "Enter") {
+    event.preventDefault(); // 기본 Enter 동작 방지
+    document.getElementById("send-btn").click(); // Send 버튼 클릭 동작 실행
+  }
 });
 
 // Google Docs API로 응답 추가
