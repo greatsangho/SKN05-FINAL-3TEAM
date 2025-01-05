@@ -1,10 +1,15 @@
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException, Request, Depends
 from authlib.integrations.starlette_client import OAuth
 from starlette.middleware.sessions import SessionMiddleware
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
+from pydantic import BaseModel
+from sqlalchemy import create_engine, Column, Integer, String, Text
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker, Session
 import os
 import uuid
+import uvicorn
 import requests
 
 # Load environment variables
@@ -12,6 +17,7 @@ load_dotenv()
 GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
 GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
 REDIRECT_URI = os.getenv("REDIRECT_URI")
+DATABASE_URL = os.getenv("DATABASE_URL")
 
 app = FastAPI()
 
@@ -40,10 +46,12 @@ oauth.register(
     redirect_uri=REDIRECT_URI
 )
 
+# url/docs 로 기능 설명 페이지 안내
 @app.get("/")
 async def hello():
     return {"hello": "/docs for more info"}
 
+# 구글 로그인 구현
 @app.get("/auth/google")
 async def login_with_google(request: Request):
     # Generate a unique state parameter using uuid
@@ -118,3 +126,127 @@ async def edit_doc(file_id: str, content: str, token: str):
         return response.json()
     else:
         raise HTTPException(status_code=response.status_code, detail=response.json())
+
+# -------------------
+# 데이터베이스 설정
+# -------------------
+# DATABASE_URL = "mysql+pymysql://<USER>:<PASSWORD>@<RDS_ENDPOINT>:3306/<DATABASE_NAME>"
+DATABASE_URL = DATABASE_URL
+engine = create_engine(DATABASE_URL)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+Base = declarative_base()
+
+# 질문/답변 모델 정의
+class QuestionAnswer(Base):
+    __tablename__ = "questions_answers"
+    id = Column(Integer, primary_key=True, index=True)
+    question = Column(Text, nullable=False)
+    answer = Column(Text, nullable=True)
+
+Base.metadata.create_all(bind=engine)
+
+# -------------------
+# 데이터베이스 의존성
+# -------------------
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+# -------------------
+# Pydantic 모델 정의
+# -------------------
+class QuestionCreate(BaseModel):
+    question: str
+
+class QuestionResponse(BaseModel):
+    id: int
+    question: str
+    answer: str | None
+
+# -------------------
+# RunPod 통신 함수
+# -------------------
+def send_to_runpod(question: str) -> str:
+    url = "https://api.runpod.ai/v2/<POD_ID>/runsync"  # RunPod 엔드포인트 URL
+    headers = {"Authorization": "Bearer <YOUR_API_KEY>"}
+    body = {
+        "input": {
+            "api": {
+                "method": "POST",
+                "endpoint": "/generate",  # RunPod의 LLM 엔드포인트
+            },
+            "payload": {"question": question},
+        }
+    }
+    response = requests.post(url, json=body, headers=headers)
+    if response.status_code != 200:
+        raise HTTPException(status_code=response.status_code, detail=response.text)
+    return response.json().get("output", {}).get("answer", "No answer received")
+
+# -------------------
+# API 엔드포인트 정의 (CRUD 포함)
+# -------------------
+
+# 질문 생성 및 RunPod 호출 엔드포인트 (CREATE)
+@app.post("/questions", response_model=QuestionResponse)
+async def create_question(question_data: QuestionCreate, db: Session = Depends(get_db)):
+    # 질문 저장 (답변은 None 상태로 저장)
+    question_entry = QuestionAnswer(question=question_data.question)
+    db.add(question_entry)
+    db.commit()
+    db.refresh(question_entry)
+
+    # RunPod에 질문 전송 및 답변 수신
+    try:
+        answer = send_to_runpod(question_data.question)
+        question_entry.answer = answer  # 답변 업데이트
+        db.commit()
+        db.refresh(question_entry)
+        return {"id": question_entry.id, "question": question_entry.question, "answer": question_entry.answer}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+# 모든 질문/답변 조회 (READ - 전체 조회)
+@app.get("/questions", response_model=list[QuestionResponse])
+async def get_all_questions(db: Session = Depends(get_db)):
+    questions = db.query(QuestionAnswer).all()
+    return [{"id": q.id, "question": q.question, "answer": q.answer} for q in questions]
+
+# 특정 질문/답변 조회 (READ - 단일 조회)
+@app.get("/questions/{question_id}", response_model=QuestionResponse)
+async def get_question(question_id: int, db: Session = Depends(get_db)):
+    question = db.query(QuestionAnswer).filter(QuestionAnswer.id == question_id).first()
+    if not question:
+        raise HTTPException(status_code=404, detail="Question not found")
+    return {"id": question.id, "question": question.question, "answer": question.answer}
+
+# 질문/답변 삭제 (DELETE)
+@app.delete("/questions/{question_id}")
+async def delete_question(question_id: int, db: Session = Depends(get_db)):
+    question = db.query(QuestionAnswer).filter(QuestionAnswer.id == question_id).first()
+    if not question:
+        raise HTTPException(status_code=404, detail="Question not found")
+    db.delete(question)
+    db.commit()
+    return {"message": f"Question with id {question_id} deleted"}
+
+# 질문/답변 수정 (UPDATE)
+@app.put("/questions/{question_id}", response_model=QuestionResponse)
+async def update_question(question_id: int, updated_data: QuestionCreate, db: Session = Depends(get_db)):
+    question = db.query(QuestionAnswer).filter(QuestionAnswer.id == question_id).first()
+    if not question:
+        raise HTTPException(status_code=404, detail="Question not found")
+    
+    # 질문 업데이트 및 RunPod 재호출
+    try:
+        question.question = updated_data.question
+        answer = send_to_runpod(updated_data.question)  # 새로운 질문으로 RunPod 호출
+        question.answer = answer
+        db.commit()
+        db.refresh(question)
+        return {"id": question.id, "question": question.question, "answer": question.answer}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
