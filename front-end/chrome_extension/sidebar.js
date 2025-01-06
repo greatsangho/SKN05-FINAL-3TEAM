@@ -3,7 +3,7 @@ let DOCUMENT_ID = ""; // 초기값 설정
 // Google 서비스 계정 JSON 키 정보 (각자 개인의 키를 넣어주세요!!!!!!!!!!!!!!)
 const serviceAccount = {};
 // OpenAI API (키 각자 개인의 키를 넣어주세요!!!!!!!!!!!!!!!!!!)
-const OPENAI_API_KEY ="sk-proj--";
+const OPENAI_API_KEY ="sk-proj-";
 
 function getDocumentIdFromActiveTab() {
   return new Promise((resolve, reject) => {
@@ -71,13 +71,16 @@ document.getElementById("send-btn").addEventListener("click", async () => {
   const userInput = document.getElementById("user-input").value.trim();
   // 사용자 메시지가 비어있는 경우 중단
   if (!userInput) {
-    alert("메시지를 입력해주세요.");
+    alert("질문을 입력해주세요.");
     return;
   }
 
   const chatBox = document.getElementById("chat-box");
+
+  // 사용자 메시지 생성
   const userMessage = document.createElement("div");
-  userMessage.textContent = `🧑‍💻 ${userInput}`;
+  userMessage.classList.add("chat-message", "question"); // 사용자 메시지에 클래스 추가
+  userMessage.textContent = `${userInput}`; //🧑‍💻
   chatBox.appendChild(userMessage);
 
   // 로딩 스피너 표시
@@ -102,8 +105,13 @@ document.getElementById("send-btn").addEventListener("click", async () => {
     const data = await response.json();
     const botMessage = data.choices[0]?.message?.content || "GPT 응답 실패";
 
+    // GPT 응답 메시지 생성
     const botMessageElement = document.createElement("div");
-    botMessageElement.textContent = `🤖 ${botMessage}`;
+    botMessageElement.classList.add("chat-message", "answer"); // GPT 메시지에 클래스 추가
+    botMessageElement.innerHTML = `
+    <img src="icon_circle.png" alt="FinPilot Icon" width="32" height="32" style="margin-right: 3px; vertical-align: middle;">
+    <span>${botMessage}</span>`; // FinPilot 로고
+
     chatBox.appendChild(botMessageElement);
 
     await appendToGoogleDoc(botMessage); // Google Docs에 추가
@@ -117,6 +125,14 @@ document.getElementById("send-btn").addEventListener("click", async () => {
   }
 
   document.getElementById("user-input").value = ""; // 메시지 입력창 초기화
+});
+
+// "Enter" 키로 전송 이벤트 구현
+document.getElementById("user-input").addEventListener("keyup", (event) => {
+  if (event.key === "Enter") {
+    event.preventDefault(); // 기본 Enter 동작 방지
+    document.getElementById("send-btn").click(); // Send 버튼 클릭 동작 실행
+  }
 });
 
 // Google Docs API로 응답 추가

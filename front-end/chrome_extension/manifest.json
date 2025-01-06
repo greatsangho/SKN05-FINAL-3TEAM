@@ -15,7 +15,8 @@
   "permissions": ["sidePanel", "storage", "tabs", "identity"], 
   "host_permissions": ["https://api.openai.com/*","https://docs.google.com/*"],
   "side_panel": {
-    "default_path": "sidebar.html"
+    "default_path": "sidebar.html",
+    "default_title": "FinPilot Assistant"
   },
   "background": {
     "service_worker": "background.js"
@@ -25,7 +26,7 @@
       "suggested_key": {
         "default": "Ctrl+Shift+K"
       },
-      "description": "Open FinPilot Landing page"
+      "description": "Open FinPilot Landing Page"
     }
-  }
+  } 
 }

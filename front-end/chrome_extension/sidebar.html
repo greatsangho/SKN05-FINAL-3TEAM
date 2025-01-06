@@ -3,17 +3,24 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <title>GPT Sidebar Chatbot</title>
+  <title>FinPilot</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <div class="chat-container">
-    <h2>💬 FinPilot</h2>
+    <h2>
+      <!-- <img src="icon_32.png" alt="FinPilot Logo" style="vertical-align: middle;"> -->
+      FinPilot
+    </h2>
+    <p class="subtitle">Generate text or ask your AI chatbot assistant anything.</p>
     <div id="chat-box" class="chat-box"></div>
     <div class="input-container">
-      <!-- <input id="doc-url-input" type="text" placeholder="Enter Google Docs URL"> -->
-      <input id="user-input" type="text" placeholder="Type your message here...">
-      <button id="send-btn">Send</button>
+      <div class="input-wrapper">
+        <input id="user-input" type="text" placeholder="Message to FinPilot">
+        <button id="send-btn">
+          <img src="send_icon.png" alt="send" width="21" height="21" style="vertical-align: middle;">
+        </button>
+      </div>
     </div>
   </div>
   <!-- 로딩 버퍼링 스피너 -->
