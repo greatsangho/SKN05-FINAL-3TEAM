@@ -149,9 +149,8 @@ h2 {
     margin-left: -15px; /* 크기에 맞춰 중앙 정렬 */
     margin-top: -15px;
     border: 3px solid rgba(0, 0, 0, 0.2);
-    border-radius: 50%;
-    border-top-color: #4caf50; /* 메인 색상 */  
-    /* border-top-color: #4a90e2; */ /* 이거 파란색 계열로 바꿀지 의논 */
+    border-radius: 50%; 
+    border-top-color: #4a90e2; /* 이거 파란색 계열로 바꿀지 의논 */
     animation: spin 0.8s linear infinite;
     z-index: 1000; /* 최상단 레이어 */
     display: none; /* 초기 숨김 */

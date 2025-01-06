@@ -3,7 +3,7 @@ let DOCUMENT_ID = ""; // 초기값 설정
 // Google 서비스 계정 JSON 키 정보 (각자 개인의 키를 넣어주세요!!!!!!!!!!!!!!)
 const serviceAccount = {};
 // OpenAI API (키 각자 개인의 키를 넣어주세요!!!!!!!!!!!!!!!!!!)
-const OPENAI_API_KEY ="sk-proj--";
+const OPENAI_API_KEY ="sk-proj-";
 
 function getDocumentIdFromActiveTab() {
   return new Promise((resolve, reject) => {
