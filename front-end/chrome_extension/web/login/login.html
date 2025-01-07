@@ -5,7 +5,7 @@
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="stylesheet" href="./login_2.css" />
+    <link rel="stylesheet" href="./login.css" />
 
     <style>
       a,
@@ -36,7 +36,7 @@
         padding: 0;
       }
     </style>
-    <title>Google_login</title>
+    <title>Google login</title>
   </head>
   <body>
     <div class="login-2">
@@ -71,7 +71,7 @@
         Join FinPilot for free AI-powered tools, seamless Google Docs
         integration, and enhanced productivity (멘트는 추후 수정)
       </div>
-      <button onclick="window.location.href='http://localhost:8000/start/start.html'"><div class="button">
+      <button type="button" id="GloginButton"><div class="button">
         <svg
           class="icon-google-original"
           width="21"
@@ -111,6 +111,7 @@
         </svg>
         <div class="login-now">Continue with Google</div>
       </div></button>
+      <script src="./login.js"></script>
     </div>
   </body>
 </html>
