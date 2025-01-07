@@ -43,11 +43,8 @@
   }, 
   "web_accessible_resources": [
     {
-      "resources": ["*"],
-      "matches": ["https://docs.google.com/*"]
+      "resources": ["./web/landing/landing.html", "./web/start/start.html"],
+      "matches": ["<all_urls>"]
     }
-  ],
-  "content_security_policy": {
-    "extension_pages": "script-src 'self'; object-src 'self';"
-  }
+  ]
 }
