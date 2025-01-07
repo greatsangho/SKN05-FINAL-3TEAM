@@ -33,6 +33,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# 웹 상에서 구글 로그인 기능 --> 크롬 익스텐션에서 불필요하여 삭제(예정)
 # Initialize OAuth client with required scopes
 oauth = OAuth()
 oauth.register(

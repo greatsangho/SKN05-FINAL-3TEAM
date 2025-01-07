@@ -5,3 +5,4 @@
 *.pycharm
 *.vscode
 *__pycache__
+*.bak
