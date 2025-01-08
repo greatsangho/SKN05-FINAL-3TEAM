@@ -41,92 +41,6 @@ def get_db():
     finally:
         db.close()
 
-'''
-# -------------------
-# RunPod 통신 함수
-# -------------------
-def send_to_runpod(question: str) -> str:
-    url = "https://api.runpod.ai/v2/<POD_ID>/runsync"  # RunPod 엔드포인트 URL
-    headers = {"Authorization": "Bearer <YOUR_API_KEY>"}
-    body = {
-        "input": {
-            "api": {
-                "method": "POST",
-                "endpoint": "/generate",  # RunPod의 LLM 엔드포인트
-            },
-            "payload": {"question": question},
-        }
-    }
-    response = requests.post(url, json=body, headers=headers)
-    if response.status_code != 200:
-        raise HTTPException(status_code=response.status_code, detail=response.text)
-    return response.json().get("output", {}).get("answer", "No answer received")
-
-# -------------------
-# API 엔드포인트 정의 (CRUD 포함)
-# -------------------
-
-# 질문 생성 및 RunPod 호출 엔드포인트 (CREATE)
-@app.post("/questions", response_model=QuestionResponse)
-async def create_question(question_data: QuestionCreate, db: Session = Depends(get_db)):
-    # 질문 저장 (답변은 None 상태로 저장)
-    question_entry = QuestionAnswer(question=question_data.question)
-    db.add(question_entry)
-    db.commit()
-    db.refresh(question_entry)
-
-    # RunPod에 질문 전송 및 답변 수신
-    try:
-        answer = send_to_runpod(question_data.question)
-        question_entry.answer = answer  # 답변 업데이트
-        db.commit()
-        db.refresh(question_entry)
-        return {"id": question_entry.id, "question": question_entry.question, "answer": question_entry.answer}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-# 모든 질문/답변 조회 (READ - 전체 조회)
-@app.get("/questions", response_model=list[QuestionResponse])
-async def get_all_questions(db: Session = Depends(get_db)):
-    questions = db.query(QuestionAnswer).all()
-    return [{"id": q.id, "question": q.question, "answer": q.answer} for q in questions]
-
-# 특정 질문/답변 조회 (READ - 단일 조회)
-@app.get("/questions/{question_id}", response_model=QuestionResponse)
-async def get_question(question_id: int, db: Session = Depends(get_db)):
-    question = db.query(QuestionAnswer).filter(QuestionAnswer.id == question_id).first()
-    if not question:
-        raise HTTPException(status_code=404, detail="Question not found")
-    return {"id": question.id, "question": question.question, "answer": question.answer}
-
-# 질문/답변 삭제 (DELETE)
-@app.delete("/questions/{question_id}")
-async def delete_question(question_id: int, db: Session = Depends(get_db)):
-    question = db.query(QuestionAnswer).filter(QuestionAnswer.id == question_id).first()
-    if not question:
-        raise HTTPException(status_code=404, detail="Question not found")
-    db.delete(question)
-    db.commit()
-    return {"message": f"Question with id {question_id} deleted"}
-
-# 질문/답변 수정 (UPDATE)
-@app.put("/questions/{question_id}", response_model=QuestionResponse)
-async def update_question(question_id: int, updated_data: QuestionCreate, db: Session = Depends(get_db)):
-    question = db.query(QuestionAnswer).filter(QuestionAnswer.id == question_id).first()
-    if not question:
-        raise HTTPException(status_code=404, detail="Question not found")
-    
-    # 질문 업데이트 및 RunPod 재호출
-    try:
-        question.question = updated_data.question
-        answer = send_to_runpod(updated_data.question)  # 새로운 질문으로 RunPod 호출
-        question.answer = answer
-        db.commit()
-        db.refresh(question)
-        return {"id": question.id, "question": question.question, "answer": question.answer}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-'''
 # -------------------
 # 유저 정보 CRUD
 # -------------------
@@ -217,12 +131,44 @@ def delete_file(file_id: int, db: Session = Depends(get_db)):
     return {"message": "File deleted successfully"}
 
 # -------------------
-# 질문 기록 CRUD
+# RunPod 통신 함수
 # -------------------
-# Create (POST) - QnA 생성
+def send_to_runpod(question: str) -> str:
+    url = "https://api.runpod.ai/v2/<POD_ID>/runsync"  # RunPod 엔드포인트 URL
+    headers = {"Authorization": "Bearer <YOUR_API_KEY>"}
+    body = {
+        "input": {
+            "api": {
+                "method": "POST",
+                "endpoint": "/generate",  # RunPod의 LLM 엔드포인트
+            },
+            "payload": {"question": question},
+        }
+    }
+    response = requests.post(url, json=body, headers=headers)
+    if response.status_code != 200:
+        raise HTTPException(status_code=response.status_code, detail=response.text)
+    return response.json().get("output", {}).get("answer", "No answer received")
+
+# -------------------
+# 질문 기록 CRUD 및 RunPod 연동
+# -------------------
+
+# Create (POST) - 질문 생성 및 RunPod 호출
 @app.post("/qnas/", response_model=schemas.QnaResponse)
 def create_qna(qna: schemas.QnaCreate, db: Session = Depends(get_db)):
-    return crud.create_qna(db=db, qna=qna)
+    # 질문 저장 (답변은 None 상태로 저장)
+    db_qna = crud.create_qna(db=db, qna=qna)
+
+    # RunPod에 질문 전송 및 답변 수신
+    try:
+        answer = send_to_runpod(qna.question)
+        db_qna.answer = answer  # 답변 업데이트
+        db.commit()
+        db.refresh(db_qna)
+        return db_qna
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 # Read (GET all) - 모든 QnA 조회
 @app.get("/qnas/", response_model=list[schemas.QnaResponse])
@@ -239,15 +185,25 @@ def read_qna(qna_id: int, db: Session = Depends(get_db)):
     
     return qna_record
 
-# Update (PUT) - QnA 정보 수정
+# Update (PUT) - QnA 정보 수정 및 RunPod 재호출
 @app.put("/qnas/{qna_id}", response_model=schemas.QnaResponse)
 def update_qna(qna_id: int, updates: schemas.QnaUpdate, db: Session = Depends(get_db)):
-    updated_qna = crud.update_qna(db=db, qna_id=qna_id, updates=updates)
+    qna_record = crud.get_qna_by_id(db=db, qna_id=qna_id)
     
-    if not updated_qna:
+    if not qna_record:
         raise HTTPException(status_code=404, detail="QnA not found")
     
-    return updated_qna
+    try:
+        # 질문 업데이트 및 RunPod 재호출
+        qna_record.question = updates.question
+        answer = send_to_runpod(updates.question)  # 새로운 질문으로 RunPod 호출
+        qna_record.answer = answer
+        
+        db.commit()
+        db.refresh(qna_record)
+        return qna_record
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 # Delete (DELETE) - QnA 삭제
 @app.delete("/qnas/{qna_id}")
