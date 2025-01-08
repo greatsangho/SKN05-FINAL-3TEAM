@@ -1,6 +1,8 @@
 from authlib.integrations.starlette_client import OAuth
 from dotenv import load_dotenv
 import os
+import uuid
+import requests
 
 # Load environment variables
 load_dotenv()
@@ -8,7 +10,8 @@ GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
 GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
 REDIRECT_URI = os.getenv("REDIRECT_URI")
 
-# 웹 상에서 구글 로그인 기능 --> 크롬 익스텐션에서 불필요하여 삭제(예정)
+# 웹 상에서 구글 로그인 기능 --> 크롬 익스텐션에서 불필요(미사용)
+# 웹 상에서 구글 로그인 시 사용 가능
 # Initialize OAuth client with required scopes
 oauth = OAuth()
 oauth.register(

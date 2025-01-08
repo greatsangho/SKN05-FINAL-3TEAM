@@ -7,13 +7,12 @@ from sqlalchemy.orm import sessionmaker, Session, relationship
 from DB import models, schemas, crud
 from DB.database import engine, SessionLocal
 from DB.models import Base
-import uuid
 import uvicorn
 import requests
 
 app = FastAPI()
 
-# Add session middleware (required for OAuth)
+# Add session middleware
 app.add_middleware(SessionMiddleware, secret_key="your_consistent_secret_key")
 
 # CORS configuration (adjust as needed for production)
@@ -21,7 +20,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  # Replace "*" with your frontend domain in production
     allow_credentials=True,
-    allow_methods=["GET", "POST"],
+    allow_methods=["GET", "POST", "PUT", "DELETE"],
     allow_headers=["*"],
 )
 
