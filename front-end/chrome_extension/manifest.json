@@ -43,8 +43,13 @@
   }, 
   "web_accessible_resources": [
     {
-      "resources": ["./web/landing/landing.html", "./web/start/start.html"],
+      "resources": ["./web/landing/landing.html", "web/start/start.html", "./web/login/login.html", "./popup.html"],
       "matches": ["<all_urls>"]
     }
-  ]
+  ],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'"
+  }
 }
+
+
