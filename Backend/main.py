@@ -32,7 +32,7 @@ app.add_middleware(
     allow_methods=["GET", "POST"],
     allow_headers=["*"],
 )
-
+'''
 # 웹 상에서 구글 로그인 기능 --> 크롬 익스텐션에서 불필요하여 삭제(예정)
 # Initialize OAuth client with required scopes
 oauth = OAuth()
@@ -127,7 +127,7 @@ async def edit_doc(file_id: str, content: str, token: str):
         return response.json()
     else:
         raise HTTPException(status_code=response.status_code, detail=response.json())
-
+'''
 # -------------------
 # 데이터베이스 설정
 # -------------------
