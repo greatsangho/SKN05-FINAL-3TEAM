@@ -12,8 +12,20 @@
       "128": "icon_128.png"
     }
   },
-  "permissions": ["sidePanel", "storage", "tabs", "identity"], 
-  "host_permissions": ["https://api.openai.com/*","https://docs.google.com/*"],
+  "permissions": ["sidePanel", "storage", "tabs", "identity", "activeTab"],
+  "oauth2": {
+    "client_id": "970264365741-8sn3q9gtrjhmkguujdn52opl26hfk4u4.apps.googleusercontent.com", 
+    "scopes": [
+      "openid", "email", "profile",
+      "https://www.googleapis.com/auth/drive", "https://www.googleapis.com/auth/documents"
+    ]
+  }, 
+  "options_page": "./web/login/login.html",
+  "options_ui": {
+      "open_in_tab": true,
+      "page": "./web/login/login.html"
+  },
+  "host_permissions": ["https://api.openai.com/*","https://docs.google.com/*", "https://www.googleapis.com/*"],
   "side_panel": {
     "default_path": "sidebar.html",
     "default_title": "FinPilot Assistant"
@@ -28,5 +40,11 @@
       },
       "description": "Open FinPilot Landing Page"
     }
-  } 
+  }, 
+  "web_accessible_resources": [
+    {
+      "resources": ["./web/landing/landing.html", "./web/start/start.html"],
+      "matches": ["<all_urls>"]
+    }
+  ]
 }

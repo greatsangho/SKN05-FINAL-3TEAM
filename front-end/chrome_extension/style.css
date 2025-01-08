@@ -25,6 +25,15 @@ h2 {
     margin-bottom: 20px;
     font-size: 35px;
     margin-top: 5px;
+    font-family: "Poppins-BoldItalic", sans-serif;
+    font-style: italic;
+}
+
+.dot {
+    color: #007dfa;
+    font-size: 32px;
+    font-family: "Poppins-BoldItalic", sans-serif;
+    font-style: italic;
 }
 
 /* 타이틀 아래에 멘트 스타일 */

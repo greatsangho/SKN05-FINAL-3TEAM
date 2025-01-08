@@ -114,6 +114,12 @@
   height: 80px;
   position: relative;
 }
+.button:hover {
+  background: #648ECF; /* 살짝 더 진한 파란색 배경 */
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2); /* 그림자 추가 */
+  cursor: pointer; /* 손가락 커서 표시 */
+  transform: translateY(-2px); /* 살짝 위로 올라가는 효과 */
+}
 .google-docs {
   color: var(--foreground-oncolor, #fcfcfd);
   text-align: left;
