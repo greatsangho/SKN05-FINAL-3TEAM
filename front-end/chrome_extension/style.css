@@ -244,3 +244,21 @@ h2 {
 .chat-box::-webkit-scrollbar-thumb:hover {
     background: #81868A; /* 호버 시 변경 */
 }
+
+/* 환영 문구 */
+.greeting {
+    display: flex;
+    justify-content: center; /* 가로 중앙 정렬 */
+    align-items: center; /* 세로 중앙 정렬 */
+    font-size: 1.75rem; /* 글씨 크기 */
+    font-weight: bold; /* 글씨 두께 */
+    text-align: center; /* 텍스트 중앙 정렬 */
+    background: linear-gradient(to right, #4facfe, #6a11cb); /* 그라디언트 색상 추후 고민 해보는걸로 */
+    background-clip: text; /* 표준 속성 */
+    -webkit-background-clip: text; /* 웹킷 호환 속성 */
+    -webkit-text-fill-color: transparent; /* 웹킷 호환 속성 */
+    margin-top: 150px; /* 위쪽 여백 이걸로 글자 위치 높이 조정*/
+    height: 100px; /* 박스 높이 */
+  }
+  
+  

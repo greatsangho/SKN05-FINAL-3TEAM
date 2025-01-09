@@ -17,7 +17,8 @@
     "client_id": "970264365741-8sn3q9gtrjhmkguujdn52opl26hfk4u4.apps.googleusercontent.com", 
     "scopes": [
       "openid", "email", "profile",
-      "https://www.googleapis.com/auth/drive", "https://www.googleapis.com/auth/documents"
+      "https://www.googleapis.com/auth/drive.file", "https://www.googleapis.com/auth/documents",
+      "https://www.googleapis.com/auth/userinfo.profile","https://www.googleapis.com/auth/userinfo.email"
     ]
   }, 
   "options_page": "./web/login/login.html",

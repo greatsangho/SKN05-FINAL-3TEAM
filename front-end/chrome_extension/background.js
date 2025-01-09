@@ -1,6 +1,7 @@
 // Google Login
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.message === 'Glogin') {
+    // Auth Token 요청
     chrome.identity.getAuthToken({ interactive: true }, (token) => {
       if (chrome.runtime.lastError) {
         console.error('Google 로그인 실패:', chrome.runtime.lastError);
@@ -19,6 +20,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
               success: true,
               email: data.email,
               name: data.name,
+              picture: data.picture, // 프로필 사진 URL 추가
             });
           } else {
             sendResponse({ success: false });

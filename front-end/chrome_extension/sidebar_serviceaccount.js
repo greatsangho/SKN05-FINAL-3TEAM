@@ -1,8 +1,9 @@
+let DOCUMENT_ID = ""; // 문서 아이디 초기값 설정
+
+// Google 서비스 계정 JSON 키 정보 (각자 개인의 키를 넣어주세요!!!!!!!!!!!!!!)
+const serviceAccount = {};
 // OpenAI API (키 각자 개인의 키를 넣어주세요!!!!!!!!!!!!!!!!!!)
 const OPENAI_API_KEY ="sk-proj--";  
-
-// 문서 아이디 초기값 설정
-let DOCUMENT_ID = ""; 
 
 // 현재 활성탭을 가져와 문서 id 찾기
 function getDocumentIdFromActiveTab() {
@@ -30,7 +31,7 @@ function getDocumentIdFromActiveTab() {
       if (match) {
         resolve(match[1]);
       } else {
-        reject("URL에서 Google Docs 문서 ID를 찾을 수 없습니다.");
+        reject("Google Docs 문서 ID를 URL에서 찾을 수 없습니다.");
       }
     });
   });
@@ -66,6 +67,7 @@ function hideLoadingSpinner() {
   if (chatContainer) chatContainer.classList.remove("loading"); // 흐림 효과 제거
 }
 
+
 // "Send" 버튼 클릭 이벤트
 document.getElementById("send-btn").addEventListener("click", async () => {
   const userInput = document.getElementById("user-input").value.trim();
@@ -74,12 +76,6 @@ document.getElementById("send-btn").addEventListener("click", async () => {
     alert("질문을 입력해주세요.");
     return;
   }
-
-  // 환영 메시지 숨기기
-  const greetingElement = document.getElementById('greeting');
-  if (greetingElement) {
-    greetingElement.style.display = 'none';
-  } 
 
   const chatBox = document.getElementById("chat-box");
 
@@ -141,71 +137,144 @@ document.getElementById("user-input").addEventListener("keyup", (event) => {
   }
 });
 
-// Google Docs에 답변 반영
+
+// 여기가 메인 //
+// Google Docs API로 응답 추가
 async function appendToGoogleDoc(content) {
-    try {
-      const accessToken = await getAccessToken();
-  
-      const response = await fetch(
-        `https://docs.googleapis.com/v1/documents/${DOCUMENT_ID}:batchUpdate`,
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            requests: [
-              {
-                insertText: {
-                  location: { index: 1 },
-                  text: `${content}\n`,
-                },
+  try {
+    const accessToken = await getAccessToken();
+
+    const response = await fetch(
+      `https://docs.googleapis.com/v1/documents/${DOCUMENT_ID}:batchUpdate`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          requests: [
+            {
+              insertText: {
+                location: { index: 1 },
+                text: `${content}\n`,
               },
-            ],
-          }),
-        }
-      );
-  
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`❌ Google Docs 업데이트 실패: ${errorText}`);
+            },
+          ],
+        }),
       }
-  
-      console.log("✅ Google Docs 업데이트 성공!");
-    } catch (error) {
-      console.error("❌ Google Docs API 오류:", error);
-      alert("Google Docs 업데이트 중 문제가 발생했습니다.\n\nGoogle 로그인을 완료하고 현재 활성 탭이 Google Docs 문서 페이지인지 확인 후 다시 시도해주세요.");
+    );
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`❌ Google Docs 업데이트 실패: ${errorText}`);
     }
+
+    console.log("✅ Google Docs 업데이트 성공!");
+  } catch (error) {
+    console.error("❌ Google Docs API 오류:", error);
+    alert(
+      "연동된 문서를 찾을 수 없습니다. 활성 탭의 Google Docs URL이 올바른지 확인해주세요. 또한, 문서에 서비스 계정에 대한 편집 권한을 공유했는지 확인해주세요.\n\n" +
+        "- 올바른 URL 예시:\n  https://docs.google.com/document/d/문서ID/edit\n\n" +
+        "- 편집자 권한 공유 방법:\n" +
+        "  1. Google Docs 문서를 열고 우측 상단의 '공유' 버튼을 클릭합니다.\n" +
+        "  2. 아래 이메일을 추가하여 편집자 권한을 부여하세요.\n" +
+        "     - 서비스 계정 이메일: finpilot@gen-lang-client-0845052581.iam.gserviceaccount.com\n\n" +
+        "오류가 계속된다면 사이드 패널을 닫고 Google Docs에 재접속한 후 다시 실행해주세요."
+    );
+  }
 }
 
-// 실시간으로 OAuth 토큰을 가져오기
+// 여기도 메인 //
+// JWT 토큰 생성 및 Google OAuth 2.0 토큰 요청
 async function getAccessToken() {
-    return new Promise((resolve, reject) => {
-      chrome.identity.getAuthToken({ interactive: true }, (token) => {
-        if (chrome.runtime.lastError || !token) {
-          reject(chrome.runtime.lastError || "Token을 가져올 수 없습니다.");
-          return;
-        }
-        resolve(token);
-      });
+  const header = {
+    alg: "RS256",
+    typ: "JWT",
+  };
+
+  const now = Math.floor(Date.now() / 1000);
+  const claims = {
+    iss: serviceAccount.client_email,
+    scope: "https://www.googleapis.com/auth/documents",
+    aud: serviceAccount.token_uri,
+    exp: now + 3600,
+    iat: now,
+  };
+
+  const encodeBase64URL = (obj) =>
+    btoa(JSON.stringify(obj))
+      .replace(/\+/g, "-")
+      .replace(/\//g, "_")
+      .replace(/=+$/, "");
+
+  const headerEncoded = encodeBase64URL(header);
+  const claimsEncoded = encodeBase64URL(claims);
+  const unsignedToken = `${headerEncoded}.${claimsEncoded}`;
+
+  try {
+    const keyBuffer = pemToArrayBuffer(serviceAccount.private_key);
+
+    const privateKey = await crypto.subtle.importKey(
+      "pkcs8",
+      keyBuffer,
+      {
+        name: "RSASSA-PKCS1-v1_5",
+        hash: { name: "SHA-256" },
+      },
+      false,
+      ["sign"]
+    );
+
+    const signature = await crypto.subtle.sign(
+      "RSASSA-PKCS1-v1_5",
+      privateKey,
+      new TextEncoder().encode(unsignedToken)
+    );
+
+    const signatureEncoded = btoa(
+      String.fromCharCode(...new Uint8Array(signature))
+    )
+      .replace(/\+/g, "-")
+      .replace(/\//g, "_")
+      .replace(/=+$/, "");
+
+    const jwt = `${unsignedToken}.${signatureEncoded}`;
+
+    const response = await fetch(serviceAccount.token_uri, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer",
+        assertion: jwt,
+      }),
     });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`OAuth 2.0 토큰 요청 실패: ${errorText}`);
+    }
+
+    const { access_token } = await response.json();
+    return access_token;
+  } catch (error) {
+    console.error("❌ JWT 생성 또는 토큰 요청 중 오류:", error);
+  }
 }
 
-// 환영 인사
-document.addEventListener('DOMContentLoaded', () => {
-  // Greeting 요소 가져오기
-  const greetingElement = document.getElementById('greeting');
 
-  // 저장된 userName 가져오기
-  chrome.storage.local.get(['userName', 'isLoggedIn'], (data) => {
-    if (data.isLoggedIn && data.userName) {
-      // 로그인된 경우 환영 메시지 표시
-      greetingElement.textContent = `${data.userName}님, 안녕하세요`;
-      greetingElement.style.display = 'block';
-    } else {
-      // 로그인되지 않은 경우 숨기기
-      greetingElement.style.display = 'none';
-    }
-  });
-});
+// 여기도 메인 //
+// 🔑 PEM 형식의 키를 ArrayBuffer로 변환
+function pemToArrayBuffer(pem) {
+  const base64 = pem
+    .replace(/-----BEGIN PRIVATE KEY-----/, "")
+    .replace(/-----END PRIVATE KEY-----/, "")
+    .replace(/\n/g, "");
+  const binary = atob(base64);
+  const buffer = new ArrayBuffer(binary.length);
+  const view = new Uint8Array(buffer);
+  for (let i = 0; i < binary.length; i++) {
+    view[i] = binary.charCodeAt(i);
+  }
+  return buffer;
+}
