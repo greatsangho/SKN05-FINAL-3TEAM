@@ -22,6 +22,7 @@ from langgraph.checkpoint.memory import MemorySaver
 
 # Prompts
 from langchain_core.messages import AIMessage, HumanMessage
+from langgraph.graph.message import add_messages
 
 
 
@@ -115,10 +116,14 @@ llm_with_tools = llm.bind_tools(tools)
 ################################ Define Nodes ################################
 def web_visualizer_node(state):
     question = state["question"]
-    result = llm_with_tools.invoke(question)
-    return {'question' : question, 
-            'generation' : result,
-            'messages' : [result]}
+    updated_messages = add_messages(state["messages"], HumanMessage(content=question))
+    state["messages"] = updated_messages
+    
+    result = llm_with_tools.invoke(state["messages"])
+    state["generation"] = result.content
+    state["messages"] = add_messages(state["messages"], result)
+
+    return state
 
 tool_node = ToolNode(tools)
 
@@ -134,9 +139,6 @@ tool_node = ToolNode(tools)
 def should_continue(state):
     messages = state["messages"]
     last_message = messages[-1]
-    print("="*100)
-    print(last_message)
-    print("="*100)
     if not last_message.tool_calls:
         return "end"
     else:
