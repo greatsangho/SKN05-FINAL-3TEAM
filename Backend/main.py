@@ -300,35 +300,6 @@ def delete_pdf(file_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="PDF not found")
     
     return {"message": "PDF deleted successfully"}
-    
-# -------------------
-# 로그인 기록 CRUD
-# -------------------   
-# Create (POST)
-@app.post("/login-history/", response_model=schemas.LoginHistoryResponse)
-def create_login(login_history: schemas.LoginHistoryCreate, db: Session = Depends(get_db)):
-    return crud.create_login_history(db=db, login_history=login_history)
-
-# Read (GET all)
-@app.get("/login-history/", response_model=list[schemas.LoginHistoryResponse])
-def read_logins(skip: int = 0, limit: int = 10, db: Session = Depends(get_db)):
-    return crud.get_login_history(db=db, skip=skip, limit=limit)
-
-# Read (GET by ID)
-@app.get("/login-history/{login_id}", response_model=schemas.LoginHistoryResponse)
-def read_login(login_id: int, db: Session = Depends(get_db)):
-    login_record = crud.get_login_history_by_id(db=db, login_id=login_id)
-    if not login_record:
-        raise HTTPException(status_code=404, detail="Login record not found")
-    return login_record
-
-# Delete (DELETE by ID)
-@app.delete("/login-history/{login_id}")
-def delete_login(login_id: int, db: Session = Depends(get_db)):
-    success = crud.delete_login_history(db=db, login_id=login_id)
-    if not success:
-        raise HTTPException(status_code=404, detail="Login record not found")
-    return {"message": "Login record deleted successfully"}
 
 # -------------------
 # 파이썬 서버 실행

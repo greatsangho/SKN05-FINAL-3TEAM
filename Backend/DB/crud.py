@@ -1,6 +1,8 @@
 from sqlalchemy.orm import Session
-from .models import userTBL ,loginHistoryTBL, fileTBL, qnaTBL
-from .schemas import UserCreate, UserUpdate, LoginHistoryCreate, FileCreate, FileUpdate, QnaCreate, QnaUpdate, CsvCreate, CsvUpdate, PdfCreate, PdfUpdate
+from .models import userTBL, fileTBL, qnaTBL
+from .schemas import UserCreate, UserUpdate
+from .schemas import FileCreate, FileUpdate, QnaCreate, QnaUpdate
+from .schemas import CsvCreate, CsvUpdate, PdfCreate, PdfUpdate
 
 # -------------------
 # 유저 정보 CRUD
@@ -21,18 +23,15 @@ def get_users(db: Session, skip: int = 0, limit: int = 10):
 def get_user_by_email(db: Session, user_email: str):
     return db.query(userTBL).filter(userTBL.userEmail == user_email).first()
 
-# Update (사용자 정보 수정)
+# Update (사용자 로그인 기록 업데이트)
 def update_user(db: Session, user_email: str, updates: UserUpdate):
     db_user = db.query(userTBL).filter(userTBL.userEmail == user_email).first()
-    if not db_user:
-        return None  # 사용자 없음
-
-    for key, value in updates.dict(exclude_unset=True).items():
-        setattr(db_user, key, value)  # 기존 사용자 객체에 업데이트 적용
-    
-    db.commit()
-    db.refresh(db_user)  # 업데이트된 객체 반환
-    return db_user
+    if db_user:
+        db.delete(db_user)
+        db.commit()
+        return True
+    else:
+        return create_user(db, user)
 
 # Delete (사용자 삭제)
 def delete_user(db: Session, user_email: str):
@@ -211,27 +210,3 @@ def delete_pdf(db: Session, file_id: int):
     db.delete(db_pdf)
     db.commit()
     return True
-
-# -------------------
-# 로그인 기록 생성
-# -------------------
-def create_login_history(db: Session, login_history: LoginHistoryCreate):
-    db_login_history = loginHistoryTBL(**login_history.dict())
-    db.add(db_login_history)
-    db.commit()
-    db.refresh(db_login_history)
-    return db_login_history
-
-def get_login_history(db: Session, skip: int = 0, limit: int = 10):
-    return db.query(loginHistoryTBL).offset(skip).limit(limit).all()
-
-def get_login_history_by_id(db: Session, login_id: int):
-    return db.query(loginHistoryTBL).filter(loginHistoryTBL.id == login_id).first()
-
-def delete_login_history(db: Session, login_id: int):
-    db_login_history = db.query(loginHistoryTBL).filter(loginHistoryTBL.id == login_id).first()
-    if db_login_history:
-        db.delete(db_login_history)
-        db.commit()
-        return True
-    return False

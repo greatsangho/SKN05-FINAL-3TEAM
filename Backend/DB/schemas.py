@@ -11,11 +11,7 @@ from typing import Optional
 # -------------------
 class UserBase(BaseModel):
     userEmail: str
-    userID: str
-    userLName: Optional[str] = None
-    userFName: str
-    userImg: Optional[str] = None
-    userToken: Optional[str] = None
+    loginTime: datetime
 
 # Create 요청 스키마
 class UserCreate(UserBase):
@@ -23,11 +19,7 @@ class UserCreate(UserBase):
 
 # Update 요청 스키마 (부분 업데이트 허용)
 class UserUpdate(BaseModel):
-    userID: Optional[str]
-    userLName: Optional[str]
-    userFName: Optional[str]
-    userImg: Optional[str]
-    userToken: Optional[str]
+    loginTime: Optional[datetime]
 
 # Response 스키마
 class UserResponse(UserBase):
@@ -66,8 +58,8 @@ class FileResponse(FileBase):
 class QnaBase(BaseModel):
     question: str
     answer: Optional[str] = None
-    askTime: datetime
     fileID: Optional[int] = None  # fileID는 외래 키로 선택적 필드
+    isDel: bool = False
 
 # Create 요청 스키마
 class QnaCreate(QnaBase):
@@ -77,9 +69,8 @@ class QnaCreate(QnaBase):
 class QnaUpdate(BaseModel):
     question: Optional[str]
     answer: Optional[str]
-    askTime: Optional[datetime]
     fileID: Optional[int]
-
+    isDel: Optional[bool]
 # Response 스키마
 class QnaResponse(QnaBase):
     qnaID: int  # Primary Key 포함
@@ -133,27 +124,3 @@ class PdfResponse(PdfBase):
     class Config:
         orm_mode = True  # SQLAlchemy 모델과 호환되도록 설정
         
-# -------------------
-# 로그인 정의
-# -------------------
-class LoginHistoryBase(BaseModel):
-    userEmail: str
-
-class LoginHistoryCreate(LoginHistoryBase):
-    pass
-
-class LoginHistoryResponse(LoginHistoryBase):
-    loginID: int
-    loginTime: datetime
-
-    class Config:
-        orm_mode = True  # SQLAlchemy 모델과 호환되도록 설정
-
-
-class QuestionCreate(BaseModel):
-    question: str
-
-class QuestionResponse(BaseModel):
-    id: int
-    question: str
-    answer: Optional[str] = None
