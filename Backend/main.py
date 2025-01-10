@@ -80,9 +80,9 @@ def update_user(user_email: str, updates: schemas.UserUpdate, db: Session = Depe
 # Delete (DELETE) - 사용자 삭제
 @app.delete("/users/{user_email}")
 def delete_user(user_email: str, db: Session = Depends(get_db)):
-    success = crud.delete_user(db=db, user_email=user_email)
+    result = crud.delete_user(db=db, user_email=user_email)
     
-    if not success:
+    if not result:
         raise HTTPException(status_code=404, detail="User not found")
     
     return {"message": "User deleted successfully"}

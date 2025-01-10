@@ -26,22 +26,25 @@ def get_user_by_email(db: Session, user_email: str):
 # Update (사용자 로그인 기록 업데이트)
 def update_user(db: Session, user_email: str, updates: UserUpdate):
     db_user = db.query(userTBL).filter(userTBL.userEmail == user_email).first()
-    if db_user:
-        db.delete(db_user)
-        db.commit()
-        return True
-    else:
-        return create_user(db, user)
+    if not db_user:
+        return None  # 사용자 없음
+    
+    for key, value in updates.dict(exclude_unset=True).items():
+        setattr(db_user, key, value)  # 업데이트된 값만 적용
+    
+    db.commit()
+    db.refresh(db_user)
+    return db_user
 
 # Delete (사용자 삭제)
 def delete_user(db: Session, user_email: str):
     db_user = db.query(userTBL).filter(userTBL.userEmail == user_email).first()
     if not db_user:
-        return False  # 사용자 없음
+        return None  # 사용자 없음
     
     db.delete(db_user)
     db.commit()
-    return True
+    return {"message": "User deleted successfully"}
 
 # -------------------
 # 구글 독스 파일 CRUD

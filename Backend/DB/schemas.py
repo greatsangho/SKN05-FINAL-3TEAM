@@ -11,8 +11,7 @@ from typing import Optional
 # -------------------
 class UserBase(BaseModel):
     userEmail: str
-    loginTime: datetime
-
+    loginTime: Optional[datetime] = None
 # Create 요청 스키마
 class UserCreate(UserBase):
     pass  # 모든 필드를 그대로 사용
