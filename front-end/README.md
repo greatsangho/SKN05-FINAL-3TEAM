@@ -10,10 +10,12 @@ FinPilot은 Google Docs와 원활하게 통합된 SLLM 기반 Chrome Extension�
 - [About the Project](#-about-the-project)
 - [Features](#-features)
 - [File Structure](#-file-structure)
-- [Technologies Used](#-technologies-used)
+- [Tech Stack](#-tech-stack)
+- [Communication](#-communication)
 - [Setup and Installation](#-setup-and-installation)
 - [How to Run](#-how-to-run)
 - [Contribution](#-contribution)
+- [Contact](#-contact)
 
 ---
 

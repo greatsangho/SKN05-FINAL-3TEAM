@@ -78,6 +78,106 @@ h2 {
 .chat-message.answer {
     align-self: flex-start;
     text-align: left;
+    /* background-color: #C9E6FC; */
+    background-color: #F9F9F9;
+    padding: 10px;  
+    border-radius: 15px;
+    position: relative; /* 자식 요소 위치를 기준으로 */
+}
+
+/* apply 버튼 기본 스타일 (숨김) */
+.chat-message.answer .apply-btn {
+    display: none; /* 기본적으로 숨김 */
+    position: absolute;
+    top: 5px; /* 우측 상단 위치 */
+    right: 5px;
+    background-color: #5aaded; /* 버튼 배경색 */
+    color: white; /* 버튼 글자색 */
+    font-size: 12px;
+    border: none;
+    border-radius: 5px;
+    padding: 5px 10px;
+    cursor: pointer;
+    z-index: 10;
+    transition: background-color 0.3s ease, transform 0.3s ease; /* 부드러운 효과 추가 */
+}
+
+/* hover 시 apply 버튼 표시 */
+.chat-message.answer:hover .apply-btn {
+    display: block;
+}
+
+/* apply 버튼 호버 효과 */
+.chat-message.answer .apply-btn:hover {
+    background-color: #3c8fd0; /* 호버 시 버튼 배경색 변경 */
+    transform: scale(1.01); /* 살짝 커지는 효과 */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* 그림자 추가 */
+}
+
+/* Copy 버튼 스타일 */
+.chat-message.answer .copy-btn {
+    display: none; /* 기본적으로 숨김 */
+    position: absolute;
+    top: 5px;
+    right: 102px; /* Apply 버튼 왼쪽에 위치 */
+    background-color: transparent; /* 버튼 배경을 투명하게 설정 */
+    border: none;
+    border-radius: 5px;
+    padding: 5px;
+    cursor: pointer;
+    z-index: 10;
+    transition: background-color 0.3s ease, transform 0.3s ease;
+}
+
+/* Copy 버튼 이미지 스타일 */
+.chat-message.answer .copy-btn img {
+    display: block;
+    margin: 0 auto; /* 이미지 가운데 정렬 */
+}   
+
+/* hover 시 Copy 버튼 표시 */
+.chat-message.answer:hover .copy-btn {
+    display: block;
+}
+
+/* Copy 버튼 호버 시 말풍선 추가 */
+.chat-message.answer .copy-btn::after {
+    content: "Copy"; /* 말풍선 텍스트 */
+    display: none; /* 기본적으로 숨김 */
+    position: absolute;
+    bottom: 120%; /* 버튼 위로 위치 */
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #333; /* 말풍선 배경색 */
+    color: #fff; /* 말풍선 글자색 */
+    font-size: 10px;
+    padding: 5px 8px;
+    border-radius: 5px; /* 말풍선 본체 모서리 둥글게 */
+    white-space: nowrap; /* 텍스트 줄바꿈 방지 */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    z-index: 20;
+}
+
+/* 말풍선 꼬리 추가 */
+.chat-message.answer .copy-btn::before {
+    content: "";
+    display: none; /* 기본적으로 숨김 */
+    position: absolute;
+    bottom: 110%; /* 말풍선 본체와 연결 */
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 8px solid transparent; /* 왼쪽 투명 삼각형 */
+    border-right: 6px solid transparent; /* 오른쪽 투명 삼각형 */
+    border-top: 8px solid #333; /* 위쪽 삼각형 (말풍선 배경색과 동일) */
+    z-index: 19; /* 본체 아래에 배치 */
+}
+
+/* 호버 시 말풍선 및 꼬리 표시 */
+.chat-message.answer .copy-btn:hover::after,
+.chat-message.answer .copy-btn:hover::before {
+    display: block;
 }
 
 /* 가로 및 세로 스크롤 간격 */
@@ -109,7 +209,7 @@ h2 {
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     display: flex;
     align-items: center;
-  }
+}
   
   /* 입력 필드 */
   #user-input {
@@ -125,6 +225,18 @@ h2 {
 #user-input:focus {
     border-color: #C9E6FC;
     outline: none;
+}
+
+/* 입력 필드 비활성화 상태 스타일 */
+#user-input:disabled {
+    background: #f5f5f5; /* 흐려진 배경 */
+    color: #a0a0a0; /* 흐려진 글자색 */
+    border: none; /* 테두리 제거 */
+    padding: 10px 50px 10px 15px; /* 기존 패딩 유지 */
+    border-radius: 50px; /* 기존의 둥근 모서리 유지 */
+    font-size: 15px; /* 기존 글꼴 크기 유지 */
+    cursor: not-allowed; /* 클릭 불가 커서 */
+    opacity: 0.7; /* 약간의 투명도 추가 */
 }
 
 #send-btn {
@@ -259,6 +371,14 @@ h2 {
     -webkit-text-fill-color: transparent; /* 웹킷 호환 속성 */
     margin-top: 150px; /* 위쪽 여백 이걸로 글자 위치 높이 조정*/
     height: 100px; /* 박스 높이 */
-  }
-  
-  
+}
+
+/* 로그인이 필요할 때 환영 문구 흐려짐 */
+.greeting.login-required {
+    background: linear-gradient(to right, #494747, #989696); /* 흐려진 그라디언트 */
+    background-clip: text; /* 표준 속성 */
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent; /* 웹킷 호환 속성 */
+    font-style: italic; /* 기울임체로 변경 */
+    opacity: 0.7; /* 투명도 추가 */
+}

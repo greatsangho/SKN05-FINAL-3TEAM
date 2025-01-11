@@ -160,6 +160,9 @@ document.getElementById("send-btn").addEventListener("click", async () => {
 
     // 메시지 컨테이너에 추가
     document.getElementById("chat-box").appendChild(botMessageElement);
+    //chatBox.appendChild(botMessageElement);       
+
+    //await appendToGoogleDoc(botMessage); // Google Docs에 추가
 
     chatBox.scrollTop = chatBox.scrollHeight;
   } catch (error) {
