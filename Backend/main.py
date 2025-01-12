@@ -1,28 +1,41 @@
-from fastapi import FastAPI, HTTPException, Request, Depends
+from fastapi import FastAPI, HTTPException, Depends
 from starlette.middleware.sessions import SessionMiddleware
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, Session, relationship
+from sqlalchemy.orm import Session
 from DB import models, schemas, crud
 from DB.database import engine, SessionLocal
 from DB.models import Base
+from dotenv import load_dotenv
 import uvicorn
 import requests
+from secrets import token_hex
+import os
+from fastapi.middleware.gzip import GZipMiddleware
+from starlette.middleware.base import BaseHTTPMiddleware
+from Middleware.mid import TimingMiddleware, RateLimitMiddleware
+import time
+from collections import defaultdict
+
+load_dotenv()
 
 app = FastAPI()
 
 # Add session middleware
-app.add_middleware(SessionMiddleware, secret_key="your_consistent_secret_key")
+app.add_middleware(SessionMiddleware, secret_key=token_hex(32))
 
 # CORS configuration (adjust as needed for production)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Replace "*" with your frontend domain in production
+    allow_origins=["*"],  # Security risk in production
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE"],
     allow_headers=["*"],
 )
+
+# Performance and monitoring middleware
+app.add_middleware(GZipMiddleware, minimum_size=1000)
+app.add_middleware(TimingMiddleware)
+app.add_middleware(RateLimitMiddleware, requests_per_minute=60)
 
 # url/docs 로 기능 설명 페이지 안내
 @app.get("/")
@@ -134,8 +147,8 @@ def delete_file(file_id: int, db: Session = Depends(get_db)):
 # RunPod 통신 함수
 # -------------------
 def send_to_runpod(question: str) -> str:
-    url = "https://api.runpod.ai/v2/<POD_ID>/runsync"  # RunPod 엔드포인트 URL
-    headers = {"Authorization": "Bearer <YOUR_API_KEY>"}
+    url = os.getenv("RUNPOD_URL")
+    headers = {"Authorization": "Bearer " + os.getenv("RUNPOD_API_KEY")}
     body = {
         "input": {
             "api": {

@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from .models import userTBL, fileTBL, qnaTBL
+from .models import userTBL, fileTBL, qnaTBL, csvTBL, pdfTBL
 from .schemas import UserCreate, UserUpdate
 from .schemas import FileCreate, FileUpdate, QnaCreate, QnaUpdate
 from .schemas import CsvCreate, CsvUpdate, PdfCreate, PdfUpdate
