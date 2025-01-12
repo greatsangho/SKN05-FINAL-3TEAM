@@ -1,6 +1,5 @@
 ########################### Import Modules ###########################
 import os
-from config.secret_keys import OPENAI_API_KEY, TAVILY_API_KEY, USER_AGENT
 
 # Retrieval Grader
 from langchain_core.prompts import ChatPromptTemplate
@@ -28,23 +27,12 @@ from langgraph.graph.message import add_messages
 
 
 
-
-########################### Set Environment ###########################
-os.environ["OPENAI_API_KEY"] = OPENAI_API_KEY
-os.environ["TAVILY_API_KEY"] = TAVILY_API_KEY
-os.environ["USER_AGENT"] = USER_AGENT
-
-
-
-
-
-
-
 ########################### Define Agents ###########################
 
 ########### Define LLM API Client ###########
 llm = ChatOpenAI(
     model = "gpt-4o-mini",
+    api_key=os.getenv("OPENAI_API_KEY"),
     temperature=0
 )
 
@@ -77,13 +65,13 @@ class AnswerGrader(BaseModel):
     )
 
 
-########### Structured LLM ###########
+########## Structured LLM ###########
 hallucination_structured_llm = llm.with_structured_output(GradeHallucination)
 grader_structured_llm = llm.with_structured_output(GradeDocuments)
 answer_structured_llm = llm.with_structured_output(AnswerGrader)
 
 
-########### system_prompt ###########
+########## system_prompt ###########
 grader_system_prompt = """
     You are a grader assessing relevance of a retrieved document to a user question. \n 
 
@@ -109,7 +97,7 @@ rewrite_system_prompt = """
     Look at the input and try to reason about the underlying semantic intent / meaning.
 """
 
-########### Chain_prompt ###########
+########## Chain_prompt ###########
 grade_prompt = ChatPromptTemplate.from_messages(
     [
         ("system", grader_system_prompt),
@@ -137,7 +125,7 @@ rewrite_prompt = ChatPromptTemplate.from_messages(
 )
 
 
-########### Agent Chain ###########
+########## Agent Chain ###########
 retrieval_grader = grade_prompt | grader_structured_llm
 writer = write_prompt | llm | StrOutputParser()
 hallucination_grader = hallucination_prompt | hallucination_structured_llm
@@ -152,7 +140,7 @@ query_rewriter = rewrite_prompt | llm
 
 
 
-########################### Define Tools ###########################
+########################## Define Tools ###########################
 web_search_tool = TavilySearchResults(k=3)
 
 
@@ -163,9 +151,9 @@ web_search_tool = TavilySearchResults(k=3)
 
 
 
-########################### Define Nodes ###########################
+########################## Define Nodes ###########################
 
-########### Retriever ###########
+########## Retriever ###########
 
 
 def retrieve_node(state):
@@ -188,7 +176,7 @@ def retrieve_node(state):
     
     return state
 
-########### writer ###########
+########## writer ###########
 def write_node(state):
     """
     Generate answer
@@ -216,7 +204,7 @@ def write_node(state):
 
     return state
 
-########### filter_document ###########
+########## filter_document ###########
 def filter_documents_node(state):
     """
     Determines whether the retrieved documents are relevant to the question.
@@ -251,7 +239,7 @@ def filter_documents_node(state):
     
     return state
 
-########### transform_query ###########
+########## transform_query ###########
 def transform_query_node(state):
     """
     Transform the query to produce a better question.
@@ -273,7 +261,7 @@ def transform_query_node(state):
 
     return state
 
-########### web_search ###########
+########## web_search ###########
 def web_search_node(state):
     """
     Web search based on the re-phrased question.
@@ -312,7 +300,7 @@ def web_search_node(state):
 
 
 
-########################### Define Conditional Edge Functions ###########################
+########################## Define Conditional Edge Functions ###########################
 
 def decide_write_or_rewrite_query(state):
     """

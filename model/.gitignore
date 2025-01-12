@@ -1,3 +1,5 @@
 /config/
 /model_lab/config/
 /rag-chroma/
+
+.env
