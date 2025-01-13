@@ -47,48 +47,6 @@ def delete_user(db: Session, user_email: str):
     return {"message": "User deleted successfully"}
 
 # -------------------
-# 구글 독스 파일 CRUD
-# -------------------
-# Create (파일 생성)
-def create_file(db: Session, file: FileCreate):
-    db_file = fileTBL(**file.dict())  # Pydantic 데이터를 SQLAlchemy 모델로 변환
-    db.add(db_file)
-    db.commit()
-    db.refresh(db_file)  # 새로 생성된 객체 반환
-    return db_file
-
-# Read (모든 파일 조회)
-def get_files(db: Session, skip: int = 0, limit: int = 10):
-    return db.query(fileTBL).offset(skip).limit(limit).all()
-
-# Read (특정 파일 조회)
-def get_file_by_id(db: Session, file_id: int):
-    return db.query(fileTBL).filter(fileTBL.fileID == file_id).first()
-
-# Update (파일 정보 수정)
-def update_file(db: Session, file_id: int, updates: FileUpdate):
-    db_file = db.query(fileTBL).filter(fileTBL.fileID == file_id).first()
-    if not db_file:
-        return None  # 파일 없음
-
-    for key, value in updates.dict(exclude_unset=True).items():
-        setattr(db_file, key, value)  # 기존 파일 객체에 업데이트 적용
-    
-    db.commit()
-    db.refresh(db_file)  # 업데이트된 객체 반환
-    return db_file
-
-# Delete (파일 삭제)
-def delete_file(db: Session, file_id: int):
-    db_file = db.query(fileTBL).filter(fileTBL.fileID == file_id).first()
-    if not db_file:
-        return False  # 파일 없음
-    
-    db.delete(db_file)
-    db.commit()
-    return True
-
-# -------------------
 # 질문 기록 생성
 # -------------------
 # Create (QnA 생성)

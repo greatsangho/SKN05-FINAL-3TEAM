@@ -101,68 +101,48 @@ def delete_user(user_email: str, db: Session = Depends(get_db)):
     return {"message": "User deleted successfully"}
 
 # -------------------
-# 구글 독스 파일 CRUD
-# -------------------
-# Create (POST) - 파일 생성
-@app.post("/files/", response_model=schemas.FileResponse)
-def create_file(file: schemas.FileCreate, db: Session = Depends(get_db)):
-    return crud.create_file(db=db, file=file)
-
-# Read (GET all) - 모든 파일 조회
-@app.get("/files/", response_model=list[schemas.FileResponse])
-def read_files(skip: int = 0, limit: int = 10, db: Session = Depends(get_db)):
-    return crud.get_files(db=db, skip=skip, limit=limit)
-
-# Read (GET by ID) - 특정 파일 조회
-@app.get("/files/{file_id}", response_model=schemas.FileResponse)
-def read_file(file_id: int, db: Session = Depends(get_db)):
-    file_record = crud.get_file_by_id(db=db, file_id=file_id)
-    
-    if not file_record:
-        raise HTTPException(status_code=404, detail="File not found")
-    
-    return file_record
-
-# Update (PUT) - 파일 정보 수정
-@app.put("/files/{file_id}", response_model=schemas.FileResponse)
-def update_file(file_id: int, updates: schemas.FileUpdate, db: Session = Depends(get_db)):
-    updated_file = crud.update_file(db=db, file_id=file_id, updates=updates)
-    
-    if not updated_file:
-        raise HTTPException(status_code=404, detail="File not found")
-    
-    return updated_file
-
-# Delete (DELETE) - 파일 삭제
-@app.delete("/files/{file_id}")
-def delete_file(file_id: int, db: Session = Depends(get_db)):
-    success = crud.delete_file(db=db, file_id=file_id)
-    
-    if not success:
-        raise HTTPException(status_code=404, detail="File not found")
-    
-    return {"message": "File deleted successfully"}
-
-# -------------------
 # RunPod 통신 함수
 # -------------------
 def send_to_runpod(question: str) -> str:
-    url = os.getenv("RUNPOD_URL")
-    headers = {"Authorization": "Bearer " + os.getenv("RUNPOD_API_KEY")}
+    # 환경 변수 가져오기
+    endpoint_id = os.getenv("RUNPOD_ENDPOINT_ID")
+    api_key = os.getenv("RUNPOD_API_KEY")
+    
+    # 환경 변수 검증
+    if not endpoint_id or not api_key:
+        raise HTTPException(status_code=500, detail="RunPod API credentials are not set.")
+
+    # RunPod API URL
+    url = f"https://api.runpod.ai/v2/{endpoint_id}/runsync"
+
+    # 요청 헤더
+    headers = {
+        "accept": "application/json",
+        "authorization": f"Bearer {api_key}",
+        "content-type": "application/json"
+    }
+
+    # 요청 바디
     body = {
         "input": {
-            "api": {
-                "method": "POST",
-                "endpoint": "/generate",  # RunPod의 LLM 엔드포인트
-            },
-            "payload": {"question": question},
+            "question": question
         }
     }
-    response = requests.post(url, json=body, headers=headers)
-    if response.status_code != 200:
-        raise HTTPException(status_code=response.status_code, detail=response.text)
-    return response.json().get("output", {}).get("answer", "No answer received")
 
+    # API 호출
+    try:
+        response = requests.post(url, json=body, headers=headers)
+        response.raise_for_status()  # HTTP 상태 코드가 4xx/5xx인 경우 예외 발생
+    except requests.exceptions.RequestException as e:
+        raise HTTPException(status_code=500, detail=f"RunPod API request failed: {str(e)}")
+
+    # 응답 처리
+    try:
+        output = response.json().get("output", {}).get("finpilot_answer", "No answer received")
+        return output
+    except (ValueError, KeyError) as e:
+        raise HTTPException(status_code=500, detail=f"Invalid response format: {str(e)}")
+    
 # -------------------
 # 질문 기록 CRUD 및 RunPod 연동
 # -------------------
