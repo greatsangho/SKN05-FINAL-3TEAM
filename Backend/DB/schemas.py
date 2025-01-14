@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
 from datetime import datetime
 from typing import Optional
 
@@ -10,7 +10,7 @@ from typing import Optional
 # 유저 정보 정의
 # -------------------
 class UserBase(BaseModel):
-    userEmail: str
+    userEmail: EmailStr
     loginTime: Optional[datetime] = None
 # Create 요청 스키마
 class UserCreate(UserBase):
@@ -29,7 +29,7 @@ class UserResponse(UserBase):
 # 구글 독스 파일 정의
 # -------------------
 class FileBase(BaseModel):
-    userEmail: str
+    userEmail: EmailStr
     docsID: str
     isCSV: bool
     isPDF: bool
