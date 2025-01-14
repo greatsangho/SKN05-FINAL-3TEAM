@@ -3,6 +3,13 @@ from .models import userTBL, fileTBL, qnaTBL, csvTBL, pdfTBL
 from .schemas import UserCreate, UserUpdate
 from .schemas import FileCreate, FileUpdate, QnaCreate, QnaUpdate
 from .schemas import CsvCreate, CsvUpdate, PdfCreate, PdfUpdate
+import uuid
+
+def generate_uuid(user_email: str, docs_id: str) -> str:
+    # Combine userEmail and docsID into a single string
+    combined_string = f"{user_email}:{docs_id}"
+    # Generate a UUID based on the combined string
+    return str(uuid.uuid5(uuid.NAMESPACE_DNS, combined_string))
 
 # -------------------
 # 유저 정보 CRUD
@@ -45,6 +52,76 @@ def delete_user(db: Session, user_email: str):
     db.delete(db_user)
     db.commit()
     return {"message": "User deleted successfully"}
+
+# -------------------
+# 구글 독스 파일 정보 CRUD
+# -------------------
+# Create (파일 생성)
+def create_file(db: Session, file: FileCreate):
+    # Generate fileID using userEmail and docsID
+    file_id = generate_uuid(file.userEmail, file.docsID)
+
+    # Check if the file already exists (optional)
+    existing_file = db.query(fileTBL).filter(fileTBL.fileID == file_id).first()
+    if existing_file:
+        raise HTTPException(status_code=400, detail="File with the same userEmail and docsID already exists.")
+
+    # Create a new file record
+    db_file = fileTBL(
+        fileID=file_id,
+        userEmail=file.userEmail,
+        docsID=file.docsID,
+        isCSV=file.isCSV,
+        isPDF=file.isPDF
+    )
+    
+    db.add(db_file)
+    db.commit()
+    db.refresh(db_file)
+    return db_file
+
+# Read (모든 파일 조회)
+def get_files(db: Session, skip: int = 0, limit: int = 10):
+    return db.query(fileTBL).offset(skip).limit(limit).all()
+# Read (특정 파일 조회)
+def get_file_by_user_and_docs(db: Session, user_email: str, docs_id: str):
+    return db.query(fileTBL).filter(
+        fileTBL.userEmail == user_email,
+        fileTBL.docsID == docs_id
+    ).first()
+
+# Update (파일 정보 수정)
+def update_or_create_file(db: Session, file: FileCreate):
+    # userEmail과 docsID로 기존 파일 검색
+    db_file = db.query(fileTBL).filter(
+        fileTBL.userEmail == file.userEmail,
+        fileTBL.docsID == file.docsID
+    ).first()
+
+    if db_file:
+        # 기존 파일 업데이트
+        for key, value in file.dict().items():
+            setattr(db_file, key, value)
+        db.commit()
+        db.refresh(db_file)
+        return db_file
+
+    # 새 파일 생성
+    db_file = fileTBL(**file.dict())
+    db.add(db_file)
+    db.commit()
+    db.refresh(db_file)
+    return db_file
+
+# Delete (파일 삭제)
+def delete_file(db: Session, file_id: int):
+    db_file = db.query(fileTBL).filter(fileTBL.fileID == file_id).first()
+    if not db_file:
+        return False  # 파일 없음
+    
+    db.delete(db_file)
+    db.commit()
+    return True
 
 # -------------------
 # 질문 기록 생성

@@ -101,6 +101,45 @@ def delete_user(user_email: str, db: Session = Depends(get_db)):
     return {"message": "User deleted successfully"}
 
 # -------------------
+# 구글 독스 파일 정보 CRUD
+# -------------------
+# Create (POST) - 파일 생성
+@app.post("/files/", response_model=schemas.FileResponse)
+def create_file(file: schemas.FileCreate, db: Session = Depends(get_db)):
+    return crud.create_file(db=db, file=file)
+# Read (GET all) - 모든 파일 조회
+@app.get("/files/", response_model=list[schemas.FileResponse])
+def read_files(skip: int = 0, limit: int = 10, db: Session = Depends(get_db)):
+    return crud.get_files(db=db, skip=skip, limit=limit)
+# Read (GET by ID) - 특정 파일 조회
+@app.get("/files/{file_id}", response_model=schemas.FileResponse)
+def read_file(file_id: int, db: Session = Depends(get_db)):
+    file_record = crud.get_file_by_id(db=db, file_id=file_id)
+    
+    if not file_record:
+        raise HTTPException(status_code=404, detail="File not found")
+    
+    return file_record
+# Update (PUT) - 파일 정보 수정
+@app.put("/files/{file_id}", response_model=schemas.FileResponse)
+def update_file(file_id: int, updates: schemas.FileUpdate, db: Session = Depends(get_db)):
+    updated_file = crud.update_file(db=db, file_id=file_id, updates=updates)
+    
+    if not updated_file:
+        raise HTTPException(status_code=404, detail="File not found")
+    
+    return updated_file
+# Delete (DELETE) - 파일 삭제
+@app.delete("/files/{file_id}")
+def delete_file(file_id: int, db: Session = Depends(get_db)):
+    success = crud.delete_file(db=db, file_id=file_id)
+    
+    if not success:
+        raise HTTPException(status_code=404, detail="File not found")
+    
+    return {"message": "File deleted successfully"}
+
+# -------------------
 # RunPod 통신 함수
 # -------------------
 def send_to_runpod(question: str) -> str:

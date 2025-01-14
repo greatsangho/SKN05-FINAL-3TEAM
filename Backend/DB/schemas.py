@@ -40,13 +40,14 @@ class FileCreate(FileBase):
 
 # Update 요청 스키마 (부분 업데이트 허용)
 class FileUpdate(BaseModel):
-    docsID: Optional[str]
+    userEmail: EmailStr
+    docsID: str
     isCSV: Optional[bool]
     isPDF: Optional[bool]
 
 # Response 스키마
 class FileResponse(FileBase):
-    fileID: int  # Primary Key 포함
+    fileID: str  # Primary Key 포함
 
     class Config:
         orm_mode = True  # SQLAlchemy 모델과 호환되도록 설정
@@ -57,7 +58,7 @@ class FileResponse(FileBase):
 class QnaBase(BaseModel):
     question: str
     answer: Optional[str] = None
-    fileID: Optional[int] = None  # fileID는 외래 키로 선택적 필드
+    fileID: Optional[str] = None  # fileID는 외래 키로 선택적 필드
     isDel: bool = False
 
 # Create 요청 스키마
@@ -68,7 +69,7 @@ class QnaCreate(QnaBase):
 class QnaUpdate(BaseModel):
     question: Optional[str]
     answer: Optional[str]
-    fileID: Optional[int]
+    fileID: Optional[str]
     isDel: Optional[bool]
 # Response 스키마
 class QnaResponse(QnaBase):

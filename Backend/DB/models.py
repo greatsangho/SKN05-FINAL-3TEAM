@@ -1,8 +1,7 @@
 from .database import Base
 from sqlalchemy import create_engine, ForeignKey, DateTime, Text, Boolean, func, Integer, String, VARCHAR, Column
-from sqlalchemy.dialects.postgresql import UUID
-import uuid
 from datetime import datetime
+from sqlalchemy import UniqueConstraint
 
 # 질문/답변 모델 정의
 class userTBL(Base):
@@ -12,11 +11,15 @@ class userTBL(Base):
 
 class fileTBL(Base):
     __tablename__ = "fileTBL"
-    fileID = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    fileID = Column(String(36), primary_key=True)
     userEmail = Column(VARCHAR(40), ForeignKey('userTBL.userEmail'), nullable=False)
     docsID = Column(VARCHAR(100), nullable=False)
     isCSV = Column(Boolean, nullable=False, default=False)
     isPDF = Column(Boolean, nullable=False, default=False)
+
+    __table_args__ = (
+        UniqueConstraint('userEmail', 'docsID', name='unique_user_docs'),
+    )
 
 class qnaTBL(Base):
     __tablename__ = "qnaTBL"
