@@ -7,6 +7,7 @@ body {
   
   .popup-container {
     width: 550px;
+    height: 600px;
     padding: 30px;
     box-sizing: border-box;
   }
@@ -56,19 +57,13 @@ body {
     margin-bottom: 10px;
   }
   
-  .progress-bar {
-    height: 100%;
-    background-color: #007bff;
-    border-radius: 4px;
-  }
-  
   .remaining {
     font-size: 14px;
     color: #cccccc;
   }
   
   .upgrade-section {
-    margin-bottom: 41px;
+    margin-bottom: 18px;
   }
   
   .price {
@@ -89,7 +84,7 @@ body {
     background-color: #292A3C;
     color: #ffffff;
     border: none;
-    padding: 20px 87px;
+    padding: 11px 87px;
     font-size: 13px;
     margin: 5px;
     border-radius: 8px;
@@ -119,5 +114,16 @@ body {
   height: auto; /* 비율에 따라 높이 자동 조정 */
   border-radius: 10px; /* 선택적으로 둥근 모서리 추가 */
 }
-  
+
+#userProfile {
+  margin: 5px 5px 0 auto; /* 상단과 우측 여백 */
+  display: block;
+  width: 38px; /* 이미지 크기 조정 */
+  height: 38px; /* 이미지 크기 조정 */
+  border-radius: 50%; /* 이미지를 동그랗게 */
+  object-fit: cover; /* 이미지를 잘 맞추기 위해 비율 유지 */
+  text-align: right; /* 부모 컨테이너에서 오른쪽 정렬 */
+}
+
+
   

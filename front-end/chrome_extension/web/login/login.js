@@ -10,12 +10,16 @@ document.addEventListener('DOMContentLoaded', () => {
         if (response && response.success) {
           alert(`${response.name} (${response.email}) 님 안녕하세요!`);
 
-          // 로그인 성공 시 상태 업데이트 및 이메일 저장
+          // 로그인 성공 시 상태 업데이트     
           chrome.storage.local.set({ 
             isLoggedIn: true,
-            userEmail: response.email // 이메일 저장
+            userEmail: response.email, // 이메일 저장
+            userName: response.name, // 이름 저장
+            authToken: response.token, // 토큰 저장
+            userProfile: response.picture // 프로필 사진 URL 저장 
           }, () => {
             console.log('Login state set to true and email saved.');
+            console.log('Google Login Response:', response);
           });
 
           // 현재 탭에서 web/start/start.html로 이동

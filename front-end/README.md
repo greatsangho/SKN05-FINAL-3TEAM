@@ -10,10 +10,12 @@ FinPilot은 Google Docs와 원활하게 통합된 SLLM 기반 Chrome Extension�
 - [About the Project](#-about-the-project)
 - [Features](#-features)
 - [File Structure](#-file-structure)
-- [Technologies Used](#-technologies-used)
+- [Tech Stack](#-tech-stack)
+- [Communication](#-communication)
 - [Setup and Installation](#-setup-and-installation)
 - [How to Run](#-how-to-run)
 - [Contribution](#-contribution)
+- [Contact](#-contact)
 
 ---
 
@@ -60,6 +62,16 @@ frontend/
 ![Google Docs API](https://img.shields.io/badge/Google%20Docs%20API-4285F4?style=for-the-badge&logo=google&logoColor=white)
 ![OpenAI GPT API](https://img.shields.io/badge/OpenAI%20API-412991?style=for-the-badge&logo=openai&logoColor=white)
 ![Chrome Extensions](https://img.shields.io/badge/Chrome%20Extensions-4285F4?style=for-the-badge&logo=googlechrome&logoColor=white)
+![Figma](https://img.shields.io/badge/Figma-F24E1E?style=for-the-badge&logo=figma&logoColor=white)
+![Framer](https://img.shields.io/badge/Framer-0055FF?style=for-the-badge&logo=framer&logoColor=white)
+
+---
+
+## 📢 Communication
+
+![GitHub](https://img.shields.io/badge/GitHub-181717?style=for-the-badge&logo=github&logoColor=white)
+![Discord](https://img.shields.io/badge/Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white)
+![Notion](https://img.shields.io/badge/Notion-000000?style=for-the-badge&logo=notion&logoColor=white)
 
 ---
 

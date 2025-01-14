@@ -4,10 +4,23 @@ document.getElementById("logoutButton").addEventListener("click", () => {
     fetch("https://accounts.google.com/Logout", { mode: "no-cors" })
       .then(() => {
         // 1. 로그아웃 상태 업데이트
-        chrome.storage.local.set({ isLoggedIn: false, userEmail: null }, () => {
+        chrome.storage.local.set({ isLoggedIn: false, userEmail: null, userProfile:null, userName:null }, () => {
           console.log("User logged out and status updated to false");
+
+          // 이름 초기화
+          const greetingElement = document.getElementById('greeting');
+          if (greetingElement) {
+            greetingElement.style.display = 'none'; // 숨기기
+          }
+
+          // 이메일 초기화
           const emailElement = document.querySelector('.email');
           emailElement.textContent = 'Not logged in'; // 초기 상태로 업데이트
+
+          // 프사 초기화
+          const profileElement = document.getElementById('userProfile');
+          profileElement.src = "./default_profile.webp"; // 기본 이미지로 설정    
+          profileElement.style.display = 'block'; // 필요 시 표시 
   
           // 2. 로그아웃 후 랜딩 페이지로 리다이렉트
           chrome.tabs.create({ url: "./web/landing/landing.html" });
@@ -16,7 +29,7 @@ document.getElementById("logoutButton").addEventListener("click", () => {
       .catch((error) => {
         console.error("Logout failed:", error);
       });
-  });
+});
   
 
 // Open Docs버튼, Get Help 버튼
@@ -40,19 +53,23 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 });
 
+// 이메일이랑 프사 표시
+chrome.storage.local.get(['userEmail', 'userProfile'], (data) => {
 
-// google email 표시
-document.addEventListener('DOMContentLoaded', () => {
-  const emailElement = document.querySelector('.email'); // 이메일 표시 요소
+  const emailElement = document.querySelector('.email');
+  const profileElement = document.getElementById('userProfile');
 
-  // Chrome Storage에서 이메일 가져오기
-  chrome.storage.local.get('userEmail', (data) => {
-    if (data.userEmail) {
-      // 저장된 이메일이 있다면 업데이트
-      emailElement.textContent = data.userEmail;
-    } else {
-      // 저장된 이메일이 없으면 기본 메시지 표시
-      emailElement.textContent = 'Not logged in';
-    }
-  });
+  if (data.userEmail) {
+    emailElement.textContent = data.userEmail;
+  } else {
+    emailElement.textContent = 'Not logged in';
+  }
+
+  if (data.userProfile) {
+    profileElement.src = data.userProfile;
+    profileElement.style.display = 'block';
+  } else {
+    profileElement.src = "./default_profile.webp";
+  }
 });
+

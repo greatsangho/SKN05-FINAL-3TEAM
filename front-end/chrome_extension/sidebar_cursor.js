@@ -1,5 +1,5 @@
 // OpenAI API (키 각자 개인의 키를 넣어주세요!!!!!!!!!!!!!!!!!!)
-const OPENAI_API_KEY ="sk-proj-";
+const OPENAI_API_KEY ="sk-proj--";
 
 // 문서 아이디 초기값 설정
 let DOCUMENT_ID = ""; 
@@ -43,7 +43,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (docId) {
       DOCUMENT_ID = docId;
       console.log(`문서 ID 자동 추출 성공: ${DOCUMENT_ID}`);
-      console.log(`Google Docs 문서가 연동되었습니다.\n\n문서 ID: ${DOCUMENT_ID}`);  // 활성 탭이 구글 docs라서 정상적으로 문서 id를 가져왔을 때
+      alert(`Google Docs 문서가 연동되었습니다.\n\n문서 ID: ${DOCUMENT_ID}`);  // 활성 탭이 구글 docs라서 정상적으로 문서 id를 가져왔을 때
     }
   } catch (error) {
     console.error("문서 ID 추출 실패:", error);
@@ -160,6 +160,9 @@ document.getElementById("send-btn").addEventListener("click", async () => {
 
     // 메시지 컨테이너에 추가
     document.getElementById("chat-box").appendChild(botMessageElement);
+    //chatBox.appendChild(botMessageElement);       
+
+    //await appendToGoogleDoc(botMessage); // Google Docs에 추가
 
     chatBox.scrollTop = chatBox.scrollHeight;
   } catch (error) {
@@ -235,7 +238,7 @@ async function appendToGoogleDoc(content) {
     }
 
     console.log("✅ Google Docs 업데이트 성공!");
-    // alert("Google Docs에 텍스트가 삽입되었습니다!");
+    alert("Google Docs에 텍스트가 삽입되었습니다!");
   } catch (error) {
     console.error("❌ Google Docs API 오류:", error);
     alert(`Google Docs 업데이트 중 문제가 발생했습니다: ${error.message}`);
