@@ -40,7 +40,7 @@
       "suggested_key": {
         "default": "Ctrl+Shift+K"
       },
-      "description": "Open FinPilot Landing Page"
+      "description": "Open FinPilot Landing Page or popup page"
     }
   }, 
   "web_accessible_resources": [

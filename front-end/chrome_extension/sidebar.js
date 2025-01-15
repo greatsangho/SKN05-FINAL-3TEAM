@@ -1,5 +1,5 @@
 // OpenAI API (키 각자 개인의 키를 넣어주세요!!!!!!!!!!!!!!!!!!)
-const OPENAI_API_KEY ="sk-proj-";
+const OPENAI_API_KEY ="sk-proj--";
 
 // 문서 아이디 초기값 설정
 let DOCUMENT_ID = ""; 
@@ -122,7 +122,8 @@ document.getElementById("send-btn").addEventListener("click", async () => {
     // Apply 버튼 추가
     const applyButton = document.createElement("button");
     applyButton.classList.add("apply-btn"); // CSS 클래스 추가
-    applyButton.textContent = "Apply to Docs";
+    // applyButton.textContent = "Apply to Docs";
+    applyButton.innerHTML = `<img src="./apply.png" alt="Apply" style="width: 16px; height: 16px;">`; // apply 아이콘 추가 
     botMessageElement.appendChild(applyButton); // Apply 버튼을 메시지에 추가
 
     // Copy 버튼 추가
@@ -134,6 +135,17 @@ document.getElementById("send-btn").addEventListener("click", async () => {
     // Apply 버튼 클릭 기능 구현
     applyButton.addEventListener("click", () => {
       appendToGoogleDoc(botMessage); // Google Docs에 추가
+
+      // 이미지 변경
+      const imgElement = applyButton.querySelector("img");
+      imgElement.src = "copy_done.png"; // 새로운 이미지 경로
+      imgElement.alt = "Applied"; // 대체 텍스트 변경
+
+      // 1초 후 원래 이미지로 복원
+      setTimeout(() => {
+          imgElement.src = "./apply.png"; // 기본 이미지 경로
+          imgElement.alt = "Apply"; // 기본 대체 텍스트
+      }, 1000);
     });
 
     // Copy 버튼 클릭 기능 구현
@@ -238,7 +250,7 @@ async function appendToGoogleDoc(content) {
     // alert("Google Docs에 텍스트가 삽입되었습니다!");
   } catch (error) {
     console.error("❌ Google Docs API 오류:", error);
-    alert(`Google Docs 업데이트 중 문제가 발생했습니다: ${error.message}`);
+    alert(`Google Docs 업데이트 중 문제가 발생했습니다: ${error.message}\n\nGoogle Docs 문서를 열고 다시 시도해주세요.`);
   }
 }
 
@@ -269,12 +281,113 @@ document.addEventListener('DOMContentLoaded', () => {
       greetingElement.classList.remove('login-required'); // 흐림 클래스 제거
     } else {
       // 로그인되지 않은 경우
-      //greetingElement.style.display = 'none';
       greetingElement.textContent = `로그인이 필요합니다`;
       greetingElement.style.display = 'block';
       greetingElement.classList.add('login-required'); // 흐림 클래스 추가
       document.getElementById("user-input").disabled = true;
     }
   });
+});
+
+
+
+
+
+
+// 나중에 따로 연결을 해줘야할 듯 (지금은 임시) 
+// 파일 업로드 제한 조건
+const MAX_FILES = 4; // 최대 파일 개수
+const ALLOWED_EXTENSIONS = ['pdf', 'csv']; // 허용된 확장자
+
+// 에러 메시지 표시 함수
+const showErrorMessage = (message) => {
+    const errorMessageDiv = document.getElementById('error-message');
+    errorMessageDiv.textContent = message; // 에러 메시지 설정
+
+    // 3초 후 에러 메시지 제거
+    setTimeout(() => {
+        errorMessageDiv.textContent = '';
+    }, 3000);
+};
+
+// 파일 업로드 버튼 클릭 이벤트
+document.getElementById('file_upload-btn').addEventListener('click', () => {
+    document.getElementById('file-upload-input').click(); // 파일 선택 창 열기
+});
+
+// 파일 업로드 입력창 변경 이벤트
+document.getElementById('file-upload-input').addEventListener('change', (event) => {
+    const files = event.target.files; // 선택된 파일 목록
+    const fileListDiv = document.getElementById('file-list'); // 파일 목록 표시 영역
+
+    let existingFiles = fileListDiv.children.length; // 현재 업로드된 파일 수
+
+    Array.from(files).forEach((file) => {
+        const fileExtension = file.name.split('.').pop().toLowerCase(); // 파일 확장자
+
+        // 파일 개수 제한 검사
+        if (existingFiles >= MAX_FILES) {
+            showErrorMessage(`최대 ${MAX_FILES}개의 파일만 업로드 가능합니다.`);
+            return;
+        }
+
+        // 파일 확장자 검사
+        if (!ALLOWED_EXTENSIONS.includes(fileExtension)) {
+            showErrorMessage(`.pdf와 .csv 파일만 업로드 가능합니다. (${file.name})`);
+            return;
+        }
+
+        // 파일 추가
+        const fileCard = document.createElement('div');
+        fileCard.classList.add('file-item');
+        fileCard.textContent = file.name;
+
+        // 삭제 버튼 추가
+        const deleteBtn = document.createElement('button');
+        deleteBtn.classList.add('delete-btn');
+        deleteBtn.textContent = 'X';
+        deleteBtn.addEventListener('click', () => {
+            fileCard.remove(); // 파일 카드 삭제
+            existingFiles--; // 파일 개수 감소
+        });
+
+        fileCard.appendChild(deleteBtn);
+        fileListDiv.appendChild(fileCard);
+        existingFiles++; // 파일 개수 증가
+    });
+
+    // 업로드 입력 초기화 (중복 업로드 방지)
+    event.target.value = '';
+});
+
+
+
+
+
+// 채팅 옵션 선택 버튼 드롭다운 (지금은 임시)
+// 드롭다운 버튼 및 메뉴 참조
+const chatOptionButton = document.getElementById('chat_option-btn');
+const chatDropdownMenu = document.getElementById('chat-options-dropdown');
+
+// 드롭다운 표시/숨김 토글
+chatOptionButton.addEventListener('click', () => {
+    chatDropdownMenu.classList.toggle('hidden'); // 숨김/표시 전환
+});
+
+// 페이지 클릭 시 드롭다운 숨기기
+document.addEventListener('click', (event) => {
+    // 클릭된 요소가 버튼이나 메뉴 내부가 아니면 메뉴 숨김
+    if (!chatOptionButton.contains(event.target) && !chatDropdownMenu.contains(event.target)) {
+        chatDropdownMenu.classList.add('hidden');
+    }
+});
+
+// 각 옵션 클릭 시 동작
+const dropdownItems = document.querySelectorAll('.dropdown-item');
+dropdownItems.forEach((item, index) => {
+    item.addEventListener('click', () => {
+        alert(`${index + 1}번째 옵션이 선택되었습니다.`);  // 인덱스를 기준으로 요청 분할 처리해야함
+        chatDropdownMenu.classList.add('hidden'); // 메뉴 숨기기
+    });
 });
 

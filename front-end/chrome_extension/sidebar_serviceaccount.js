@@ -1,7 +1,10 @@
+// 서비스 계정을 중심으로 apply하는 js -> 필요 없어짐
+
 let DOCUMENT_ID = ""; // 문서 아이디 초기값 설정
 
 // Google 서비스 계정 JSON 키 정보 (각자 개인의 키를 넣어주세요!!!!!!!!!!!!!!)
 const serviceAccount = {};
+
 // OpenAI API (키 각자 개인의 키를 넣어주세요!!!!!!!!!!!!!!!!!!)
 const OPENAI_API_KEY ="sk-proj--";  
 
@@ -137,8 +140,6 @@ document.getElementById("user-input").addEventListener("keyup", (event) => {
   }
 });
 
-
-// 여기가 메인 //
 // Google Docs API로 응답 추가
 async function appendToGoogleDoc(content) {
   try {
@@ -185,7 +186,6 @@ async function appendToGoogleDoc(content) {
   }
 }
 
-// 여기도 메인 //
 // JWT 토큰 생성 및 Google OAuth 2.0 토큰 요청
 async function getAccessToken() {
   const header = {
@@ -262,8 +262,6 @@ async function getAccessToken() {
   }
 }
 
-
-// 여기도 메인 //
 // 🔑 PEM 형식의 키를 ArrayBuffer로 변환
 function pemToArrayBuffer(pem) {
   const base64 = pem

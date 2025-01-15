@@ -1,8 +1,8 @@
 # 🚀 FinPilot - Frontend
 
-FinPilot은 Google Docs와 원활하게 통합된 SLLM 기반 Chrome Extension입니다. 
+FinPilot은 Google Docs와 원활하게 통합된 sLLM 기반 Chrome Extension입니다. 
 
-**Frontend**는 사용자가 직관적으로 접근할 수 있는 사용자 인터페이스를 제공하며, SLLM을 활용하여 금융 문서 생성 및 편집을 돕습니다.
+**Frontend**는 사용자가 직관적으로 접근할 수 있는 사용자 인터페이스를 제공하며, sLLM을 활용하여 금융 문서 생성 및 편집을 돕습니다.
 
 ---
 
@@ -22,17 +22,17 @@ FinPilot은 Google Docs와 원활하게 통합된 SLLM 기반 Chrome Extension�
 ## 📋 About the Project
 
 FinPilot은 Google Docs 환경에서 사용자가 더 효율적으로 금융 문서를 작성하고 관리할 수 있도록 설계된 **Chrome Extension**입니다. 
-이 프로젝트는 **AI 기반 텍스트 생성**과 **Google Docs 통합**을 핵심 기능으로 제공합니다.
+이 프로젝트는 **sLLM 기반 텍스트 생성**과 **Google Docs 연동**을 핵심 기능으로 제공합니다.
 
 ---
 
 ## ✨ Features
 
 - **AI-Driven Chatbot**: 사용자의 입력에 따라 AI가 실시간으로 텍스트를 생성합니다.
-- **Google Docs Integration**: 생성된 텍스트를 Google Docs에 바로 반영영 가능.
+- **Google Docs Integration**: 생성된 텍스트를 Google Docs에 바로 반영 가능.
 - **Responsive Design**: 반응형 디자인으로 다양한 화면 크기에서도 완벽히 작동.
 - **Authentication**: Google 로그인 기능 제공.
-- **User-Friendly Interface**: 간결하고 직관적인 Sideabr UI.
+- **User-Friendly Interface**: 간결하고 직관적인 Sidebar UI.
 
 ---
 
@@ -79,6 +79,7 @@ frontend/
 
 ### Prerequisites
 - Chrome 브라우저
+- Google Docs
 
 ### Installation Steps
 1. **Repository Clone**
@@ -98,7 +99,7 @@ frontend/
 
 1. **Extension 실행**:
    - Chrome에서 FinPilot 확장 아이콘을 우클릭.
-   - 측면 패널 열기 클릭
+   - 측면 패널 열기 선택
    - Google Docs 페이지에서 동작 확인.
 
 2. **AI 기능 테스트**:
@@ -137,4 +138,5 @@ frontend/
 ---
 
 > 이 README는 **FinPilot 프론트엔드 브랜치**에 최적화된 문서입니다. 
+
 > 전체 프로젝트에 대한 자세한 내용은 Main 브랜치의 README를 참조하세요.
