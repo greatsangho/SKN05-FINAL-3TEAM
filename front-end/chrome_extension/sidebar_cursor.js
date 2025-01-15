@@ -1,3 +1,5 @@
+// 커서 위치를 기반으로 apply 하려고 하였으나 실패작
+
 // OpenAI API (키 각자 개인의 키를 넣어주세요!!!!!!!!!!!!!!!!!!)
 const OPENAI_API_KEY ="sk-proj--";
 
@@ -160,9 +162,6 @@ document.getElementById("send-btn").addEventListener("click", async () => {
 
     // 메시지 컨테이너에 추가
     document.getElementById("chat-box").appendChild(botMessageElement);
-    //chatBox.appendChild(botMessageElement);       
-
-    //await appendToGoogleDoc(botMessage); // Google Docs에 추가
 
     chatBox.scrollTop = chatBox.scrollHeight;
   } catch (error) {

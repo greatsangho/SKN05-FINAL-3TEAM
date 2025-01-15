@@ -35,28 +35,14 @@ body {
   }
   
   .free-requests {
-    margin-bottom: 20px;
+    margin-bottom: 18px;
   }
   .dot {
     color: #007dfa;
     font-family: "Poppins-BoldItalic", sans-serif;
     font-style: italic;
   }
-  
-  .free-requests h2 {
-    font-size: 18px;
-    margin: 0 0 10px 0;
-  }
-  
-  .progress-bar-container {
-    width: 100%;
-    height: 8px;
-    background-color: #333333;
-    border-radius: 4px;
-    overflow: hidden;
-    margin-bottom: 10px;
-  }
-  
+
   .remaining {
     font-size: 14px;
     color: #cccccc;
@@ -64,16 +50,6 @@ body {
   
   .upgrade-section {
     margin-bottom: 18px;
-  }
-  
-  .price {
-    font-size: 24px;
-    margin: 10px 0;
-  }
-  
-  .price span {
-    font-size: 14px;
-    color: #cccccc;
   }
   
   footer {
@@ -84,9 +60,9 @@ body {
     background-color: #292A3C;
     color: #ffffff;
     border: none;
-    padding: 11px 87px;
+    padding: 16px 85px;
     font-size: 13px;
-    margin: 5px;
+    margin: 7px;
     border-radius: 8px;
     cursor: pointer;
   }
@@ -99,7 +75,7 @@ body {
     background: none;       /* 배경 제거 */
     border: none;           /* 테두리 제거 */
     padding: 0;             /* 여백 제거 */
-    font-size: 12px;
+    font-size: 12.5px;
     color: #888888;
     margin-top: 10px;
     cursor: pointer;
@@ -116,7 +92,7 @@ body {
 }
 
 #userProfile {
-  margin: 5px 5px 0 auto; /* 상단과 우측 여백 */
+  margin: -23px 5px 0 auto; /* 상단과 우측 여백 */
   display: block;
   width: 38px; /* 이미지 크기 조정 */
   height: 38px; /* 이미지 크기 조정 */
@@ -124,6 +100,18 @@ body {
   object-fit: cover; /* 이미지를 잘 맞추기 위해 비율 유지 */
   text-align: right; /* 부모 컨테이너에서 오른쪽 정렬 */
 }
+
+.scale {
+  color: #1e90ff;
+  font-weight: bold; /* 텍스트 두껍게 */
+  font-size: 13px; /* 적절한 크기로 조정 */
+  margin-left: 14px; /* 왼쪽 공백 추가 */
+  background-color: rgba(255, 255, 255, 0.1); /* 약간 투명한 배경색 */
+  padding: 3px 5px; /* 텍스트와 박스 사이 간격 추가 */
+  border-radius: 4px; /* 모서리를 둥글게 */
+}
+
+
 
 
   

@@ -53,7 +53,8 @@ h2 {
     border: 1px solid #ccc;
     padding: 15px;
     background: #f9f9f9;
-    margin-bottom: 50px; 
+    /* margin-bottom: 50px; */
+    margin-bottom: 5px;
     border-radius: 20px;
     max-height: 400px;
     display: flex;
@@ -85,33 +86,70 @@ h2 {
     position: relative; /* 자식 요소 위치를 기준으로 */
 }
 
-/* apply 버튼 기본 스타일 (숨김) */
+/* Apply 버튼 기본 스타일 */
 .chat-message.answer .apply-btn {
     display: none; /* 기본적으로 숨김 */
     position: absolute;
     top: 5px; /* 우측 상단 위치 */
-    right: 5px;
-    background-color: #5aaded; /* 버튼 배경색 */
-    color: white; /* 버튼 글자색 */
-    font-size: 12px;
+    right: 5px; /* Copy 버튼 오른쪽에 위치 */
+    background-color: transparent; /* 버튼 배경을 투명하게 설정 */
     border: none;
     border-radius: 5px;
-    padding: 5px 10px;
+    padding: 5px;
     cursor: pointer;
     z-index: 10;
-    transition: background-color 0.3s ease, transform 0.3s ease; /* 부드러운 효과 추가 */
+    transition: background-color 0.3s ease, transform 0.3s ease;
 }
 
-/* hover 시 apply 버튼 표시 */
+/* Apply 버튼 이미지 스타일 */
+.chat-message.answer .apply-btn img {
+    display: block;
+    margin: 0 auto; /* 이미지 가운데 정렬 */
+}
+
+/* Hover 시 Apply 버튼 표시 */
 .chat-message.answer:hover .apply-btn {
     display: block;
 }
 
-/* apply 버튼 호버 효과 */
-.chat-message.answer .apply-btn:hover {
-    background-color: #3c8fd0; /* 호버 시 버튼 배경색 변경 */
-    transform: scale(1.01); /* 살짝 커지는 효과 */
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* 그림자 추가 */
+/* Apply 버튼 호버 시 말풍선 추가 */
+.chat-message.answer .apply-btn::after {
+    content: "Apply to Docs"; /* 말풍선 텍스트 */
+    display: none; /* 기본적으로 숨김 */
+    position: absolute;
+    bottom: 120%; /* 버튼 위로 위치 */
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #333; /* 말풍선 배경색 */
+    color: #fff; /* 말풍선 글자색 */
+    font-size: 10px;
+    padding: 5px 8px;
+    border-radius: 5px; /* 말풍선 본체 모서리 둥글게 */
+    white-space: nowrap; /* 텍스트 줄바꿈 방지 */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    z-index: 20;
+}
+
+/* Apply 버튼 말풍선 꼬리 추가 */
+.chat-message.answer .apply-btn::before {
+    content: "";
+    display: none; /* 기본적으로 숨김 */
+    position: absolute;
+    bottom: 110%; /* 말풍선 본체와 연결 */
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 8px solid transparent; /* 왼쪽 투명 삼각형 */
+    border-right: 6px solid transparent; /* 오른쪽 투명 삼각형 */
+    border-top: 8px solid #333; /* 위쪽 삼각형 (말풍선 배경색과 동일) */
+    z-index: 19; /* 본체 아래에 배치 */
+}
+
+/* Hover 시 말풍선 및 꼬리 표시 */
+.chat-message.answer .apply-btn:hover::after,
+.chat-message.answer .apply-btn:hover::before {
+    display: block;
 }
 
 /* Copy 버튼 스타일 */
@@ -119,7 +157,7 @@ h2 {
     display: none; /* 기본적으로 숨김 */
     position: absolute;
     top: 5px;
-    right: 102px; /* Apply 버튼 왼쪽에 위치 */
+    right: 30px; /* Apply 버튼 왼쪽에 위치 */
     background-color: transparent; /* 버튼 배경을 투명하게 설정 */
     border: none;
     border-radius: 5px;
@@ -194,6 +232,7 @@ h2 {
     display: flex;
     gap: 10px;
     margin-top: 10px;
+    margin-bottom: 10px;
     width: 100%; /* 부모 요소 기준 100% */
 }
 
@@ -209,6 +248,7 @@ h2 {
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     display: flex;
     align-items: center;
+    margin-bottom: 10px;
 }
   
   /* 입력 필드 */
@@ -220,6 +260,7 @@ h2 {
     border-radius: 50px;
     font-size: 15px;
     background: transparent;
+    text-indent: 55px; /* placeholder를 오른쪽으로 이동 */
   }
 
 #user-input:focus {
@@ -258,6 +299,46 @@ h2 {
 
 #send-btn:hover{
     background-color: #DDE4EC;
+}
+
+#file_upload-btn {
+    position: absolute;
+    left: 10px; /* 입력창 오른쪽에 붙이기 */
+    width: 32px; /* 버튼의 너비 */
+    height: 32px; /* 버튼의 높이 */
+    background-color: #FFFFFF; /* 버튼 배경색 */
+    color: white;
+    border: none;
+    border-radius: 27%;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    display: flex; /* 아이콘이나 텍스트를 가운데 정렬하기 위해 flexbox 사용 */
+    justify-content: center; /* 가로 정렬 */
+    align-items: center; /* 세로 정렬 */
+}
+
+#file_upload-btn:hover{
+    background-color: #F1F4F8;
+}
+
+#chat_option-btn {
+    position: absolute;
+    left: 42px; /* 입력창 오른쪽에 붙이기 */
+    width: 32px; /* 버튼의 너비 */
+    height: 32px; /* 버튼의 높이 */
+    background-color: #FFFFFF; /* 버튼 배경색 */
+    color: white;
+    border: none;
+    border-radius: 27%;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    display: flex; /* 아이콘이나 텍스트를 가운데 정렬하기 위해 flexbox 사용 */
+    justify-content: center; /* 가로 정렬 */
+    align-items: center; /* 세로 정렬 */
+}
+
+#chat_option-btn:hover{
+    background-color: #F1F4F8;
 }
 
 /* 스피너 */
@@ -369,7 +450,7 @@ h2 {
     background-clip: text; /* 표준 속성 */
     -webkit-background-clip: text; /* 웹킷 호환 속성 */
     -webkit-text-fill-color: transparent; /* 웹킷 호환 속성 */
-    margin-top: 150px; /* 위쪽 여백 이걸로 글자 위치 높이 조정*/
+    margin-top: 125px; /* 위쪽 여백 이걸로 글자 위치 높이 조정*/
     height: 100px; /* 박스 높이 */
 }
 
@@ -381,4 +462,205 @@ h2 {
     -webkit-text-fill-color: transparent; /* 웹킷 호환 속성 */
     font-style: italic; /* 기울임체로 변경 */
     opacity: 0.7; /* 투명도 추가 */
+}
+
+/* 공통 말풍선 스타일 */
+.tooltip::before {
+    content: "";
+    display: none; /* 기본적으로 숨김 */
+    position: absolute;
+    bottom: 110%; /* 말풍선 본체와 연결 */
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 8px solid transparent; /* 왼쪽 투명 삼각형 */
+    border-right: 8px solid transparent; /* 오른쪽 투명 삼각형 */
+    border-top: 8px solid #333; /* 위쪽 삼각형 (말풍선 배경색과 동일) */
+    z-index: 19; /* 본체 아래에 배치 */
+}
+
+.tooltip::after {
+    content: attr(data-tooltip); /* 말풍선 내용 */
+    display: none; /* 기본적으로 숨김 */
+    position: absolute;
+    bottom: 120%; /* 삼각형 위에 말풍선 본체 위치 */
+    left: 50%;
+    transform: translateX(-50%);
+    background: #333;
+    color: #fff;
+    font-size: 12px;
+    padding: 5px 8px;
+    border-radius: 5px;
+    white-space: nowrap;
+    z-index: 20; /* 삼각형 위에 표시 */
+}
+
+/* Hover 시 말풍선 표시 */
+.tooltip:hover::after,
+.tooltip:hover::before {
+    display: block;
+}
+
+/* 버튼별 적용 */
+#file_upload-btn.tooltip::after {
+    content: "파일 업로드"; /* 파일 업로드 버튼 말풍선 텍스트 */
+}
+
+#chat_option-btn.tooltip::after {
+    content: "채팅 옵션 선택"; /* 채팅 옵션 버튼 말풍선 텍스트 */
+}
+
+#send-btn.tooltip::after {
+    content: "전송"; /* 전송 버튼 말풍선 텍스트 */
+}
+
+
+
+
+
+
+
+
+
+/* 파일 목록 컨테이너 */
+.file-list-container {
+    display: flex; /* 가로 방향으로 나열 */
+    align-items: center; /* 수직 중앙 정렬 */
+    flex-wrap: nowrap; /* 줄 바꿈 없이 나열 */
+    overflow-x: auto; /* 가로 스크롤 활성화 */
+    overflow-y: hidden; /* 세로 스크롤 비활성화 */
+    border-radius: 8px; /* 둥근 모서리 */
+    padding: 0px;
+    /* background-color: #f9f9f9; */
+    background-color: #FFFFFF;
+    margin-top: 5px;
+    height: 60px; /* 높이 고정 */
+}
+
+/* 파일 카드 스타일 */
+.file-item {
+    position: relative; /* 삭제 버튼 위치를 조정하기 위해 상대 위치 설정 */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto; /* 카드 크기 고정 (가로 방향) */
+    width: 250px; /* 각 카드의 고정 너비 */
+    height: 30px; /* 카드의 높이 설정 */
+    padding: 5px;
+    margin-right: 10px; /* 카드 간 간격 */
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    background-color: #f9f9f9;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* 파일 이름 */
+.file-name {
+    font-size: 13px;
+    color: #333;
+    margin-right: 10px;
+    word-break: break-all; /* 긴 파일 이름 처리 */
+    text-align: center; /* 텍스트 정렬 */
+    text-overflow: ellipsis; /* 초과된 텍스트를 ...으로 표시 */
+    overflow: hidden; /* 텍스트가 카드 밖으로 넘치지 않도록 */
+    white-space: nowrap; /* 줄 바꿈 방지 */
+}
+
+/* 삭제 버튼 스타일 */
+.delete-btn {
+    position: absolute; /* 부모 .file-item을 기준으로 위치 설정 */
+    top: -5px; /* 카드 상단에서의 거리 */
+    right: -5px; /* 카드 우측에서의 거리 */
+    background-color: #ff4d4f;
+    color: #fff;
+    border: none;
+    border-radius: 50%; /* 원형 버튼 */
+    width: 15px;
+    height: 15px;
+    font-size: 11px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+}
+
+.delete-btn:hover {
+    background-color: #ff7875;
+}
+
+
+
+
+
+
+
+
+
+/* 드롭다운 메뉴 스타일 */
+.dropdown-menu {
+    position: absolute; /* 버튼 위로 위치 설정 */
+    bottom: 50px; /* 버튼 위로 간격 */
+    left: 0;
+    background: #fff; /* 밝은 배경 */
+    color: #333;
+    border: 1px solid #ccc; /* 테두리 */
+    border-radius: 15px; /* 둥근 모서리 */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* 그림자 효과 */
+    padding: 5px 0;
+    z-index: 1000;
+    width: 165px; /* 드롭다운 메뉴의 너비 */
+}
+
+/* 숨김 상태 */
+.hidden {
+    display: none; /* 기본적으로 숨김 */
+}
+
+/* 드롭다운 항목 스타일 */
+.dropdown-menu ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.dropdown-item {
+    display: flex;
+    padding: 8px 10px; /* 여백을 줄여 살짝 더 작게 */
+    cursor: pointer;
+    font-size: 14px; /* 글자 크기 */
+    transition: background-color 0.2s, padding 0.1s, border-radius 0.2s; /* 애니메이션 효과 추가 */
+    border-radius: 10px; /* 기본 상태에서 약간 둥글게 */
+}
+
+/* 드롭다운 항목 호버 스타일 */
+.dropdown-item:hover {
+    background-color: #f1f1f1; /* 밝은 회색 배경 */
+    padding: 9px 9px;
+    border-radius: 8px; /* 더 둥글게 강조 */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* 약간의 그림자 */
+    max-width: 145px; /* 호버 시 가로 폭 줄이기 */
+}
+
+/* 텍스트 스타일 */
+.dropdown-item span {
+    flex-grow: 1; /* 텍스트가 남은 공간을 차지 */
+    text-align: left; /* 텍스트 왼쪽 정렬 */
+    color: #333; /* 텍스트 색상 */
+}
+
+
+
+
+
+
+
+
+/* 에러 메시지 스타일 */
+#error-message {
+    font-size: 12px;
+    color: red;
+    margin-top: 10px;
+    text-align: center;
 }

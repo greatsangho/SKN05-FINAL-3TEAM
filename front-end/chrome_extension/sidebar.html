@@ -14,16 +14,45 @@
     </h2>
     <!-- subtitle -->
     <p class="subtitle">Advanced AI assistance, perfectly aligned with your docs.</p>
-    <!-- <p class="subtitle">Generate text or ask your AI chatbot assistant anything.</p> -->
     <div id="chat-box" class="chat-box">
-      <p id="greeting" class="greeting" style="display: none;"></p> <!-- 로그인 성공 시 환영인사 -->
+      <p id="greeting" class="greeting" style="display: none;"></p> <!-- 로그인 성공 시 사이드바에 환영인사 -->
     </div>
+
+    <!-- 선택된 파일 목록을 표시할 영역 -->
+    <div id="file-list" class="file-list-container"></div>
+    <div id="error-message" style="color: red; margin-top: 10px;"></div> <!-- 파일 업로드 관련 에러 메시지 -->
+
     <div class="input-container">
       <div class="input-wrapper">
+        <!-- 질문 입력창 -->
         <input id="user-input" type="text" placeholder="Message to FinPilot">
-        <button id="send-btn">
+
+        <!-- 파일 업로드 버튼 -->
+        <button id="file_upload-btn" class="tooltip">
+          <img src="file_upload.png" alt="file upload" width="21" height="21" style="vertical-align: middle;">
+        </button>
+        <input type="file" id="file-upload-input" style="display: none;" multiple>
+
+        <!-- 채팅 옵션 선택 버튼 -->
+        <button id="chat_option-btn" class="tooltip">
+          <img src="chat_option.png" alt="chat option" width="21" height="21" style="vertical-align: middle;">
+        </button>
+        <!-- 채팅 옵션 드롭다운 메뉴 -->
+        <div id="chat-options-dropdown" class="dropdown-menu hidden">
+          <ul>
+              <li class="dropdown-item">초안 작성</li>
+              <li class="dropdown-item">단락 생성</li>
+              <li class="dropdown-item">요약 / 확장</li>
+              <li class="dropdown-item">데이터 시각화 (Web)</li>
+              <li class="dropdown-item">데이터 시각화 (Upload)</li>
+          </ul>
+        </div>
+
+        <!-- 질문 전송 버튼 -->
+        <button id="send-btn" class="tooltip">
           <img src="send_icon.png" alt="send" width="21" height="21" style="vertical-align: middle;">
         </button>
+
       </div>
     </div>
   </div>

@@ -1,3 +1,4 @@
+// googleDocsButton
 document.getElementById('googleDocsButton').addEventListener('click', () => {
     chrome.runtime.sendMessage({ action: 'openGoogleDocs' }, (response) => {
       if (response && response.success) {

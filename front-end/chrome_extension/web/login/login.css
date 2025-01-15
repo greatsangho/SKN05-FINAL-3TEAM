@@ -73,18 +73,19 @@
   -webkit-text-fill-color: transparent;
   text-align: left;
   font-family: "Poppins-LightItalic", sans-serif;
-  font-size: 50px;
+  font-size: 56px;
   line-height: 120%;
   font-weight: 300;
   font-style: italic;
   position: absolute;
   left: 80px;
-  top: 420px;
+  top: 425px;
   width: 568px;
   display: flex;
   align-items: center;
   justify-content: flex-start;
 }
+
 .frame-32 {
   width: 720px;
   height: 900px;
@@ -151,6 +152,7 @@
 }
 .welcome-to-fin-pilot-span2 {
   color: #0089ed;
+  /* color: #020817; */
   font-family: "Poppins-SemiBold", sans-serif;
   font-size: 21px;
   font-weight: 600;
