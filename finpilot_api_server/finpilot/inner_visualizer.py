@@ -3,7 +3,6 @@ import os
 
 # Define Tools
 import pandas as pd
-from langchain_experimental.utilities import PythonREPL
 from langchain_core.tools import tool
 from langchain_openai import ChatOpenAI
 from langchain.agents.agent_types import AgentType
@@ -119,27 +118,21 @@ class InnerVisualizerProcess:
             state_modifier = analyst_prompt
         )
     
-    def get_inner_visualizer_node(self):
-        def inner_visualizer_node(state : dict):
-            question = state["question"]
-            state["messages"] = add_messages(state["messages"], HumanMessage(content=question))
+    def inner_visualizer_node(self, state : dict):
+        question = state["question"]
+        state["messages"] = add_messages(state["messages"], HumanMessage(content=question))
 
-            result = self.analyst_agent.invoke(
-                {"messages" : [
-                    HumanMessage(
-                        content = f"""
-                            Analyze given data and Visualize Chart,
+        result = self.analyst_agent.invoke(
+            {"messages" : [
+                HumanMessage(
+                    content = f"""
+                        Analyze given data and Visualize Chart,
 
-                            Human Message : {question}
-                        """
-                    )
-                ]}
-            )
-            print("="*100)
-            print(result)
-            print("="*100)
-            state["messages"] = add_messages(state["messages"], result['messages'])
+                        Human Message : {question}
+                    """
+                )
+            ]}
+        )
+        state["messages"] = add_messages(state["messages"], result['messages'])
 
-            return state
-        
-        return inner_visualizer_node
+        return state

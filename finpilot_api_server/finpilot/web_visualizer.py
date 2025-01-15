@@ -1,6 +1,5 @@
 ################################ Import Modules ################################
 import os
-from pathlib import Path
 
 # Define Tools
 from typing import Annotated
@@ -54,6 +53,7 @@ class WebVisualizerProcess:
             )
 
         self.tools = [web_search_tool, python_repl]
+        self.tool_node = ToolNode(self.tools)
 
         ################################ Define AGent ################################
         llm = ChatOpenAI(
@@ -62,32 +62,21 @@ class WebVisualizerProcess:
         )
         self.llm_with_tools = llm.bind_tools(self.tools)
     
-    def get_web_visualizer_node(self):
-        def web_visualizer_node(state):
-            question = state["question"]
-            updated_messages = add_messages(state["messages"], HumanMessage(content=question))
-            state["messages"] = updated_messages
-            
-            result = self.llm_with_tools.invoke(state["messages"])
-            state["generation"] = result.content
-            state["messages"] = add_messages(state["messages"], result)
-
-            return state
+    def web_visualizer_node(self, state):
+        question = state["question"]
+        updated_messages = add_messages(state["messages"], HumanMessage(content=question))
+        state["messages"] = updated_messages
         
-        return web_visualizer_node
-    
-    def get_tool_node(self):
-        tool_node = ToolNode(self.tools)
+        result = self.llm_with_tools.invoke(state["messages"])
+        state["generation"] = result.content
+        state["messages"] = add_messages(state["messages"], result)
 
-        return tool_node
+        return state
     
-    def get_should_continue(self):
-        def should_continue(state):
-            messages = state["messages"]
-            last_message = messages[-1]
-            if not last_message.tool_calls:
-                return "end"
-            else:
-                return "continue"
-        
-        return should_continue
+    def should_continue(self, state):
+        messages = state["messages"]
+        last_message = messages[-1]
+        if not last_message.tool_calls:
+            return "end"
+        else:
+            return "continue"

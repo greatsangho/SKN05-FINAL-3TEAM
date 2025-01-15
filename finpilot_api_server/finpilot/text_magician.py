@@ -21,28 +21,26 @@ class TextMagicianProcess:
 
         self.text_magician = llm | StrOutputParser()
     
-    def get_text_magician_node(self):
-        def text_magician_node(state):
-            """
-            Summary / Expand the given text.
+    def text_magician_node(self, state):
+        """
+        Summary / Expand the given text.
 
-            Args : 
-                state (dict) : The current graph state
+        Args : 
+            state (dict) : The current graph state
 
-            Returns :
-                state (dict) : New key added to state, generation, that contains LLM generation
-            """
+        Returns :
+            state (dict) : New key added to state, generation, that contains LLM generation
+        """
 
-            print("[Graph Log] TEXT_MAGICIAN ...")
+        print("[Graph Log] TEXT_MAGICIAN ...")
 
-            question = state["question"]
-            updated_messages = add_messages(state["messages"], HumanMessage(content=question))
-            state["messages"] = updated_messages
+        question = state["question"]
+        updated_messages = add_messages(state["messages"], HumanMessage(content=question))
+        state["messages"] = updated_messages
 
-            generation = self.text_magician.invoke([HumanMessage(content=question)])
-            state["generation"] = generation
-            updated_messages = add_messages(state["messages"], AIMessage(content=generation))
-            state["messages"] = updated_messages
+        generation = self.text_magician.invoke([HumanMessage(content=question)])
+        state["generation"] = generation
+        updated_messages = add_messages(state["messages"], AIMessage(content=generation))
+        state["messages"] = updated_messages
 
-            return state
-        return text_magician_node
+        return state

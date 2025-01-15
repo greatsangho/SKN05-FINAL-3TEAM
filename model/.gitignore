@@ -3,3 +3,4 @@
 /rag-chroma/
 
 .env
+*.pyc

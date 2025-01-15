@@ -1,6 +1,6 @@
 # Session Cache
 from functools import lru_cache
-import pickle
+import dill
 
 # FinPilot Application
 from finpilot.core import FinPilot
@@ -8,7 +8,7 @@ from finpilot.core import FinPilot
 import os
 from config.secret_keys import OPENAI_API_KEY, TAVILY_API_KEY, USER_AGENT, POLYGON_API_KEY
 
-from fastapi import FastAPI, Request, HTTPException
+from fastapi import FastAPI, HTTPException
 import uvicorn
 from redis import Redis
 from request_model import RequestModel
@@ -27,11 +27,11 @@ redis = Redis(host="localhost", port=6379, decode_responses=True)
 def get_app(session_id):
     # Redis 에서 session data 로드
     if redis.exists(session_id):
-        app = pickle.loads(redis.get(session_id))
+        app = dill.loads(redis.get(session_id))
     else:
         # 새로운 세션 생성 및 Redis에 저장
         app = FinPilot()
-        redis.set(session_id, pickle.dumps(app))
+        redis.set(session_id, dill.dumps(app))
         redis.expire(session_id, 3600)
     return app
 
