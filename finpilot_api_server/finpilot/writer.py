@@ -58,9 +58,8 @@ class WriterProcess:
                 description="Answer address the question, 'yes' or 'no'"
             )
         
-
-        hallucination_structured_llm = llm.with_structured_output(GradeHallucination)
         grader_structured_llm = llm.with_structured_output(GradeDocuments)
+        hallucination_structured_llm = llm.with_structured_output(GradeHallucination)
         answer_structured_llm = llm.with_structured_output(AnswerGrader)
 
         grader_system_prompt = """
@@ -82,7 +81,7 @@ class WriterProcess:
             
             Give a binary score 'yes' or 'no'. Yes' means that the answer resolves the question.
         """
-        rewrite_system_prompt = """
+        improve_system_prompt = """
             You a question re-writer that converts an input question to a better version that is optimized for vectorstore retrieval. \n
             
             Look at the input and try to reason about the underlying semantic intent / meaning.
@@ -107,9 +106,9 @@ class WriterProcess:
                 ("human", "User question : \n\n {question} \n\n LLM generation : {generation}")
             ]
         )
-        rewrite_prompt = ChatPromptTemplate.from_messages(
+        improve_prompt = ChatPromptTemplate.from_messages(
             [
-                ("system", rewrite_system_prompt),
+                ("system", improve_system_prompt),
                 ("human", "Here is the initial question : \n\n {question} \n Formulation an improved question")
             ]
         )
@@ -118,7 +117,7 @@ class WriterProcess:
         self.writer = write_prompt | llm | StrOutputParser()
         self.hallucination_grader = hallucination_prompt | hallucination_structured_llm
         self.answer_grader = answer_prompt | answer_structured_llm
-        self.query_rewriter = rewrite_prompt | llm
+        self.query_improver = improve_prompt | llm
 
         self.web_search_tool = TavilySearchResults(k=3)
 
@@ -135,9 +134,13 @@ class WriterProcess:
         """
         print("[Graph Log] RETRIEVE ...")
         question = state["question"]
-
         retrieve = load_test_retriever()
-        documents = retrieve.invoke(question)
+        try : 
+            prev_documents = state["documents"]
+            retrieved_documents = retrieve.invoke(question)
+            documents = prev_documents + retrieved_documents
+        except:
+            documents = retrieve.invoke(question)
 
         state["documents"] = documents
         
@@ -205,7 +208,7 @@ class WriterProcess:
         return state
     
 
-    def transform_query_node(self, state):
+    def improve_query_node(self, state):
         """
         Transform the query to produce a better question.
 
@@ -220,9 +223,9 @@ class WriterProcess:
 
         question = state["question"]
 
-        rewrited_query = self.query_rewriter.invoke({"question" : question})
+        improved_query = self.query_improver.invoke({"question" : question})
 
-        state['question'] = rewrited_query.content
+        state['question'] = improved_query.content
 
         return state
     
@@ -255,7 +258,7 @@ class WriterProcess:
 
         return state
     
-    def decide_write_or_rewrite_query(self, state):
+    def decide_write_or_improve_query(self, state):
         """
         Determines whether to generate an answer, or re-generate a question.
 
@@ -279,33 +282,7 @@ class WriterProcess:
             print(
                 "[Graph Log] DECISION : REWRITE QUESTION"
             )
-            return "transform_query"
-
-    def decide_to_retrieve_or_web_search(self, state):
-        """
-        Determines whether to retrieve vectorstore, or search web.
-
-        Args : 
-            state (dict) : The current graph state
-        
-        Returns :
-            str : Binary decision for next node to call
-        """
-
-        print("[Graph Log] DETERMINES 'RETRIEVE' OR 'WEB SEARCH' ...")
-
-        documents = state["documents"]
-
-        if len(documents) >= 3:
-            print(
-                "[Graph Log] DECISION : WEB SEARCH"
-            )
-            return "web_search"
-        else:
-            print(
-                "[Graph Log] DECISION : RETRIVE"
-            )
-            return "retriever"
+            return "improve_query"
     
     def decide_to_regenerate_or_rewrite_query_or_end(self, state):
         """

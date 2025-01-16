@@ -10,7 +10,7 @@ from finpilot.web_visualizer import WebVisualizerProcess
 from finpilot.inner_visualizer import InnerVisualizerProcess
 from finpilot.router import route_question
 
-def get_application():
+def get_application(memory : MemorySaver):
     class State(TypedDict):
         """
         Represents the state of graph.
@@ -24,8 +24,6 @@ def get_application():
         generation : str
         messages : Annotated[list, add_messages]
         documents : List[str]
-        
-    memory = MemorySaver()
     
     workflow = StateGraph(State)
 
@@ -40,7 +38,7 @@ def get_application():
     workflow.add_node("retriever", writer_process.retrieve_node)
     workflow.add_node("filter_documents", writer_process.filter_documents_node)
     workflow.add_node("writer", writer_process.write_node)
-    workflow.add_node("transform_query", writer_process.transform_query_node)
+    workflow.add_node("improve_query", writer_process.improve_query_node)
     workflow.add_node("web_search", writer_process.web_search_node)
 
     ## text_magician
@@ -71,30 +69,23 @@ def get_application():
     workflow.add_edge("retriever", "filter_documents")
     workflow.add_conditional_edges(
         "filter_documents",
-        writer_process.decide_write_or_rewrite_query,
+        writer_process.decide_write_or_improve_query,
         {
             "writer" : "writer",
-            "transform_query" : "transform_query"
+            "improve_query" : "improve_query"
         },
     )
-    workflow.add_conditional_edges(
-        "transform_query",
-        writer_process.decide_to_retrieve_or_web_search,
-        {
-            "retriever" : "retriever",
-            "web_search" : "web_search"
-        }
-    )
-    workflow.add_edge("web_search", "writer")
     workflow.add_conditional_edges(
         "writer",
         writer_process.decide_to_regenerate_or_rewrite_query_or_end,
         {
             "not supported" : "writer",
             "useful" : END,
-            "not useful" : "transform_query"
+            "not useful" : "improve_query"
         }
     )
+    workflow.add_edge("improve_query", "web_search")
+    workflow.add_edge("web_search", "retriever")
 
     # text_magician process
     workflow.add_edge("text_magician", END)

@@ -1,9 +1,10 @@
 ############################### Import Modules ###############################
 from finpilot.workflow import get_application
+from langgraph.checkpoint.memory import MemorySaver
 
 class FinPilot:
-    def __init__(self):
-        self.app = get_application()
+    def __init__(self, memory : MemorySaver):
+        self.app = get_application(memory=memory)
     
     def invoke(self, question, session_id):
         inputs = {"question" : question}
