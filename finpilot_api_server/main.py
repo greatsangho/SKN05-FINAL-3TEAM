@@ -4,15 +4,16 @@ import dill
 
 # FinPilot Application
 from finpilot.core import FinPilot
-
-import os
-from config.secret_keys import OPENAI_API_KEY, TAVILY_API_KEY, USER_AGENT, POLYGON_API_KEY
+from finpilot.memory import LimitedMemorySaver
 
 from fastapi import FastAPI, HTTPException
 import uvicorn
 from redis import Redis
 from request_model import RequestModel
 
+# Environment Variable Setting
+import os
+from config.secret_keys import OPENAI_API_KEY, TAVILY_API_KEY, USER_AGENT, POLYGON_API_KEY
 os.environ["OPENAI_API_KEY"] = OPENAI_API_KEY
 os.environ["TAVILY_API_KEY"] = TAVILY_API_KEY
 os.environ["USER_AGENT"] = USER_AGENT
@@ -24,16 +25,20 @@ os.environ["POLYGON_API_KEY"] = POLYGON_API_KEY
 redis = Redis(host="localhost", port=6379, decode_responses=True)
 
 @lru_cache(maxsize=100)
-def get_app(session_id):
+def get_session_data(session_id):
     # Redis 에서 session data 로드
     if redis.exists(session_id):
-        app = dill.loads(redis.get(session_id))
+        memory = dill.loads(redis.get(f"{session_id}_memory_saver"))
+        pilot = FinPilot(memory=memory)
     else:
         # 새로운 세션 생성 및 Redis에 저장
-        app = FinPilot()
-        redis.set(session_id, dill.dumps(app))
-        redis.expire(session_id, 3600)
-    return app
+        memory = LimitedMemorySaver(capacity=10)
+        pilot = FinPilot(memory=memory)
+        
+        redis.set(f"{session_id}_memory_saver", dill.dumps(memory))
+        redis.expire(f"{session_id}_memory_saver", 3600)
+
+    return pilot, memory
 
 
 
@@ -51,13 +56,13 @@ async def finpilot_endpoint(json : RequestModel):
     if not session_id:
         raise HTTPException(status_code=400, detail="Session ID is required!")
     
-    app = get_app(session_id)
+    pilot, memory = get_session_data(session_id)
 
     question = json_input.question
     if not question:
         raise HTTPException(status_code=400, detail="Question is required!")
     
-    answer = app.invoke(question, session_id)
+    answer = pilot.invoke(question, session_id)
 
     return {"session_id" : session_id, "answer" : answer}
 
