@@ -6,6 +6,7 @@ import dill
 from finpilot.core import FinPilot
 from finpilot.memory import LimitedMemorySaver
 from finpilot.request_model import RequestModel
+from finpilot.vectorstore import load_faiss_from_redis, create_empty_faiss, save_faiss_to_redis, add_data_to_vectorstore_and_update_redis
 
 from fastapi import FastAPI, HTTPException
 import uvicorn
@@ -22,23 +23,44 @@ os.environ["POLYGON_API_KEY"] = POLYGON_API_KEY
 
 
 # Redis 연결
-redis = Redis(host="localhost", port=6379, decode_responses=True)
+redis = Redis(host="localhost", port=6379, decode_responses=False)
 
 @lru_cache(maxsize=100)
 def get_session_data(session_id):
     # Redis 에서 session data 로드
     if redis.exists(session_id):
         memory = dill.loads(redis.get(f"{session_id}_memory_saver"))
-        pilot = FinPilot(memory=memory)
+        vectorstore = load_faiss_from_redis(redis_client=redis, session_id=session_id)
+        pilot = FinPilot(memory=memory, vector_store=vectorstore)
     else:
         # 새로운 세션 생성 및 Redis에 저장
         memory = LimitedMemorySaver(capacity=10)
-        pilot = FinPilot(memory=memory)
+        vectorstore = create_empty_faiss()
+        pilot = FinPilot(memory=memory, vector_store=vectorstore)
         
         redis.set(f"{session_id}_memory_saver", dill.dumps(memory))
         redis.expire(f"{session_id}_memory_saver", 3600)
+        save_faiss_to_redis(
+            redis_client=redis,
+            session_id=session_id,
+            vector_store=vectorstore
+        )
 
-    return pilot, memory
+
+        ##### Test Process #####
+        add_data_to_vectorstore_and_update_redis(
+            redis_client=redis,
+            session_id=session_id,
+            vector_store=vectorstore,
+        )
+        memory = dill.loads(redis.get(f"{session_id}_memory_saver"))
+        vectorstore = load_faiss_from_redis(redis_client=redis, session_id=session_id)
+        pilot = FinPilot(memory=memory, vector_store=vectorstore)
+        #########################
+        
+
+
+    return pilot, memory, vectorstore
 
 
 
@@ -56,7 +78,7 @@ async def finpilot_endpoint(json : RequestModel):
     if not session_id:
         raise HTTPException(status_code=400, detail="Session ID is required!")
     
-    pilot, memory = get_session_data(session_id)
+    pilot, memory, vectorstore = get_session_data(session_id)
 
     question = json_input.question
     if not question:

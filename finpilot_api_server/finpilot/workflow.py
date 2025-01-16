@@ -4,6 +4,7 @@ from langgraph.graph.message import add_messages
 # from langgraph.checkpoint.memory import MemorySaver
 from finpilot.memory import LimitedMemorySaver
 from langgraph.graph import START, END, StateGraph
+from langchain_community.vectorstores import FAISS
 
 from finpilot.writer import WriterProcess
 from finpilot.text_magician import TextMagicianProcess
@@ -11,7 +12,7 @@ from finpilot.web_visualizer import WebVisualizerProcess
 from finpilot.inner_visualizer import InnerVisualizerProcess
 from finpilot.router import route_question
 
-def create_application(memory : LimitedMemorySaver):
+def create_application(memory : LimitedMemorySaver, vector_store : FAISS):
     class State(TypedDict):
         """
         Represents the state of graph.
@@ -28,7 +29,7 @@ def create_application(memory : LimitedMemorySaver):
     
     workflow = StateGraph(State)
 
-    writer_process = WriterProcess()
+    writer_process = WriterProcess(vector_store=vector_store)
     text_magician_process = TextMagicianProcess()
     web_visualizer_process = WebVisualizerProcess()
     inner_visualizer_process = InnerVisualizerProcess()

@@ -18,12 +18,13 @@ from langchain.schema import Document
 
 # load retriever
 from finpilot.vectorstore import load_test_retriever
+from langchain_community.vectorstores import FAISS
 
 # messages
 from langgraph.graph.message import add_messages
 
 class WriterProcess:
-    def __init__(self):
+    def __init__(self, vector_store : FAISS):
         llm = ChatOpenAI(
             model = "gpt-4o-mini",
             api_key=os.getenv("OPENAI_API_KEY"),
@@ -121,6 +122,9 @@ class WriterProcess:
 
         self.web_search_tool = TavilySearchResults(k=3)
 
+
+        self.retrieve = vector_store.as_retriever()
+
     
     def retrieve_node(self, state):
         """
@@ -134,13 +138,14 @@ class WriterProcess:
         """
         print("[Graph Log] RETRIEVE ...")
         question = state["question"]
-        retrieve = load_test_retriever()
+        # retrieve = load_test_retriever()
+        
         try : 
             prev_documents = state["documents"]
-            retrieved_documents = retrieve.invoke(question)
+            retrieved_documents = self.retrieve.invoke(question)
             documents = prev_documents + retrieved_documents
         except:
-            documents = retrieve.invoke(question)
+            documents = self.retrieve.invoke(question)
 
         state["documents"] = documents
         

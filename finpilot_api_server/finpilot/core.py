@@ -2,10 +2,11 @@
 from finpilot.workflow import create_application
 # from langgraph.checkpoint.memory import MemorySaver
 from finpilot.memory import LimitedMemorySaver
+from langchain_community.vectorstores import FAISS
 
 class FinPilot:
-    def __init__(self, memory : LimitedMemorySaver):
-        self.app = create_application(memory=memory)
+    def __init__(self, memory : LimitedMemorySaver, vector_store : FAISS):
+        self.app = create_application(memory=memory, vector_store=vector_store)
     
     def invoke(self, question, session_id):
         inputs = {"question" : question}
