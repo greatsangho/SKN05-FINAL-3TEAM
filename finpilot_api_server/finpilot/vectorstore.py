@@ -1,7 +1,7 @@
 # Construct Vector DB / Create retriever
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.document_loaders import WebBaseLoader
-from langchain_community.vectorstores import Chroma
+from langchain_community.vectorstores import FAISS
 from langchain_openai import OpenAIEmbeddings
 
 import os
@@ -22,27 +22,25 @@ def create_test_retriever():
     )
     doc_splits = text_splitter.split_documents(docs_list)
 
-    vectorstore = Chroma.from_documents(
+    vectorstore = FAISS.from_documents(
         documents=doc_splits,
-        persist_directory='./rag-chroma',
-        collection_name = 'rag-chroma',
         embedding=OpenAIEmbeddings(
             api_key=os.getenv("OPENAI_API_KEY")
-        ),
+        )
     )
+    vectorstore.save_local("faiss_storage")
 
     retrieve = vectorstore.as_retriever()
 
     return retrieve
 
-def load_test_retriever(dir_path='./rag-chroma'):
-
-    vectorstore = Chroma(
-        persist_directory=dir_path,
-        collection_name='rag-chroma',
-        embedding_function=OpenAIEmbeddings(
+def load_test_retriever(dir_path='./faiss_storage'):
+    vectorstore = FAISS.load_local(
+        dir_path,
+        embeddings=OpenAIEmbeddings(
             api_key=os.getenv("OPENAI_API_KEY")
-        )
+        ),
+        allow_dangerous_deserialization=True
     )
 
     retrieve = vectorstore.as_retriever()

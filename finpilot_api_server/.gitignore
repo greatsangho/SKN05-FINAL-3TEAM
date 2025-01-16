@@ -1,2 +1,3 @@
 /config/
+/faiss_storage/
 *.pyc

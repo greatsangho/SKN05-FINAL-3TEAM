@@ -1,6 +1,7 @@
 /config/
 /model_lab/config/
 /rag-chroma/
+/faiss_storage/
 
 .env
 *.pyc
