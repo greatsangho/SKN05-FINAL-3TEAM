@@ -17,7 +17,6 @@ from langchain_community.tools.tavily_search import TavilySearchResults
 from langchain.schema import Document
 
 # load retriever
-from finpilot.vectorstore import load_test_retriever
 from langchain_community.vectorstores import FAISS
 
 # messages

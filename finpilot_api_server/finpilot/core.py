@@ -12,7 +12,8 @@ class FinPilot:
         inputs = {"question" : question}
 
         config = {
-            "configurable" : {"thread_id" : session_id}
+            "configurable" : {"thread_id" : session_id},
+            "recursion_limit" : 40
         }
         
         result = self.app.invoke(inputs, config)
