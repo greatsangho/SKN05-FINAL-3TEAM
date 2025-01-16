@@ -5,11 +5,11 @@ import dill
 # FinPilot Application
 from finpilot.core import FinPilot
 from finpilot.memory import LimitedMemorySaver
+from finpilot.request_model import RequestModel
 
 from fastapi import FastAPI, HTTPException
 import uvicorn
 from redis import Redis
-from request_model import RequestModel
 
 # Environment Variable Setting
 import os
