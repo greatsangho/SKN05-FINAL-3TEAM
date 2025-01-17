@@ -9,7 +9,6 @@ from finpilot.request_model import QueryRequestModel, UploadPDFRequestModel
 from finpilot.vectorstore import load_faiss_from_redis, create_empty_faiss, save_faiss_to_redis, add_data_to_vectorstore_and_update_redis
 
 from langchain_core.documents import Document
-from PyPDF2 import PdfReader
 import pymupdf4llm
 import fitz
 
@@ -33,7 +32,7 @@ redis = Redis(host="localhost", port=6379, decode_responses=False)
 @lru_cache(maxsize=100)
 def get_session_app(session_id):
     # Redis 에서 session data 로드
-    if redis.exists(session_id):
+    if redis.exists(f"{session_id}_memory_saver"):
         memory = dill.loads(redis.get(f"{session_id}_memory_saver"))
         vectorstore = load_faiss_from_redis(redis_client=redis, session_id=session_id)
         pilot = FinPilot(memory=memory, vector_store=vectorstore)
@@ -57,7 +56,7 @@ def get_session_app(session_id):
 @lru_cache(maxsize=100)
 def get_session_vectorstore(session_id):
     # Redis 에서 session data 로드
-    if redis.exists(session_id):
+    if redis.exists(f"{session_id}_faiss_index"):
         vectorstore = load_faiss_from_redis(redis_client=redis, session_id=session_id)
     else:
         # 새로운 세션 생성 및 Redis에 저장
