@@ -30,7 +30,6 @@ document.getElementById("logoutButton").addEventListener("click", () => {
         console.error("Logout failed:", error);
       });
 });
-  
 
 // Open Docs버튼, Get Help 버튼
 document.addEventListener("DOMContentLoaded", () => {

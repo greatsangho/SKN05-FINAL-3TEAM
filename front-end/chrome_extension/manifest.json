@@ -45,7 +45,7 @@
   }, 
   "web_accessible_resources": [
     {
-      "resources": ["./web/landing/landing.html", "web/start/start.html", "./web/login/login.html", "./popup.html"],
+      "resources": ["./web/landing/landing.html", "web/start/start.html", "./web/login/login.html", "./popup.html", "web/info/info.html"],
       "matches": ["<all_urls>"]
     }
   ],
