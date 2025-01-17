@@ -345,7 +345,7 @@ document.getElementById('file-upload-input').addEventListener('change', (event) 
         // 삭제 버튼 추가
         const deleteBtn = document.createElement('button');
         deleteBtn.classList.add('delete-btn');
-        deleteBtn.textContent = 'X';
+        deleteBtn.textContent = 'x';
         deleteBtn.addEventListener('click', () => {
             fileCard.remove(); // 파일 카드 삭제
             existingFiles--; // 파일 개수 감소
@@ -368,26 +368,63 @@ document.getElementById('file-upload-input').addEventListener('change', (event) 
 // 드롭다운 버튼 및 메뉴 참조
 const chatOptionButton = document.getElementById('chat_option-btn');
 const chatDropdownMenu = document.getElementById('chat-options-dropdown');
+const selectedOptionDiv = document.getElementById('selected-option');
+
+// 기본값 설정
+// currentSelectedOption을 if문 같은걸 사용해서 각 옵션마다 다른 이벤트를 주면 될듯
+let currentSelectedOption = "단락 생성"; // 디폴트 값
+
+// 기본값 화면 상단 표시
+selectedOptionDiv.innerHTML = `
+  <div style="position: relative;">
+    <span>${currentSelectedOption}</span>
+    <span id="info-icon" style="cursor: pointer; position: absolute; right: 0;">ⓘ</span>
+  </div>`;
 
 // 드롭다운 표시/숨김 토글
 chatOptionButton.addEventListener('click', () => {
     chatDropdownMenu.classList.toggle('hidden'); // 숨김/표시 전환
 });
 
-// 페이지 클릭 시 드롭다운 숨기기
-document.addEventListener('click', (event) => {
-    // 클릭된 요소가 버튼이나 메뉴 내부가 아니면 메뉴 숨김
-    if (!chatOptionButton.contains(event.target) && !chatDropdownMenu.contains(event.target)) {
-        chatDropdownMenu.classList.add('hidden');
-    }
-});
-
 // 각 옵션 클릭 시 동작
 const dropdownItems = document.querySelectorAll('.dropdown-item');
-dropdownItems.forEach((item, index) => {
+dropdownItems.forEach((item) => {
     item.addEventListener('click', () => {
-        alert(`${index + 1}번째 옵션이 선택되었습니다.`);  // 인덱스를 기준으로 요청 분할 처리해야함
-        chatDropdownMenu.classList.add('hidden'); // 메뉴 숨기기
+        // 모든 항목에서 선택 상태 제거
+        dropdownItems.forEach((i) => i.classList.remove('selected'));
+
+        // 클릭된 항목에 선택 상태 추가
+        item.classList.add('selected');
+
+        // 선택된 옵션 업데이트
+        const currentSelectedOption = item.textContent.trim(); // 항목의 텍스트 가져오기
+        
+        // 화면 상단에 표시
+        selectedOptionDiv.innerHTML = `
+          <div style="position: relative;">
+            <span>${currentSelectedOption}</span>
+            <span id="info-icon" style="cursor: pointer; position: absolute; right: 0;">ⓘ</span>
+          </div>`;
+
+        // 드롭다운 메뉴 숨기기
+        chatDropdownMenu.classList.add('hidden');
+
+        // ⓘ 아이콘 이벤트 연결
+        attachInfoIconEvent();
     });
 });
+
+// ⓘ 아이콘 클릭 이벤트 연결 함수
+function attachInfoIconEvent() {
+    const infoIcon = document.getElementById("info-icon");
+    infoIcon.addEventListener("click", () => {
+        // 단일 info URL로 이동
+        chrome.tabs.create({ url: "./web/info/info.html" });
+    });
+}
+// 페이지 로드 시 ⓘ 아이콘 이벤트 연결
+attachInfoIconEvent();
+
+
+
 

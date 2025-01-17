@@ -14,13 +14,17 @@
     </h2>
     <!-- subtitle -->
     <p class="subtitle">Advanced AI assistance, perfectly aligned with your docs.</p>
+    
+    <!-- 선택된 채팅 옵션 표시 영역 -->
+    <div id="selected-option"></div>
+
     <div id="chat-box" class="chat-box">
       <p id="greeting" class="greeting" style="display: none;"></p> <!-- 로그인 성공 시 사이드바에 환영인사 -->
     </div>
 
     <!-- 선택된 파일 목록을 표시할 영역 -->
     <div id="file-list" class="file-list-container"></div>
-    <div id="error-message" style="color: red; margin-top: 10px;"></div> <!-- 파일 업로드 관련 에러 메시지 -->
+    <div id="error-message" style="color: red; margin-top: 0px;"></div> <!-- 파일 업로드 관련 에러 메시지 -->
 
     <div class="input-container">
       <div class="input-wrapper">
@@ -40,11 +44,26 @@
         <!-- 채팅 옵션 드롭다운 메뉴 -->
         <div id="chat-options-dropdown" class="dropdown-menu hidden">
           <ul>
-              <li class="dropdown-item">초안 작성</li>
-              <li class="dropdown-item">단락 생성</li>
-              <li class="dropdown-item">요약 / 확장</li>
-              <li class="dropdown-item">데이터 시각화 (Web)</li>
-              <li class="dropdown-item">데이터 시각화 (Upload)</li>
+              <li class="dropdown-item">
+                  초안 작성
+                  <img class="check-icon" src="check-icon.png" alt="Check Icon">
+              </li>
+              <li class="dropdown-item selected">
+                  단락 생성
+                  <img class="check-icon" src="check-icon.png" alt="Check Icon">
+              </li>
+              <li class="dropdown-item">
+                  요약 / 확장
+                  <img class="check-icon" src="check-icon.png" alt="Check Icon">
+              </li>
+              <li class="dropdown-item">
+                  데이터 시각화 (Web)
+                  <img class="check-icon" src="check-icon.png" alt="Check Icon">
+              </li>
+              <li class="dropdown-item">
+                  데이터 시각화 (Upload)
+                  <img class="check-icon" src="check-icon.png" alt="Check Icon">
+              </li>
           </ul>
         </div>
 

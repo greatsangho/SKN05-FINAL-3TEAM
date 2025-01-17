@@ -1,0 +1,217 @@
+.info,
+.info * {
+  box-sizing: border-box;
+}
+.info {
+  background: #050a24;
+  height: 4500px; /* 이걸로 전체 페이지 길이 조절 */
+  position: relative;
+  overflow: hidden;
+}
+.logo {
+  display: flex;
+  flex-direction: row;
+  gap: 8px;
+  align-items: flex-start;
+  justify-content: flex-start;
+  position: absolute;
+  left: 80px;
+  top: 64px;
+}
+.bala {
+  color: #ffffff;
+  text-align: left;
+  font-family: "Poppins-BoldItalic", sans-serif;
+  font-size: 28px;
+  line-height: 100%;
+  letter-spacing: 0.1em;
+  font-weight: 700;
+  font-style: italic;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+.div {
+  color: #007dfa;
+  text-align: left;
+  font-family: "Poppins-BoldItalic", sans-serif;
+  font-size: 28px;
+  line-height: 100%;
+  letter-spacing: 0.1em;
+  font-weight: 700;
+  font-style: italic;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+.bg {
+  width: 1440px;
+  height: 900px;
+  position: absolute;
+  left: 0px;
+  top: 0px;
+}
+.ellipse-1 {
+  background: #2d55fb;
+  border-radius: 50%;
+  width: 379px;
+  height: 379px;
+  position: absolute;
+  left: 0px;
+  top: 898px;
+  filter: blur(275px);
+}
+.frame-10 {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  align-items: flex-start;
+  justify-content: flex-start;
+  width: 993px;
+  height: 197px;
+  position: absolute;
+  left: 267px;
+  top: 130px;
+}
+/* 여기가 채팅 옵션에 관한 설명 내용들 */
+.title {
+  color: #ffffff;
+  text-align: left;
+  font-family: "Poppins-Bold", sans-serif;
+  font-size: 15px;
+  line-height: 180%;
+  font-weight: 700;
+  align-self: stretch;
+  align-items: center;
+  justify-content: center;
+  margin-left: -190px;
+  margin-top: 50px;
+}
+.frame-30 {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  align-items: center;
+  justify-content: flex-start;
+  width: 396px;
+  position: absolute;
+  left: 566px;
+  top: 390px;
+}
+
+
+
+
+
+
+
+
+
+.section {
+  margin-bottom: 30px;
+  padding: 20px;
+  background: #24283B;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  width: 1365px; /* 가로 길이 맞추기 */
+}
+
+.section h3 {
+  font-size: 20px;
+  margin-bottom: 10px;
+  /* color: #FFFFFF; */
+  color: #58a6ff;
+}
+
+.section p {
+  font-size: 16px;
+  margin-bottom: 10px;
+  color: #ECEEF2;
+}
+
+.section ul {
+  margin-left: 20px;
+  margin-top: 10px;
+}
+
+.section ul li {
+  margin-bottom: 5px;
+  list-style-type: disc;
+  color: #ECEEF2; /* 리스트 텍스트 색상 */
+}
+
+.faq {
+  margin-top: 20px;
+  padding: 20px;
+  background: #24283B;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  width: 1365px;
+}
+
+.faq h3 {
+  font-size: 20px;
+  margin-bottom: 10px;
+  color: #58a6ff;
+}
+
+.faq p {
+  font-size: 16px;
+  margin-bottom: 10px;
+  color: #ECEEF2
+}
+
+.faq ul {
+  margin-left: 20px;
+  margin-top: 10px;
+}
+
+.faq ul li {
+  margin-bottom: 5px;
+  list-style-type: disc;
+  color: #ECEEF2; /* 리스트 텍스트 색상 */
+}
+
+.contact {
+  margin-top: 80px;
+  text-align: left;
+  background: #24283B;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  width: 1365px;
+}
+
+.contact p {
+  font-size: 16px;
+  color: #ECEEF2;
+}
+
+.contact a {
+  color: #58a6ff;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.contact h3 {
+  font-size: 20px;
+  margin-bottom: 10px;
+  color: #58a6ff;
+}
+
+.contact a:hover {
+  text-decoration: underline;
+}
+
+.contact ul {
+  margin-left: 20px;
+  margin-top: 10px;
+}
+
+.contact ul li {
+  margin-bottom: 5px;
+  list-style-type: disc;
+  color: #ECEEF2; /* 리스트 텍스트 색상 */
+}
