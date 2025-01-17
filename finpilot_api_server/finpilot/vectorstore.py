@@ -46,6 +46,8 @@ def load_faiss_from_redis(redis_client, session_id):
 
     # Ensure Data integrity
     assert isinstance(texts, dict), "[Server Log] Restored texts is not a dictionary!"
+    for doc_id, doc in texts.items():
+        assert isinstance(doc, Document), f"Document ID {doc_id} is not a valid Document object"
     assert isinstance(index_to_id, dict), "[Server Log] Restored index_to_id in not a dictionary!"
     for idx, doc_id in index_to_id.items():
         assert doc_id in texts, f"[Server Log]Doc ID {doc_id} is missing in docstore"
@@ -85,10 +87,12 @@ def add_data_to_vectorstore_and_update_redis(redis_client, session_id, vector_st
         chunk_size=300, chunk_overlap=50
     )
     doc_splits = text_splitter.split_documents(data)
-    new_texts = [doc.page_content for doc in doc_splits]
-    metadatas = [doc.metadata for doc in doc_splits]
 
-    vector_store.add_texts(new_texts, metadata=metadatas)
+    # new_texts = [doc.page_content for doc in doc_splits]
+    # metadatas = [doc.metadata for doc in doc_splits]
+
+    # vector_store.add_texts(new_texts, metadata=metadatas)
+    vector_store.add_documents(doc_splits)
     save_faiss_to_redis(
         redis_client=redis_client,
         session_id=session_id,
@@ -96,3 +100,38 @@ def add_data_to_vectorstore_and_update_redis(redis_client, session_id, vector_st
     )
 
     print(f"VectorStore updated and saved to Redis for Session '{session_id}'.")
+
+def delete_data_from_vectorstore_and_update_redis(redis_client, session_id, vector_store : FAISS, file_name):
+
+    # find document id to remove with file name
+    doc_ids_to_delete = [
+        idx for idx, doc in vector_store.docstore._dict.items() if doc.metadata.get('filename') == file_name
+    ]
+
+    if not doc_ids_to_delete:
+        print("No Such Files!")
+        return None
+
+    faiss_ids_to_delete = [
+        faiss_id for faiss_id, doc_id in vector_store.index_to_docstore_id.items() if doc_id in doc_ids_to_delete
+    ]
+
+    if not faiss_ids_to_delete:
+        print("No vectors found to delete!")
+        return None
+    
+    vector_store.index.remove_ids(np.array(faiss_ids_to_delete, dtype=np.int64))
+    
+    for doc_id in sorted(doc_ids_to_delete, reverse=True):
+        del vector_store.docstore._dict[doc_id]
+    
+    for faiss_id in sorted(faiss_ids_to_delete, reverse=True):
+        del vector_store.index_to_docstore_id[faiss_id]
+
+    save_faiss_to_redis(
+        redis_client=redis_client,
+        session_id=session_id,
+        vector_store=vector_store
+    )
+
+    print(f"File Removed from VectorStore and saved to Redis for Session '{session_id}'.")

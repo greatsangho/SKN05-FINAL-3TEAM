@@ -1,12 +1,10 @@
-# Session Cache
-from functools import lru_cache
 import dill
 
 # FinPilot Application
 from finpilot.core import FinPilot
 from finpilot.memory import LimitedMemorySaver
-from finpilot.request_model import QueryRequestModel, UploadPDFRequestModel
-from finpilot.vectorstore import load_faiss_from_redis, create_empty_faiss, save_faiss_to_redis, add_data_to_vectorstore_and_update_redis
+from finpilot.request_model import QueryRequestModel, UploadPDFRequestModel, DeletePDFRequestModel
+from finpilot.vectorstore import load_faiss_from_redis, create_empty_faiss, save_faiss_to_redis, add_data_to_vectorstore_and_update_redis, delete_data_from_vectorstore_and_update_redis
 
 from langchain_core.documents import Document
 import pymupdf4llm
@@ -15,6 +13,12 @@ import fitz
 from fastapi import FastAPI, HTTPException, File, UploadFile, Form
 import uvicorn
 from redis import Redis
+
+import warnings
+from langsmith.utils import LangSmithMissingAPIKeyWarning
+
+# 특정 경고 무시
+warnings.filterwarnings("ignore", category=LangSmithMissingAPIKeyWarning)
 
 # Environment Variable Setting
 import os
@@ -29,13 +33,14 @@ os.environ["POLYGON_API_KEY"] = POLYGON_API_KEY
 # Redis 연결
 redis = Redis(host="localhost", port=6379, decode_responses=False)
 
-@lru_cache(maxsize=100)
+
 def get_session_app(session_id):
     # Redis 에서 session data 로드
     if redis.exists(f"{session_id}_memory_saver"):
         memory = dill.loads(redis.get(f"{session_id}_memory_saver"))
         vectorstore = load_faiss_from_redis(redis_client=redis, session_id=session_id)
         pilot = FinPilot(memory=memory, vector_store=vectorstore)
+        print(f"[Server Log] Application Loaded for session id : {session_id}")
     else:
         # 새로운 세션 생성 및 Redis에 저장
         memory = LimitedMemorySaver(capacity=10)
@@ -53,11 +58,11 @@ def get_session_app(session_id):
     return pilot
 
 
-@lru_cache(maxsize=100)
 def get_session_vectorstore(session_id):
     # Redis 에서 session data 로드
     if redis.exists(f"{session_id}_faiss_index"):
         vectorstore = load_faiss_from_redis(redis_client=redis, session_id=session_id)
+        print(f"[Server Log] VectorStore Loaded for session id : {session_id}")
     else:
         # 새로운 세션 생성 및 Redis에 저장
         memory = LimitedMemorySaver(capacity=10)
@@ -101,6 +106,8 @@ async def finpilot_endpoint(json : QueryRequestModel):
     if not session_id:
         raise HTTPException(status_code=400, detail="Session ID is required!")
     
+    # print("Cached keys : ", list(cache.keys()))
+    
     pilot = get_session_app(session_id)
 
     question = json_input.question
@@ -138,7 +145,22 @@ async def upload_pdf(
         vector_store=vectorstore,
         data=documents
     )
-        
+
+
+@app.post("/delete-pdf")
+async def delete_pdf(json : DeletePDFRequestModel):
+    file_name = json.file_name
+    session_id = json.session_id
+
+    vectorstore = get_session_vectorstore(session_id)
+
+    delete_data_from_vectorstore_and_update_redis(
+        redis_client=redis,
+        session_id=session_id,
+        vector_store=vectorstore,
+        file_name=file_name
+    )
+
 
 @app.get("/sessions")
 async def list_sessions():

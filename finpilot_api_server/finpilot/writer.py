@@ -254,9 +254,11 @@ class WriterProcess:
             query = str(question.content) if hasattr(question, 'content') else str(question)
 
         docs = self.web_search_tool.invoke({"query" : query})
-        web_results = "\n".join([doc["content"] for doc in docs])
-        web_results = Document(page_content=web_results)
-        documents.append(web_results)
+        # web_results = "\n".join([doc["content"] for doc in docs])
+        web_results = [Document(page_content=doc["content"]) for doc in docs]
+        # web_results = Document(page_content=web_results)
+        # documents.append(web_results)
+        documents.extend(web_results)
 
         state["documents"] = documents
 
