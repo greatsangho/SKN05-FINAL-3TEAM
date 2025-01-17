@@ -20,26 +20,34 @@ from langgraph.graph.message import add_messages
 
 
 class WebVisualizerProcess:
-    def __init__(self):
+    def __init__(self, session_id:str):
 
         # web search tool
         web_search_tool = TavilySearchResults(max_results=3)
 
+        doc_string_template = """
+            Use this tool to execute Python code and generate the desired results.
+
+            Write Python code that generates a graph and saves the graph image in the './charts/{session_id}/' folder.
+
+            If the specified folder does not exist, create the folder at the given path.
+
+            Follow the requirements below to write the code:
+
+            1. Save the generated graph image in the './charts/{session_id}/' folder.
+            2. The image format should be PNG.
+            3. chart labels should be written in English.
+            4. Ensure proper cleanup of resources used by Matplotlib to prevent memory leaks.
+            5. use 'matplotlib.use('Agg')' for run matplotlib
+            
+            The result should be fully functional Python code. Add comments to explain each step of the code.
+        """
+
         # python code interpreter
         repl = PythonREPL()
-        @tool
         def python_repl(
             code : Annotated[str, "The Python code to execute to generate your chart."]
         ):
-            """
-            Use this to execute python code.
-
-            If you want to see the output of a value, you should print it out with 'print(...)'. chart labels should be written in English.
-
-            This is visible to the user.
-
-            Please make the chart and save in './charts' folder.
-            """
 
             try : 
                 result = repl.run(code)
@@ -51,8 +59,11 @@ class WebVisualizerProcess:
             return (
                 result_str + "\n\nIf you have completed all tasks, repond with FINAL ANSWER."
             )
+        
+        python_repl.__doc__ = doc_string_template.format(session_id=session_id)
+        python_repl_tool = tool(python_repl)
 
-        self.tools = [web_search_tool, python_repl]
+        self.tools = [web_search_tool, python_repl_tool]
         self.tool_node = ToolNode(self.tools)
 
         ################################ Define AGent ################################

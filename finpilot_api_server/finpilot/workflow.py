@@ -12,7 +12,7 @@ from finpilot.web_visualizer import WebVisualizerProcess
 from finpilot.inner_visualizer import InnerVisualizerProcess
 from finpilot.router import route_question
 
-def create_application(memory : LimitedMemorySaver, vector_store : FAISS):
+def create_application(memory : LimitedMemorySaver, vector_store : FAISS, session_id : str):
     class State(TypedDict):
         """
         Represents the state of graph.
@@ -31,7 +31,7 @@ def create_application(memory : LimitedMemorySaver, vector_store : FAISS):
 
     writer_process = WriterProcess(vector_store=vector_store)
     text_magician_process = TextMagicianProcess()
-    web_visualizer_process = WebVisualizerProcess()
+    web_visualizer_process = WebVisualizerProcess(session_id=session_id)
     inner_visualizer_process = InnerVisualizerProcess()
 
     ################## Add Nodes ##################
