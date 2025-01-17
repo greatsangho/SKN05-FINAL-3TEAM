@@ -16,11 +16,12 @@ body {
     width: 100%; /* 부모 요소 기준 100% */
     margin: auto;
     box-sizing: border-box; /* 패딩 포함 */
+
+    /* align-items: flex-start; */
 }
 
 h2 {
     text-align: center;
-    /* color: #4a90e2; */
     color: #020817;
     margin-bottom: 20px;
     font-size: 35px;
@@ -42,7 +43,7 @@ h2 {
     font-size: 10.2px; /* 글씨 크기 작게 */
     color: #64748B; /* 회색 톤의 텍스트 */
     margin-top: -20px; /* FinPilot과의 간격 조정 */
-    margin-bottom: 20px; /* 채팅박스와 간격 */
+    margin-bottom: 25px; /* 채팅박스와 간격 */
     line-height: 1.4; /* 텍스트 줄 간격 */
     font-weight: inherit;
 }
@@ -51,11 +52,13 @@ h2 {
     flex: 1;
     overflow-y: auto;
     border: 1px solid #ccc;
+    border-top: none; /* 상단 테두리 제거 */
     padding: 15px;
     background: #f9f9f9;
     /* margin-bottom: 50px; */
     margin-bottom: 5px;
-    border-radius: 20px;
+    /* border-radius: 20px; */
+    border-radius: 0 0 18px 18px;
     max-height: 400px;
     display: flex;
     flex-direction: column;
@@ -69,7 +72,8 @@ h2 {
 }
 
 .chat-message.question {
-    background-color: #C9E6FC;
+    /* background-color: #C9E6FC; */
+    background-color: #E7F2FC;
     align-self: flex-end;
     text-align: right;
     padding: 10px;
@@ -496,9 +500,46 @@ h2 {
     z-index: 20; /* 삼각형 위에 표시 */
 }
 
-/* Hover 시 말풍선 표시 */
+#file_upload-btn.tooltip::before {
+    content: "";
+    display: none; /* 기본적으로 숨김 */
+    position: absolute;
+    bottom: 110%; /* 말풍선 본체와 연결 */
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 8px solid transparent; /* 왼쪽 투명 삼각형 */
+    border-right: 8px solid transparent; /* 오른쪽 투명 삼각형 */
+    border-top: 8px solid #333; /* 위쪽 삼각형 (말풍선 배경색과 동일) */
+    z-index: 19; /* 본체 아래에 배치 */
+}
+
+#file_upload-btn.tooltip::after {
+    content: attr(data-tooltip); /* 말풍선 내용 */
+    display: none; /* 기본적으로 숨김 */
+    position: absolute;
+    bottom: 120%; /* 삼각형 위에 말풍선 본체 위치 */
+    left: 50%;
+    transform: translateX(-50%);
+    background: #333;
+    color: #fff;
+    font-size: 12px;
+    padding: 5px 3px;
+    border-radius: 5px;
+    white-space: nowrap;
+    z-index: 20; /* 삼각형 위에 표시 */
+}
+
+/* 채팅 옵션 버튼 Hover 시 말풍선 표시 */
 .tooltip:hover::after,
 .tooltip:hover::before {
+    display: block;
+}
+
+/* Hover 시 말풍선 표시 */
+#file_upload-btn.tooltip:hover::before,
+#file_upload-btn.tooltip:hover::after {
     display: block;
 }
 
@@ -536,6 +577,7 @@ h2 {
     background-color: #FFFFFF;
     margin-top: 5px;
     height: 60px; /* 높이 고정 */
+    margin-bottom: 1px;
 }
 
 /* 파일 카드 스타일 */
@@ -572,7 +614,7 @@ h2 {
     position: absolute; /* 부모 .file-item을 기준으로 위치 설정 */
     top: -5px; /* 카드 상단에서의 거리 */
     right: -5px; /* 카드 우측에서의 거리 */
-    background-color: #ff4d4f;
+    background-color: #000;
     color: #fff;
     border: none;
     border-radius: 50%; /* 원형 버튼 */
@@ -587,7 +629,7 @@ h2 {
 }
 
 .delete-btn:hover {
-    background-color: #ff7875;
+    background-color: #444;
 }
 
 
@@ -610,7 +652,7 @@ h2 {
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* 그림자 효과 */
     padding: 5px 0;
     z-index: 1000;
-    width: 165px; /* 드롭다운 메뉴의 너비 */
+    width: 210px; /* 드롭다운 메뉴의 너비 ffff*/
 }
 
 /* 숨김 상태 */
@@ -627,11 +669,13 @@ h2 {
 
 .dropdown-item {
     display: flex;
+    align-items: center; /* 아이콘과 텍스트 수직 중앙 정렬 */
     padding: 8px 10px; /* 여백을 줄여 살짝 더 작게 */
     cursor: pointer;
     font-size: 14px; /* 글자 크기 */
     transition: background-color 0.2s, padding 0.1s, border-radius 0.2s; /* 애니메이션 효과 추가 */
     border-radius: 10px; /* 기본 상태에서 약간 둥글게 */
+    justify-content: space-between; /* 체크 표시를 오른쪽에 배치 */
 }
 
 /* 드롭다운 항목 호버 스타일 */
@@ -640,7 +684,7 @@ h2 {
     padding: 9px 9px;
     border-radius: 8px; /* 더 둥글게 강조 */
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* 약간의 그림자 */
-    max-width: 145px; /* 호버 시 가로 폭 줄이기 */
+    max-width: 190px; /* 호버 시 가로 폭 줄이기 dddd*/
 }
 
 /* 텍스트 스타일 */
@@ -650,14 +694,44 @@ h2 {
     color: #333; /* 텍스트 색상 */
 }
 
+/* 체크 표시 스타일 */
+.check-icon {
+    visibility: hidden; /* 기본적으로 숨김 */
+    width: 16px; /* 이미지 너비 */
+    height: 16px; /* 이미지 높이 */
+    margin-left: auto;
+}
+
+.dropdown-item.selected .check-icon {
+    visibility: visible; /* 선택된 항목에서 표시 */
+}
+
+#selected-option {
+    /* display: inline-block; 텍스트 길이에 따라 가로 길이 조정 */
+    /* align-self: flex-start; 부모의 정렬 영향을 받지 않고 왼쪽 정렬 */
+    /* align-self: center;  */
+    text-align: center;
+    padding: 6px 12px; /* 내부 여백 */
+    background: linear-gradient(135deg, #f6faff, #e3f2fd); /* 은은한 배경 그라데이션 */
+    border: 1px solid #cfd8dc; /* 부드러운 회색 테두리 */
+    border-bottom: none; /* 상단 테두리 제거 */
+    /* border-radius: 18px; 살짝 둥근 테두리 */
+    border-radius: 18px 18px 0 0;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08); /* 가벼운 그림자 */
+    font-family: "Poppins", sans-serif; /* 깔끔한 폰트 */
+    font-size: 13px; /* 텍스트 크기 */
+    font-weight: bold; /* 중간 굵기 */
+    color: #1565c0; /* 짙은 파란색 텍스트 */
+    white-space: nowrap; /* 텍스트 줄바꿈 방지 */
+    cursor: default; /* 클릭 불가 상태 */
+    transition: box-shadow 0.2s ease, transform 0.2s ease; /* 부드러운 애니메이션 */
+}
 
 
 
 
 
-
-
-/* 에러 메시지 스타일 */
+/* 파일첨부 에러 메시지 스타일 */
 #error-message {
     font-size: 12px;
     color: red;
