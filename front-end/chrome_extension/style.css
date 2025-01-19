@@ -75,14 +75,14 @@ h2 {
     /* background-color: #C9E6FC; */
     background-color: #E7F2FC;
     align-self: flex-end;
-    text-align: right;
+    text-align: justify;
     padding: 10px;
     border-radius: 15px;
 }
 
 .chat-message.answer {
     align-self: flex-start;
-    text-align: left;
+    text-align: justify;
     /* background-color: #C9E6FC; */
     background-color: #F9F9F9;
     padding: 10px;  
