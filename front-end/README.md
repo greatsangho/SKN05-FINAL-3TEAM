@@ -28,7 +28,7 @@ FinPilot은 Google Docs 환경에서 사용자가 더 효율적으로 금융 문
 
 ## ✨ Features
 
-- **AI-Driven Chatbot**: 사용자의 입력에 따라 AI가 실시간으로 텍스트를 생성합니다.
+- **AI-Driven Chatbot**: 사용자의 입력에 따라 AI가 실시간으로 텍스트를 생성.
 - **Google Docs Integration**: 생성된 텍스트를 Google Docs에 바로 반영 가능.
 - **Responsive Design**: 반응형 디자인으로 다양한 화면 크기에서도 완벽히 작동.
 - **Authentication**: Google 로그인 기능 제공.
@@ -39,17 +39,60 @@ FinPilot은 Google Docs 환경에서 사용자가 더 효율적으로 금융 문
 ## 🗂 File Structure
 
 ```
-frontend/
-├── icon_circle.png           # 아이콘 파일
-├── manifest.json             # Chrome Extension 설정 파일
-├── sidebar.html              # 사이드 패널 HTML
-├── sidebar.js                # 사이드 패널 JS (주요 기능 구현)
-├── style.css                 # 사이드 패널 스타일
-├── login_2.html              # 로그인 페이지 HTML
-├── login_2.css               # 로그인 페이지 스타일
-├── start.html                # 시작 페이지 HTML
-├── start.css                 # 시작 페이지 스타일
-└── README.md                 # 프로젝트 설명
+front-end/
+├── README.md                  # 프로젝트 설명
+├── chrome_extension/          # Chrome 확장 프로그램 폴더
+│   ├── .gitignore              # Git 설정 파일
+│   ├── apply.png               # apply 버튼 아이콘
+│   ├── background.js           # background 스크립트
+│   ├── chat_option.png         # 채팅 옵션 버튼 아이콘
+│   ├── check-icon.png          # 체크 아이콘
+│   ├── copy.png                # 복사 버튼 아이콘
+│   ├── copy_done.png           # 복사 완료 아이콘
+│   ├── default_profile.webp    # 기본 프로필 이미지
+│   ├── file_upload.png         # 파일 업로드 버튼 아이콘
+│   ├── guide.gif               # 팝업창 가이드 GIF
+│   ├── icon_16.png             # FinPilot 로고 (16px)
+│   ├── icon_32.png             # FinPilot 로고 (32px)
+│   ├── icon_48.png             # FinPilot 로고 (48px)
+│   ├── icon_64.png             # FinPilot 로고 (64px)
+│   ├── icon_128.png            # FinPilot 로고 (128px)
+│   ├── icon_circle.png         # FinPilot 원형 로고
+│   ├── manifest.json           # Chrome Extension 설정 파일
+│   ├── package-lock.json       # 패키지 종속성 파일
+│   ├── package.json            # 패키지 설정 파일
+│   ├── popup.css               # 팝업창 스타일
+│   ├── popup.html              # 팝업창 페이지
+│   ├── popup.js                # 팝업창 스크립트
+│   ├── privacy-policy.md       # FinPilot 개인정보 보호 정책
+│   ├── send_icon.png           # 전송 버튼 아이콘
+│   ├── sidebar.html            # 사이드바 HTML
+│   ├── sidebar.js              # 사이드바 기능 구현
+│   ├── sidebar_cursor.js       # 사이드바 커서 기능
+│   ├── sidebar_serviceaccount.js # 사이드바 서비스 계정 구현
+│   ├── style.css               # 사이드바 스타일 시트
+│   ├── web/                    # 웹페이지 관련 폴더
+│   │   ├── info/               # 채팅 옵션 info 페이지 관련 폴더
+│   │   │   ├── info.css        # 채팅 옵션 info 스타일
+│   │   │   ├── info.html       # 채팅 옵션 info HTML
+│   │   ├── landing/            # 랜딩 페이지 관련 폴더 
+│   │   │   ├── landing.html    # 랜딩 페이지 HTML
+│   │   │   ├── landing_files/  # 랜딩 페이지 이미지 및 리소스
+│   │   │   │   ├── background.png
+│   │   │   │   ├── fp_gif_1.gif
+│   │   │   │   ├── fp_gif_2.gif
+│   │   │   │   ├── fp_png_1.png
+│   │   │   │   ├── fp_png_2.png
+│   │   │   │   ├── script
+│   │   │   │   ├── script_main.Y4SCJLDF.mjs
+│   │   ├── login/              # 로그인 페이지 관련 폴더
+│   │   │   ├── login.css       # 로그인 페이지 스타일
+│   │   │   ├── login.html      # 로그인 페이지 HTML
+│   │   │   ├── login.js        # 로그인 페이지 스크립트
+│   │   ├── start/              # 시작 페이지 관련 폴더더
+│   │   │   ├── start.css       # 시작 페이지 스타일
+│   │   │   ├── start.html      # 시작 페이지 HTML
+│   │   │   ├── start.js        # 시작 페이지 스크립트
 ```
 
 ---
@@ -59,11 +102,14 @@ frontend/
 ![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=for-the-badge&logo=html5&logoColor=white)
 ![CSS3](https://img.shields.io/badge/CSS3-1572B6?style=for-the-badge&logo=css3&logoColor=white)
 ![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)
+![Google Drive API](https://img.shields.io/badge/Google%20Drive%20API-4285F4?style=for-the-badge&logo=googledrive&logoColor=white)
 ![Google Docs API](https://img.shields.io/badge/Google%20Docs%20API-4285F4?style=for-the-badge&logo=google&logoColor=white)
 ![OpenAI GPT API](https://img.shields.io/badge/OpenAI%20API-412991?style=for-the-badge&logo=openai&logoColor=white)
 ![Chrome Extensions](https://img.shields.io/badge/Chrome%20Extensions-4285F4?style=for-the-badge&logo=googlechrome&logoColor=white)
 ![Figma](https://img.shields.io/badge/Figma-F24E1E?style=for-the-badge&logo=figma&logoColor=white)
 ![Framer](https://img.shields.io/badge/Framer-0055FF?style=for-the-badge&logo=framer&logoColor=white)
+![Visual Studio Code](https://img.shields.io/badge/Visual%20Studio%20Code-007ACC?style=for-the-badge&logo=visualstudiocode&logoColor=white)
+
 
 ---
 
@@ -79,32 +125,34 @@ frontend/
 
 ### Prerequisites
 - Chrome 브라우저
+- Google Account
 - Google Docs
 
 ### Installation Steps
 1. **Repository Clone**
    ```bash
-   git clone -b frontend https://github.com/your-repo/finpilot.git
-   cd finpilot/frontend
+   git clone -b frontend https://github.com/SKNETWORKS-FAMILY-AICAMP/SKN05-FINAL-3TEAM.git
+   cd main/front-end
    ```
 
-2. **Chrome Extension 설치**
+2. **Chrome Extension 로드**
    - Chrome의 `chrome://extensions`로 이동.
    - "Developer mode"를 활성화한 뒤 "Load unpacked"를 클릭.
-   - `frontend` 폴더를 선택하여 확장 프로그램을 로드합니다.
+   - `chrome_extension` 폴더를 선택하여 확장 프로그램을 로드합니다.
 
 ---
 
 ## 🚀 How to Run
 
 1. **Extension 실행**:
-   - Chrome에서 FinPilot 확장 아이콘을 우클릭.
+   - Google Docs 페이지에서 문서 열기.
+   - Chrome 브라우저에서 우측 상단 FinPilot 확장 아이콘 우클릭.
    - 측면 패널 열기 선택
-   - Google Docs 페이지에서 동작 확인.
 
 2. **AI 기능 테스트**:
-   - SidePanel에서 질문을 입력하거나 문장을 생성.
-   - 생성된 텍스트가 Google Docs에 자동으로 반영되는지 확인.
+   - SidePanel에서 원하는 채팅 옵션 선택 후, 질문 입력.
+   - 생성된 텍스트 확인
+   - apply 버튼으로 생성 텍스트가 Google Docs 문서에 자동으로 반영되는지 확인
 
 ---
 
