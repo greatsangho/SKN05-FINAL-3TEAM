@@ -13,7 +13,7 @@ from datetime import datetime, timezone
 from dotenv import load_dotenv
 from Runpod.runpod import send_question_to_runpod, send_pdf_to_runpod, send_csv_to_runpod, send_delete_csv_request_to_runpod, send_graph_to_runpod
 import uvicorn
-from fastapi import File, UploadFile
+from fastapi import File, UploadFile, Form
 import requests
 
 load_dotenv()
@@ -206,8 +206,8 @@ def get_qnas(user_email: str, docs_id: str, db: Session = Depends(get_db)):
 # -------------------
 @app.post("/pdfs/", response_model=schemas.PDFFile)
 async def create_pdf(
-    user_email: str,
-    docs_id: str,
+    user_email: str = Form(...),  # Form 데이터로 처리
+    docs_id: str = Form(...),    # Form 데이터로 처리
     file: UploadFile = File(...),  # 파일 업로드 처리
     db: Session = Depends(get_db)
 ):
