@@ -94,33 +94,42 @@ def send_graph_to_runpod(question: str, session_id: str, chat_option: str) -> li
 # -------------------
 # RunPod으로 PDF 파일 및 session_id 전송 함수
 # -------------------
-def send_pdf_to_runpod(file: UploadFile, session_id: str):
+def send_pdf_to_runpod(file_path: str, session_id: str):
     """
-    RunPod으로 PDF 파일과 session_id를 전송하는 함수.
+    RunPod으로 PDF 파일 경로와 session_id를 전송하는 함수.
     """
     endpoint_id = os.getenv("RUNPOD_ENDPOINT_ID")
     api_key = os.getenv("RUNPOD_API_KEY")
-    
-    # 환경 변수 검증
+
     if not endpoint_id or not api_key:
-        raise HTTPException(status_code=500, detail="RunPod API credentials are not set.")
+        raise HTTPException(
+            status_code=500,
+            detail="RunPod API credentials are not set. Please check RUNPOD_ENDPOINT_ID and RUNPOD_API_KEY."
+        )
 
     try:
-        url = f"https://sjpn4pjkkt2war-8000.proxy.runpod.net/upload-pdf"  # RunPod API URL (예시)
+        url = "https://sjpn4pjkkt2war-8000.proxy.runpod.net/upload-pdf"
         
-        # 파일 데이터를 multipart/form-data로 전송
-        with file.file as f:
-            files = {"file": (file.filename, f, file.content_type)}
-            data = {"session_id": session_id}  # session_id를 데이터로 포함
+        # 파일 경로에서 파일 읽기
+        with open(file_path, "rb") as f:
+            files = {
+                "file": (os.path.basename(file_path), f, "application/pdf")
+            }
+            data = {"session_id": session_id}
             headers = {"Authorization": f"Bearer {api_key}"}
+
             response = requests.post(url, files=files, data=data, headers=headers)
+            response.raise_for_status()
 
-        response.raise_for_status()  # 요청 실패 시 예외 발생
+        response_data = response.json()
+        if response_data.get("status") != "success":
+            raise RuntimeError(f"RunPod API returned an error: {response_data}")
 
-        return response.json()  # RunPod 응답 반환
+        return response_data
+
     except requests.exceptions.RequestException as e:
         raise RuntimeError(f"Failed to communicate with RunPod: {str(e)}")
-    
+
 # -------------------
 # RunPod으로 CSV 파일 전송 함수
 # -------------------

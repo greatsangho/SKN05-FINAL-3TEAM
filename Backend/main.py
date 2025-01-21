@@ -15,6 +15,8 @@ from Runpod.runpod import send_question_to_runpod, send_pdf_to_runpod, send_csv_
 import uvicorn
 from fastapi import File, UploadFile, Form
 import requests
+import shutil
+import os
 
 load_dotenv()
 
@@ -204,37 +206,37 @@ def get_qnas(user_email: str, docs_id: str, db: Session = Depends(get_db)):
 # -------------------
 # PDF 파일 CRUD 엔드포인트
 # -------------------
+
 @app.post("/pdfs/", response_model=schemas.PDFFile)
 async def create_pdf(
-    user_email: str = Form(...),  # Form 데이터로 처리
-    docs_id: str = Form(...),    # Form 데이터로 처리
-    file: UploadFile = File(...),  # 파일 업로드 처리
+    user_email: str = Form(...),
+    docs_id: str = Form(...),
+    file: UploadFile = File(...),
     db: Session = Depends(get_db)
 ):
-    """
-    클라이언트로부터 user_email, docs_id, PDF 파일을 받아서:
-    1. session_id를 생성하거나 가져옴.
-    2. PDF 파일 이름을 데이터베이스에 저장.
-    3. session_id와 PDF 파일을 RunPod으로 전송.
-    """
     try:
         # 1. 세션 확인 또는 생성
         session = crud.create_session(db=db, user_email=user_email, docs_id=docs_id)
         session_id = session.session_id
 
-        # 2. 파일 이름 저장 (데이터베이스에 저장할 정보)
-        file_name = file.filename
+        # 2. 파일 저장 (임시 디렉토리 사용)
+        temp_dir = "/tmp/pdf_files"
+        os.makedirs(temp_dir, exist_ok=True)  # 디렉토리가 없으면 생성
+        file_path = os.path.join(temp_dir, file.filename)
+
+        with open(file_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)  # 파일 저장
 
         # 3. PDF 파일 정보 생성 및 저장 (파일 이름만 저장)
         new_pdf_file = crud.create_pdf_file(
             db=db,
             user_email=user_email,
             docs_id=docs_id,
-            file_name=file_name,
+            file_name=file.filename,
         )
 
         # 4. RunPod으로 파일과 session_id 전송
-        runpod_response = send_pdf_to_runpod(file=file, session_id=session_id)
+        runpod_response = send_pdf_to_runpod(file_path=file_path, session_id=session_id)
 
         # 5. RunPod 응답 확인 및 반환
         if runpod_response.get("status") != "success":
@@ -247,7 +249,7 @@ async def create_pdf(
             "runpod_response": runpod_response,
         }
     except ValueError as ve:
-        raise HTTPException(status_code=400, detail=str(ve))  # 잘못된 입력 처리
+        raise HTTPException(status_code=400, detail=str(ve))
     except RuntimeError as re:
         raise HTTPException(status_code=500, detail=str(re))
     except Exception as e:
