@@ -8,8 +8,8 @@ class FinPilot:
     def __init__(self, memory : LimitedMemorySaver, vector_store : FAISS, session_id:str):
         self.app = create_application(memory=memory, vector_store=vector_store, session_id=session_id)
     
-    def invoke(self, question, session_id):
-        inputs = {"question" : question}
+    def invoke(self, question, session_id, chat_option):
+        inputs = {"question" : question, "chat_option" : chat_option}
 
         config = {
             "configurable" : {"thread_id" : session_id},

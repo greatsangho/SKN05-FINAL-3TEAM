@@ -21,11 +21,11 @@ warnings.filterwarnings("ignore", category=LangSmithMissingAPIKeyWarning)
 
 
 # Environment Variable Setting
-# from config.secret_keys import OPENAI_API_KEY, TAVILY_API_KEY, USER_AGENT, POLYGON_API_KEY
-# os.environ["OPENAI_API_KEY"] = OPENAI_API_KEY
-# os.environ["TAVILY_API_KEY"] = TAVILY_API_KEY
-# os.environ["USER_AGENT"] = USER_AGENT
-# os.environ["POLYGON_API_KEY"] = POLYGON_API_KEY
+from config.secret_keys import OPENAI_API_KEY, TAVILY_API_KEY, USER_AGENT, POLYGON_API_KEY
+os.environ["OPENAI_API_KEY"] = OPENAI_API_KEY
+os.environ["TAVILY_API_KEY"] = TAVILY_API_KEY
+os.environ["USER_AGENT"] = USER_AGENT
+os.environ["POLYGON_API_KEY"] = POLYGON_API_KEY
 
 
 
@@ -48,13 +48,17 @@ async def finpilot_endpoint(request : QueryRequestModel):
     if not question:
         raise HTTPException(status_code=400, detail="Question is required!")
     
+    chat_option = request.chat_option
+    if not chat_option:
+        raise HTTPException(status_code=400, detail="Chat Option is required!")
+    
 
     pilot = get_session_app(
         redis_client=redis,
         session_id=session_id
     )
     
-    answer = pilot.invoke(question, session_id)
+    answer = pilot.invoke(question, session_id, chat_option)
 
     return {"session_id" : session_id, "answer" : answer}
 
@@ -70,6 +74,10 @@ async def get_graph_image(request : QueryRequestModel):
     if not question:
         raise HTTPException(status_code=400, detail="Question is required!")
     
+    chat_option = request.chat_option
+    if not chat_option:
+        raise HTTPException(status_code=400, detail="Chat Option is required!")
+    
 
     folder_path = f"./charts/{session_id}/"
     if not os.path.exists(folder_path):
@@ -84,7 +92,8 @@ async def get_graph_image(request : QueryRequestModel):
         session_id=session_id
     )
 
-    _ = pilot.invoke(question, session_id)
+    while len(os.listdir(folder_path)) == 0:
+        _ = pilot.invoke(question, session_id, chat_option)
 
     
     # PNG 파일 목록 가져오기
@@ -107,9 +116,9 @@ async def get_graph_image(request : QueryRequestModel):
 
 @app.post("/upload-pdf")
 async def upload_pdf(
-    request : UploadPDFRequestModel
-    # session_id: str = Form(...),  # 문자열은 Form 필드로 처리
-    # pdf_files: list[UploadFile] = File(...)  # 파일 업로드는 File로 처리
+    # request : UploadPDFRequestModel
+    session_id: str = Form(...),  # 문자열은 Form 필드로 처리
+    file: UploadFile = File(...)  # 파일 업로드는 File로 처리
 ):
     # files = request.file
     # session_id = request.session_id
@@ -122,8 +131,8 @@ async def upload_pdf(
         
     #     document = parse_pdf(file)
     #     documents.append(document)
-    file = request.file
-    session_id = request.session_id
+    # file = request.file
+    # session_id = request.session_id
 
     documents = []
 
@@ -149,12 +158,12 @@ async def upload_pdf(
 
 @app.post("/upload-csv")
 async def upload_csv(
-    request : UploadCSVRequestModel
-    # session_id : str = Form(...),
-    # csv_file : UploadFile = File(...)
+    # request : UploadCSVRequestModel
+    session_id : str = Form(...),
+    file : UploadFile = File(...)
 ):
-    session_id = request.session_id
-    file = request.file
+    # session_id = request.session_id
+    # file = request.file
 
     upload_path = Path(os.getcwd()) / "data" / f"{session_id}"
     if not os.path.exists(upload_path):
@@ -179,7 +188,6 @@ async def delete_pdf(json : DeletePDFRequestModel):
     file_name = json.file_name
     session_id = json.session_id
 
-    # vectorstore = get_session_vectorstore(session_id)
     vectorstore = get_session_vectorstore(
         redis_client=redis,
         session_id=session_id
@@ -203,4 +211,5 @@ async def list_sessions():
 
 
 if __name__ == "__main__" :
-    uvicorn.run("main:app", host="0.0.0.0", port=8000)
+    # uvicorn.run("main:app", host="0.0.0.0", port=8000)
+    uvicorn.run("main:app", host='localhost', reload=True)

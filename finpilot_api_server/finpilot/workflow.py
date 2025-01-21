@@ -22,6 +22,7 @@ def create_application(memory : LimitedMemorySaver, vector_store : FAISS, sessio
             generation : LLM generation
             documents : list of documents
         """
+        chat_option : str
         question : str
         generation : str
         messages : Annotated[list, add_messages]
