@@ -65,6 +65,9 @@ class PDFFileBase(BaseModel):
     user_email: EmailStr
     docs_id: str
 
+class DeletePDFRequest(PDFFileBase):
+    file_name: str
+
 class PDFFileCreate(PDFFileBase):
     file_name: str  # Required field for creating a PDF file entry
 
@@ -75,3 +78,11 @@ class PDFFile(PDFFileBase):
 
     class Config:
         orm_mode = True
+
+# -------------------
+# CSVFile delete
+# -------------------
+class DeleteCSVRequest(BaseModel):
+    user_email: str
+    docs_id: str
+    file_name: str

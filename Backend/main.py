@@ -4,12 +4,14 @@ from fastapi.middleware.gzip import GZipMiddleware
 from Middleware.mid import TimingMiddleware, RateLimitMiddleware
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
-from DB import schemas, crud
+from typing import List
+from DB import schemas, crud, models
 from DB.database import engine, SessionLocal
 from DB.models import Base, SessionID
+from DB.schemas import DeletePDFRequest, DeleteCSVRequest
 from datetime import datetime, timezone
 from dotenv import load_dotenv
-from Runpod.runpod import send_question_to_runpod, send_pdf_to_runpod, send_csv_to_runpod
+from Runpod.runpod import send_question_to_runpod, send_pdf_to_runpod, send_csv_to_runpod, send_delete_csv_request_to_runpod, send_graph_to_runpod
 import uvicorn
 from fastapi import File, UploadFile
 import requests
@@ -70,19 +72,6 @@ def create_or_update_user(user: schemas.MemberBase, db: Session = Depends(get_db
     # 새로운 유저 생성
     new_user = crud.create_user(db=db, user_email=user.user_email)
     return new_user
-
-
-@app.get("/users/", response_model=list[schemas.Member])
-def read_users(skip: int = 0, limit: int = 10, db: Session = Depends(get_db)):
-    users = crud.get_users(db=db, skip=skip, limit=limit)
-    return users
-
-@app.get("/users/{user_email}", response_model=schemas.Member)
-def read_user(user_email: str, db: Session = Depends(get_db)):
-    user = crud.get_user_by_email(db=db, user_email=user_email)
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-    return user
 
 @app.delete("/users/{user_email}")
 def delete_user(user_email: str, db: Session = Depends(get_db)):
@@ -147,13 +136,24 @@ def create_qna(qna: schemas.QnACreate, db: Session = Depends(get_db)):
             docs_id=qna.docs_id,
         )
 
-        # 2. RunPod 호출 (외부 서비스 연동) - question과 session_id 전달
+        # 2. RunPod 호출 (외부 서비스 연동) - chat_option에 따라 다른 함수 호출
         try:
-            answer = send_question_to_runpod({
-                "question": qna.question,
-                "session_id": session.session_id,  # session_id를 RunPod에 전달
-                "chat_option": qna.chat_option,   # chat_option도 함께 전달
-            })
+            if "데이터 시각화" in qna.chat_option:
+                # 데이터 시각화 요청인 경우 send_graph_to_runpod 호출
+                graph_response = send_graph_to_runpod(
+                    question=qna.question,
+                    session_id=session.session_id,
+                    chat_option=qna.chat_option
+                )
+                # RunPod에서 반환된 그래프 데이터를 처리 (image:[,] 형태로 저장)
+                answer = {"images": graph_response}
+            else:
+                # 일반 질문 처리
+                answer = send_question_to_runpod(
+                    question=qna.question,
+                    session_id=session.session_id,
+                    chat_option=qna.chat_option
+                )
         except Exception as e:
             raise HTTPException(status_code=502, detail="Failed to communicate with RunPod")
 
@@ -173,30 +173,33 @@ def create_qna(qna: schemas.QnACreate, db: Session = Depends(get_db)):
         db.refresh(new_qna)
 
         return new_qna
+
     except ValueError as ve:
         raise HTTPException(status_code=400, detail=str(ve))  # 잘못된 입력 처리
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Internal Server Error: {str(e)}")
 
+@app.get("/qnas/", response_model=List[schemas.QnA])
+def get_qnas(user_email: str, docs_id: str, db: Session = Depends(get_db)):
+    """
+    QnA 조회 엔드포인트:
+    - user_email과 docs_id를 기반으로 저장된 QnA 데이터를 반환
+    """
+    try:
+        # 데이터베이스에서 해당 user_email과 docs_id에 해당하는 QnA 검색
+        qnas = db.query(models.QnA).filter(
+            models.QnA.user_email == user_email,
+            models.QnA.docs_id == docs_id
+        ).all()
 
-@app.get("/pdfs/", response_model=list[schemas.PDFFile], operation_id="get_all_pdfs")
-def read_pdfs(skip: int = 0, limit: int = 10, db: Session = Depends(get_db)):
-    """
-    Retrieve a list of all PDF files.
-    """
-    pdfs = crud.get_pdfs(db=db, skip=skip, limit=limit)
-    return pdfs
+        # 결과가 없을 경우 예외 처리
+        if not qnas:
+            raise HTTPException(status_code=404, detail="No QnA found for the given user_email and docs_id.")
 
+        return qnas
 
-@app.delete("/pdfs/{pdf_id}", operation_id="delete_single_pdf")
-def delete_pdf(pdf_id: int, db: Session = Depends(get_db)):
-    """
-    Delete a specific PDF file by its ID.
-    """
-    success = crud.delete_pdf_file(db=db, pdf_id=pdf_id)
-    if not success:
-        raise HTTPException(status_code=404, detail="PDF file not found")
-    return {"message": "PDF file deleted successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Internal Server Error: {str(e)}")
 
 # -------------------
 # PDF 파일 CRUD 엔드포인트
@@ -256,23 +259,18 @@ def read_pdfs(skip: int = 0, limit: int = 10, db: Session = Depends(get_db)):
     pdfs = crud.get_pdfs(db=db, skip=skip, limit=limit)
     return pdfs
 
-@app.delete("/pdfs/{pdf_id}")
-def delete_pdf(pdf_id: int, db: Session = Depends(get_db)):
-    success = crud.delete_pdf_file(db=db, pdf_id=pdf_id)
-    if not success:
+@app.delete("/pdfs/")
+def delete_pdf(request: DeletePDFRequest, db: Session = Depends(get_db)):
+    # Check if the PDF exists for the given user and document ID
+    pdf_file = crud.get_pdf_file(db=db, user_email=request.user_email, docs_id=request.docs_id, file_name=request.file_name)
+    if not pdf_file:
         raise HTTPException(status_code=404, detail="PDF file not found")
-    return {"message": "PDF file deleted successfully"}
 
-@app.get("/pdfs/", response_model=list[schemas.PDFFile])
-def read_pdfs(skip: int = 0, limit: int = 10, db: Session = Depends(get_db)):
-    pdfs = crud.get_pdfs(db=db, skip=skip, limit=limit)
-    return pdfs
-
-@app.delete("/pdfs/{pdf_id}")
-def delete_pdf(pdf_id: int, db: Session = Depends(get_db)):
-    success = crud.delete_pdf_file(db=db, pdf_id=pdf_id)
+    # Perform the deletion
+    success = crud.delete_pdf_file(db=db, pdf_file=pdf_file)
     if not success:
-        raise HTTPException(status_code=404, detail="PDF file not found")
+        raise HTTPException(status_code=500, detail="Failed to delete PDF file")
+
     return {"message": "PDF file deleted successfully"}
 
 # -------------------
@@ -316,6 +314,37 @@ async def upload_csv(
         raise HTTPException(status_code=500, detail=str(re))
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Unexpected error: {str(e)}")
+
+@app.delete("/csvs/")
+async def delete_csv(request: DeleteCSVRequest, db: Session = Depends(get_db)):
+    """
+    클라이언트가 요청한 user_email, docs_id, file_name을 받아서,
+    RunPod에 삭제 요청을 보냄.
+    """
+    try:
+        # 1. 세션 확인
+        session = crud.get_session(db=db, user_email=request.user_email, docs_id=request.docs_id)
+        if not session:
+            raise HTTPException(status_code=404, detail="Session not found for the given user and document ID.")
+
+        # 2. RunPod으로 삭제 요청 전송
+        runpod_response = send_delete_csv_request_to_runpod(file_name=request.file_name, session_id=session.session_id)
+
+        # 3. RunPod 응답 확인
+        if runpod_response.get("status") != "success":
+            raise HTTPException(status_code=502, detail="Failed to delete CSV file with RunPod")
+
+        return {
+            "message": "CSV file deleted successfully",
+            "runpod_response": runpod_response,
+        }
+    except ValueError as ve:
+        raise HTTPException(status_code=400, detail=str(ve))
+    except RuntimeError as re:
+        raise HTTPException(status_code=500, detail=str(re))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Unexpected error: {str(e)}")
+    
 # -------------------
 # 파이썬 서버 실행
 # -------------------

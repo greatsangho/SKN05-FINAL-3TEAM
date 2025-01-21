@@ -20,22 +20,19 @@ def send_question_to_runpod(question: str, session_id: str, chat_option: str) ->
         raise HTTPException(status_code=500, detail="RunPod API credentials are not set.")
 
     # RunPod API URL
-    url = f"https://api.runpod.ai/v2/{endpoint_id}/runsync"
+    url = f"https://sjpn4pjkkt2war-8000.proxy.runpod.net/query"
 
     # 요청 헤더
     headers = {
         "accept": "application/json",
-        "authorization": f"Bearer {api_key}",
         "content-type": "application/json"
     }
 
     # 요청 바디
     body = {
-        "input": {
-            "question": question,
-            "session_id": session_id,  # session_id 추가
-            "chat_option": chat_option  # chat_option 추가
-        }
+        "session_id": session_id,
+        "question": question,
+        "chat_option": chat_option
     }
 
     # API 호출
@@ -47,12 +44,53 @@ def send_question_to_runpod(question: str, session_id: str, chat_option: str) ->
 
     # 응답 처리
     try:
-        output = response.json().get("output", {}).get("answer", "No answer received")
+        output = response.json().get("answer", "No answer received")
         return output
     except (ValueError, KeyError) as e:
         raise HTTPException(status_code=500, detail=f"Invalid response format: {str(e)}")
   
+def send_graph_to_runpod(question: str, session_id: str, chat_option: str) -> list:
+    """
+    RunPod API와 통신하여 그래프 요청을 보내고 base64 이미지 리스트를 반환하는 함수.
+    """
+    # 환경 변수 가져오기
+    endpoint_id = os.getenv("RUNPOD_ENDPOINT_ID")
+    api_key = os.getenv("RUNPOD_API_KEY")
+    
+    # 환경 변수 검증
+    if not endpoint_id or not api_key:
+        raise HTTPException(status_code=500, detail="RunPod API credentials are not set.")
 
+    # RunPod API URL
+    url = f"https://sjpn4pjkkt2war-8000.proxy.runpod.net/query"
+
+    # 요청 헤더
+    headers = {
+        "accept": "application/json",
+        "content-type": "application/json"
+    }
+
+    # 요청 바디
+    body = {
+        "session_id": session_id,
+        "question": question,
+        "chat_option": chat_option
+    }
+
+    # API 호출
+    try:
+        response = requests.post(url, json=body, headers=headers)
+        response.raise_for_status()  # HTTP 상태 코드가 4xx/5xx인 경우 예외 발생
+    except requests.exceptions.RequestException as e:
+        raise HTTPException(status_code=500, detail=f"RunPod API request failed: {str(e)}")
+
+    # 응답 처리
+    try:
+        output = response.json()
+        images = output.get("images", [])
+        return images  # 이미지 리스트 반환 (file_name과 image_data 포함)
+    except (ValueError, KeyError) as e:
+        raise HTTPException(status_code=500, detail=f"Invalid response format: {str(e)}")
 # -------------------
 # RunPod으로 PDF 파일 및 session_id 전송 함수
 # -------------------
@@ -68,7 +106,7 @@ def send_pdf_to_runpod(file: UploadFile, session_id: str):
         raise HTTPException(status_code=500, detail="RunPod API credentials are not set.")
 
     try:
-        url = f"https://api.runpod.ai/v2/{endpoint_id}/upload-pdf"  # RunPod API URL (예시)
+        url = f"https://sjpn4pjkkt2war-8000.proxy.runpod.net/upload-pdf"  # RunPod API URL (예시)
         
         # 파일 데이터를 multipart/form-data로 전송
         with file.file as f:
@@ -91,7 +129,7 @@ def send_csv_to_runpod(file: UploadFile, session_id: str):
     RunPod으로 CSV 파일과 session_id를 전송하는 함수.
     """
     try:
-        runpod_url = "https://api.runpod.ai/v2/{endpoint_id}/upload-csv"  # RunPod API URL (예시)
+        runpod_url = "https://sjpn4pjkkt2war-8000.proxy.runpod.net/upload-csv"
         
         # 파일 데이터를 multipart/form-data로 전송
         with file.file as f:
@@ -104,3 +142,24 @@ def send_csv_to_runpod(file: UploadFile, session_id: str):
         return response.json()  # RunPod 응답 반환
     except requests.exceptions.RequestException as e:
         raise RuntimeError(f"Failed to communicate with RunPod: {str(e)}")
+
+
+def send_delete_csv_request_to_runpod(file_name: str, session_id: str):
+    try:
+        # Replace with your actual RunPod API endpoint and authentication details
+        runpod_url = f"https://sjpn4pjkkt2war-8000.proxy.runpod.net/delete-pdf"
+        payload = {
+            "session_id": session_id,
+            "file_name": file_name,
+        }
+        headers = {
+            # "Authorization": "Bearer YOUR_RUNPOD_API_KEY",  # Replace with your API key
+            "Content-Type": "application/json",
+        }
+
+        response = requests.post(runpod_url, json=payload, headers=headers)
+        response.raise_for_status()  # Raise an exception for HTTP errors
+        return response.json()
+    except requests.RequestException as e:
+        print(f"Error sending delete request to RunPod: {e}")
+        return {"status": "error", "message": str(e)}
