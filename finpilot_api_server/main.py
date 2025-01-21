@@ -22,8 +22,11 @@ from langsmith.utils import LangSmithMissingAPIKeyWarning
 # 특정 경고 무시
 warnings.filterwarnings("ignore", category=LangSmithMissingAPIKeyWarning)
 
-# Environment Variable Setting
+
 import os
+from pathlib import Path
+
+# Environment Variable Setting
 from config.secret_keys import OPENAI_API_KEY, TAVILY_API_KEY, USER_AGENT, POLYGON_API_KEY
 os.environ["OPENAI_API_KEY"] = OPENAI_API_KEY
 os.environ["TAVILY_API_KEY"] = TAVILY_API_KEY
@@ -146,6 +149,40 @@ async def upload_pdf(
         data=documents
     )
 
+@app.post("/upload-csv")
+async def upload_csv(
+    session_id : str = Form(...),
+    csv_file : UploadFile = File(...)
+):
+    upload_path = Path(os.getcwd()) / "data" / f"{session_id}"
+    if not os.path.exists(upload_path):
+        os.makedirs(upload_path)
+    
+    if len(os.listdir(upload_path)) > 0:
+        try:
+            for filename in os.listdir(upload_path):
+                file_path = os.path.join(upload_path, filename)
+                
+                if os.path.isfile(file_path):
+                    os.remove(file_path)
+                    print(f"[Server Log] FILE REMOVED: {file_path}")
+                elif os.path.isdir(file_path):
+                    print(f"[Server Log] REMOVE FAILED (DIR) : {file_path}")
+            
+            print(f"[Server Log] REMOVED ALL FILES IN PATH : '{upload_path}'")
+        except Exception as e:
+            print(f"[Server Log] ERROR : {e}")
+    
+    upload_file_path = upload_path / csv_file.filename
+
+    try :
+        with open(upload_file_path, "wb") as f:
+            content = await csv_file.read()
+            f.write(content)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"An error ocurred : {e}")
+
+
 
 @app.post("/delete-pdf")
 async def delete_pdf(json : DeletePDFRequestModel):
@@ -175,24 +212,11 @@ async def get_graph_image(json : QueryRequestModel):
         raise HTTPException(status_code=400, detail="Question is required!")
 
 
-    # 이미지 폴더 안에 기존 생성 내용이 있으면 지우기기
     folder_path = f"./charts/{session_id}/"
-    if os.path.exists(folder_path):
-        deleted_files = []
+    data_path = Path(os.getcwd()) / "data" / f"{session_id}"
 
-        for file_name in os.listdir(folder_path):
-            file_path = os.path.join(folder_path, file_name)
-
-            # 파일이 지정된 확장자로 끝나고, 실제 파일인 경우 삭제
-            if os.path.isfile(file_path) and file_name.lower().endswith(("png", "jpg", "jpeg")):
-                try:
-                    os.remove(file_path)
-                    deleted_files.append(file_name)
-                except Exception as e:
-                    print(f"Failed to delete {file_path}: {e}")
-        
-        print(f"[Server Log] Clear Image Direcory for session : {session_id}")
-    
+    if not os.path.exists(folder_path):
+        os.makedirs(folder_path)
 
 
     _ = pilot.invoke(question, session_id)
@@ -215,8 +239,25 @@ async def get_graph_image(json : QueryRequestModel):
             with open(file_path, "rb") as img_file:
                 img_base64 = base64.b64encode(img_file.read()).decode("utf-8")
                 images.append({"file_name": file_name, "image_data": img_base64})
+            
+            os.remove(file_path)
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Failed to read file {file_name}: {str(e)}")
+    
+    if len(os.listdir(data_path)) > 0:
+        try:
+            for filename in os.listdir(data_path):
+                file_path = os.path.join(data_path, filename)
+                
+                if os.path.isfile(file_path):
+                    os.remove(file_path)
+                    print(f"[Server Log] FILE REMOVED: {file_path}")
+                elif os.path.isdir(file_path):
+                    print(f"[Server Log] REMOVE FAILED (DIR) : {file_path}")
+            
+            print(f"[Server Log] REMOVED ALL FILES IN PATH : '{data_path}'")
+        except Exception as e:
+            print(f"[Server Log] ERROR : {e}")
     
     # JSON 형태로 반환
     return JSONResponse(content={"images": images})

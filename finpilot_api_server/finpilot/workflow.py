@@ -32,7 +32,7 @@ def create_application(memory : LimitedMemorySaver, vector_store : FAISS, sessio
     writer_process = WriterProcess(vector_store=vector_store)
     text_magician_process = TextMagicianProcess()
     web_visualizer_process = WebVisualizerProcess(session_id=session_id)
-    inner_visualizer_process = InnerVisualizerProcess()
+    inner_visualizer_process = InnerVisualizerProcess(session_id=session_id)
 
     ################## Add Nodes ##################
 
