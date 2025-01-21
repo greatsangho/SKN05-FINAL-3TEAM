@@ -116,12 +116,12 @@ async def get_graph_image(request : QueryRequestModel):
 
 @app.post("/upload-pdf")
 async def upload_pdf(
-    request : UploadPDFRequestModel
-    # session_id: str = Form(...),  # 문자열은 Form 필드로 처리
-    # file: UploadFile = File(...)  # 파일 업로드는 File로 처리
+    # request : UploadPDFRequestModel
+    session_id: str = Form(...),  # 문자열은 Form 필드로 처리
+    file: UploadFile = File(...)  # 파일 업로드는 File로 처리
 ):
-    file = request.file
-    session_id = request.session_id
+    # file = request.file
+    # session_id = request.session_id
 
     documents = []
 
@@ -143,16 +143,18 @@ async def upload_pdf(
         data=documents
     )
 
+    return {"status" : "success"}
+
 
 
 @app.post("/upload-csv")
 async def upload_csv(
-    request : UploadCSVRequestModel
-    # session_id : str = Form(...),
-    # file : UploadFile = File(...)
+    # request : UploadCSVRequestModel
+    session_id : str = Form(...),
+    file : UploadFile = File(...)
 ):
-    session_id = request.session_id
-    file = request.file
+    # session_id = request.session_id
+    # file = request.file
 
     upload_path = Path(os.getcwd()) / "data" / f"{session_id}"
     if not os.path.exists(upload_path):
@@ -170,6 +172,8 @@ async def upload_csv(
             f.write(content)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"An error ocurred : {e}")
+    
+    return {"status" : "success"}
 
 
 @app.post("/delete-pdf")
@@ -188,6 +192,8 @@ async def delete_pdf(json : DeletePDFRequestModel):
         vector_store=vectorstore,
         file_name=file_name
     )
+
+    return {"status" : "success"}
 
 
 @app.get("/sessions")
