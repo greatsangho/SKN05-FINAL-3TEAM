@@ -1,11 +1,14 @@
 from sqlalchemy.orm import Session
-from .models import Member, QnA, PDFFile
 from sqlalchemy.sql import func
+from .models import Member, SessionID, QnA, PDFFile
 from . import schemas
-import uuid
 import hashlib
+import uuid
+import os
 
+# -------------------
 # Member CRUD Functions
+# -------------------
 def create_user(db: Session, user_email: str):
     new_user = Member(user_email=user_email)
     db.add(new_user)
@@ -36,20 +39,84 @@ def delete_user(db: Session, user_email: str):
         return True
     return False
 
-# QnA CRUD Functions
-def create_qna(db: Session, user_email: str, docs_id: str, question: str):
-    # Generate session_id based on user_email and docs_id using UUID v5
+# -------------------
+# SessionID CRUD Functions
+# -------------------
+def create_session(db: Session, user_email: str, docs_id: str):
+    # Check if the session already exists
+    existing_session = db.query(SessionID).filter(
+        SessionID.user_email == user_email,
+        SessionID.docs_id == docs_id
+    ).first()
+    
+    if existing_session:
+        # If the session already exists, return it without creating a new one
+        return existing_session
 
-    namespace = uuid.UUID("12345678-1234-5678-1234-567812345678")  # Replace with your own namespace UUID
+    # Validate that the user exists
+    if not db.query(Member).filter(Member.user_email == user_email).first():
+        raise ValueError(f"User with email {user_email} does not exist.")
+
+    # Generate session_id using UUID namespace
+    namespace = os.getenv("NAMESPACE_UUID")
+    if not namespace:
+        raise ValueError("NAMESPACE_UUID environment variable is not set.")
+    
+    namespace_uuid = uuid.UUID(namespace)
     hashed_name = hashlib.sha256(f"{user_email}-{docs_id}".encode()).hexdigest()
-    session_id = str(uuid.uuid5(namespace, hashed_name))
+    session_id = str(uuid.uuid5(namespace_uuid, hashed_name))
 
-    new_qna = QnA(
+    # Create a new session
+    new_session = SessionID(
+        user_email=user_email,
+        docs_id=docs_id,
         session_id=session_id,
+    )
+    
+    db.add(new_session)
+    db.commit()
+    db.refresh(new_session)
+    return new_session
+
+def get_sessions(db: Session, skip: int = 0, limit: int = 10):
+    return db.query(SessionID).offset(skip).limit(limit).all()
+
+def get_session_by_id(db: Session, session_id: str):
+    return db.query(SessionID).filter(SessionID.session_id == session_id).first()
+
+def delete_session(db: Session, session_id: str):
+    db_session = db.query(SessionID).filter(SessionID.session_id == session_id).first()
+    if db_session:
+        db.delete(db_session)
+        db.commit()
+        return True
+    return False
+
+# -------------------
+# QnA CRUD Functions
+# -------------------
+def create_qna(db: Session, user_email: str, docs_id: str, question: str, session_id: str, chat_option: str):
+    """
+    QnA 레코드 생성 함수.
+    """
+    # 세션 유효성 검증 (이미 session_id를 호출부에서 전달받음)
+    session = db.query(SessionID).filter(
+        SessionID.user_email == user_email,
+        SessionID.docs_id == docs_id,
+        SessionID.session_id == session_id
+    ).first()
+
+    if not session:
+        raise ValueError(f"Session with user_email {user_email} and docs_id {docs_id} does not exist.")
+
+    # 새로운 QnA 레코드 생성
+    new_qna = QnA(
         user_email=user_email,
         docs_id=docs_id,
         question=question,
-        ask_time=func.now()
+        ask_time=func.now(),
+        chat_option=chat_option,
+        session_id=session.session_id,
     )
     
     db.add(new_qna)
@@ -57,57 +124,99 @@ def create_qna(db: Session, user_email: str, docs_id: str, question: str):
     db.refresh(new_qna)
     return new_qna
 
+
+def get_qnas(db: Session, skip: int = 0, limit: int = 10):
+    """
+    QnA 목록 조회 함수.
+    """
+    return db.query(QnA).offset(skip).limit(limit).all()
+
+
+def delete_qna(db: Session, qna_id: int):
+    """
+    QnA 삭제 함수.
+    """
+    db_qna = db.query(QnA).filter(QnA.qna_id == qna_id).first()
+    
+    if db_qna:
+        db.delete(db_qna)
+        db.commit()
+        return True
+    
+    return False
+
 def get_qnas(db: Session, skip: int = 0, limit: int = 10):
     return db.query(QnA).offset(skip).limit(limit).all()
 
-def get_qna_by_session_id(db: Session, session_id: str):
-    return db.query(QnA).filter(QnA.session_id == session_id).first()
+def get_qna_by_id(db: Session, qna_id: int):
+    return db.query(QnA).filter(QnA.qna_id == qna_id).first()
 
-def delete_qna(db: Session, session_id: str):
-    db_qna = db.query(QnA).filter(QnA.session_id == session_id).first()
+def delete_qna(db: Session, qna_id: int):
+    db_qna = db.query(QnA).filter(QnA.qna_id == qna_id).first()
     if db_qna:
         db.delete(db_qna)
         db.commit()
         return True
     return False
 
-# PDF CRUD Functions
+# -------------------
+# PDFFile CRUD Functions
+# -------------------
 def create_pdf_file(db: Session, user_email: str, docs_id: str, file_name: str):
+    # Validate that the QnA entry exists
+    qna_entry = db.query(QnA).filter(
+        QnA.user_email == user_email,
+        QnA.docs_id == docs_id
+    ).first()
+
+    if not qna_entry:
+        raise ValueError(f"QnA entry with user_email {user_email} and docs_id {docs_id} does not exist.")
+
+    # Create a new PDF file entry
     new_pdf_file = PDFFile(
         user_email=user_email,
         docs_id=docs_id,
         file_name=file_name,
-        file_time=func.now()
+        file_time=func.now(),
     )
+    
     db.add(new_pdf_file)
     db.commit()
     db.refresh(new_pdf_file)
     return new_pdf_file
 
-def update_pdf_file_name(db: Session, user_email: str, docs_id: str, new_file_name: str):
-    db_pdf_file = (
+def update_pdf_file_name(db: Session, pdf_id: int, new_file_name: str):
+    pdf_file = (
         db.query(PDFFile)
-        .filter(PDFFile.user_email == user_email, PDFFile.docs_id == docs_id)
+        .filter(PDFFile.pdf_id == pdf_id)
         .first()
     )
-    if db_pdf_file:
-        db_pdf_file.file_name = new_file_name  # Update the file name
+    
+    if pdf_file:  # Ensure this line is indented correctly
+        pdf_file.file_name = new_file_name  # Update the file name
         db.commit()
-        db.refresh(db_pdf_file)
-        return db_pdf_file
-    raise ValueError(f"PDF file with user_email {user_email} and docs_id {docs_id} does not exist.")
+        db.refresh(pdf_file)
+        return pdf_file
+    
+    raise ValueError(f"PDF file with id {pdf_id} does not exist.")
+
 
 def get_pdfs(db: Session, skip: int = 0, limit: int = 10):
     return db.query(PDFFile).offset(skip).limit(limit).all()
 
-def delete_pdf_file(db: Session, user_email: str, docs_id: str):
-    db_pdf_file = (
+def get_pdf_by_id(db: Session, pdf_id: int):
+    return db.query(PDFFile).filter(PDFFile.pdf_id == pdf_id).first()
+
+def delete_pdf_file(db: Session, pdf_id: int):
+    pdf_file = (
         db.query(PDFFile)
-        .filter(PDFFile.user_email == user_email, PDFFile.docs_id == docs_id)
+        .filter(PDFFile.pdf_id == pdf_id)
         .first()
     )
-    if db_pdf_file:
-        db.delete(db_pdf_file)
+    
+    if pdf_file:  # Ensure this line is indented correctly
+        db.delete(pdf_file)
         db.commit()
         return True
+    
     return False
