@@ -21,11 +21,11 @@ warnings.filterwarnings("ignore", category=LangSmithMissingAPIKeyWarning)
 
 
 # Environment Variable Setting
-from config.secret_keys import OPENAI_API_KEY, TAVILY_API_KEY, USER_AGENT, POLYGON_API_KEY
-os.environ["OPENAI_API_KEY"] = OPENAI_API_KEY
-os.environ["TAVILY_API_KEY"] = TAVILY_API_KEY
-os.environ["USER_AGENT"] = USER_AGENT
-os.environ["POLYGON_API_KEY"] = POLYGON_API_KEY
+# from config.secret_keys import OPENAI_API_KEY, TAVILY_API_KEY, USER_AGENT, POLYGON_API_KEY
+# os.environ["OPENAI_API_KEY"] = OPENAI_API_KEY
+# os.environ["TAVILY_API_KEY"] = TAVILY_API_KEY
+# os.environ["USER_AGENT"] = USER_AGENT
+# os.environ["POLYGON_API_KEY"] = POLYGON_API_KEY
 
 
 
@@ -116,23 +116,12 @@ async def get_graph_image(request : QueryRequestModel):
 
 @app.post("/upload-pdf")
 async def upload_pdf(
-    # request : UploadPDFRequestModel
-    session_id: str = Form(...),  # 문자열은 Form 필드로 처리
-    file: UploadFile = File(...)  # 파일 업로드는 File로 처리
+    request : UploadPDFRequestModel
+    # session_id: str = Form(...),  # 문자열은 Form 필드로 처리
+    # file: UploadFile = File(...)  # 파일 업로드는 File로 처리
 ):
-    # files = request.file
-    # session_id = request.session_id
-
-    # documents = []
-
-    # for file in files:
-    #     if file.content_type != "application/pdf":
-    #         raise HTTPException(status_code=400, detail="Not a PDF file!")
-        
-    #     document = parse_pdf(file)
-    #     documents.append(document)
-    # file = request.file
-    # session_id = request.session_id
+    file = request.file
+    session_id = request.session_id
 
     documents = []
 
@@ -158,12 +147,12 @@ async def upload_pdf(
 
 @app.post("/upload-csv")
 async def upload_csv(
-    # request : UploadCSVRequestModel
-    session_id : str = Form(...),
-    file : UploadFile = File(...)
+    request : UploadCSVRequestModel
+    # session_id : str = Form(...),
+    # file : UploadFile = File(...)
 ):
-    # session_id = request.session_id
-    # file = request.file
+    session_id = request.session_id
+    file = request.file
 
     upload_path = Path(os.getcwd()) / "data" / f"{session_id}"
     if not os.path.exists(upload_path):
@@ -211,5 +200,5 @@ async def list_sessions():
 
 
 if __name__ == "__main__" :
-    # uvicorn.run("main:app", host="0.0.0.0", port=8000)
-    uvicorn.run("main:app", host='localhost', reload=True)
+    uvicorn.run("main:app", host="0.0.0.0", port=8000)
+    # uvicorn.run("main:app", host='localhost', reload=True)
