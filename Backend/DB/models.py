@@ -50,6 +50,6 @@ class PDFFile(Base):
     __table_args__ = (
         ForeignKeyConstraint(
             ['user_email', 'docs_id'], 
-            ['session_tbl.user_email', 'session_tbl.docs_id'],  # Reference composite PK in QnA table
+            ['session_tbl.user_email', 'session_tbl.docs_id'],  # Reference composite PK in SessionID table
         ),
     )
