@@ -147,8 +147,9 @@ def create_qna(qna: schemas.QnACreate, db: Session = Depends(get_db)):
                     session_id=session.session_id,
                     chat_option=qna.chat_option
                 )
-                # RunPod에서 반환된 그래프 데이터를 처리 (image:[,] 형태로 저장)
-                answer = {"images": graph_response}
+                # RunPod에서 반환된 그래프 데이터를 처리 ("images":[{},{}] 형태로 저장)
+                # answer = {"images": graph_response} # 바꾸기
+                answer = graph_response
             else:
                 # 일반 질문 처리
                 answer = send_question_to_runpod(
@@ -269,7 +270,7 @@ def delete_pdf(request: DeletePDFRequest, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="PDF file not found")
 
     # Perform the deletion
-    success = crud.delete_pdf_file(db=db, pdf_file=pdf_file)
+    success = crud.delete_pdf_file(db=db, pdf_id=pdf_file.pdf_id)
     if not success:
         raise HTTPException(status_code=500, detail="Failed to delete PDF file")
 
@@ -280,9 +281,9 @@ def delete_pdf(request: DeletePDFRequest, db: Session = Depends(get_db)):
 # -------------------
 @app.post("/csvs/")
 async def upload_csv(
-    user_email: str,
-    docs_id: str,
-    file: UploadFile = File(...),  # 파일 업로드 처리
+    user_email: str = Form(...),
+    docs_id: str = Form(...),
+    file: UploadFile = File(...),
     db: Session = Depends(get_db)
 ):
     """

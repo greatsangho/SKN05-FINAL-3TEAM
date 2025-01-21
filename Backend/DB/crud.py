@@ -201,11 +201,19 @@ def update_pdf_file_name(db: Session, pdf_id: int, new_file_name: str):
     raise ValueError(f"PDF file with id {pdf_id} does not exist.")
 
 
-def get_pdfs(db: Session, skip: int = 0, limit: int = 10):
-    return db.query(PDFFile).offset(skip).limit(limit).all()
-
-def get_pdf_by_id(db: Session, pdf_id: int):
-    return db.query(PDFFile).filter(PDFFile.pdf_id == pdf_id).first()
+def get_pdf_file(db: Session, user_email: str, docs_id: str, file_name: str):
+    """
+    Retrieve a PDF file entry based on user_email, docs_id, and file_name.
+    """
+    return (
+        db.query(PDFFile)
+        .filter(
+            PDFFile.user_email == user_email,
+            PDFFile.docs_id == docs_id,
+            PDFFile.file_name == file_name
+        )
+        .first()
+    )
 
 def delete_pdf_file(db: Session, pdf_id: int):
     pdf_file = (

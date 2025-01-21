@@ -46,14 +46,6 @@ def send_graph_to_runpod(question: str, session_id: str, chat_option: str) -> li
     """
     RunPod API와 통신하여 그래프 요청을 보내고 base64 이미지 리스트를 반환하는 함수.
     """
-    # 환경 변수 가져오기
-    endpoint_id = os.getenv("RUNPOD_ENDPOINT_ID")
-    api_key = os.getenv("RUNPOD_API_KEY")
-    
-    # 환경 변수 검증
-    if not endpoint_id or not api_key:
-        raise HTTPException(status_code=500, detail="RunPod API credentials are not set.")
-
     # RunPod API URL
     url = f"https://{runpod_url}-8000.proxy.runpod.net/get-graph-image"
 
@@ -91,15 +83,6 @@ def send_pdf_to_runpod(file_path: str, session_id: str):
     """
     RunPod으로 PDF 파일 경로와 session_id를 전송하는 함수.
     """
-    endpoint_id = os.getenv("RUNPOD_ENDPOINT_ID")
-    api_key = os.getenv("RUNPOD_API_KEY")
-
-    if not endpoint_id or not api_key:
-        raise HTTPException(
-            status_code=500,
-            detail="RunPod API credentials are not set. Please check RUNPOD_ENDPOINT_ID and RUNPOD_API_KEY."
-        )
-
     try:
         url = f"https://{runpod_url}-8000.proxy.runpod.net/upload-pdf"
         
@@ -109,8 +92,10 @@ def send_pdf_to_runpod(file_path: str, session_id: str):
                 "file": (os.path.basename(file_path), f, "application/pdf")
             }
             data = {"session_id": session_id}
-            headers = {"Authorization": f"Bearer {api_key}"}
-
+            headers = {
+                "accept": "application/json",
+                "content-type": "application/json"
+            }
             response = requests.post(url, files=files, data=data, headers=headers)
             response.raise_for_status()
 
