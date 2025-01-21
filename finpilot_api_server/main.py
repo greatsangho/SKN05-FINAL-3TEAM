@@ -2,7 +2,7 @@ import os
 from pathlib import Path
 
 # FinPilot Application
-from finpilot.request_model import QueryRequestModel, UploadPDFRequestModel, DeletePDFRequestModel
+from finpilot.request_model import QueryRequestModel, UploadPDFRequestModel, DeletePDFRequestModel, UploadCSVRequestModel
 from finpilot.vectorstore import add_data_to_vectorstore_and_update_redis, delete_data_from_vectorstore_and_update_redis
 from finpilot.session import get_session_app, get_session_vectorstore
 from finpilot.utils import parse_pdf, delete_files_in_dir, encode_img_base64
@@ -21,11 +21,11 @@ warnings.filterwarnings("ignore", category=LangSmithMissingAPIKeyWarning)
 
 
 # Environment Variable Setting
-from config.secret_keys import OPENAI_API_KEY, TAVILY_API_KEY, USER_AGENT, POLYGON_API_KEY
-os.environ["OPENAI_API_KEY"] = OPENAI_API_KEY
-os.environ["TAVILY_API_KEY"] = TAVILY_API_KEY
-os.environ["USER_AGENT"] = USER_AGENT
-os.environ["POLYGON_API_KEY"] = POLYGON_API_KEY
+# from config.secret_keys import OPENAI_API_KEY, TAVILY_API_KEY, USER_AGENT, POLYGON_API_KEY
+# os.environ["OPENAI_API_KEY"] = OPENAI_API_KEY
+# os.environ["TAVILY_API_KEY"] = TAVILY_API_KEY
+# os.environ["USER_AGENT"] = USER_AGENT
+# os.environ["POLYGON_API_KEY"] = POLYGON_API_KEY
 
 
 
@@ -38,14 +38,13 @@ redis = Redis(host="localhost", port=6379, decode_responses=False)
 app = FastAPI()
 
 @app.post("/query")
-async def finpilot_endpoint(json : QueryRequestModel):
-    json_input = json.input
+async def finpilot_endpoint(request : QueryRequestModel):
     # Session ID 가져오기
-    session_id = json_input.session_id
+    session_id = request.session_id
     if not session_id:
         raise HTTPException(status_code=400, detail="Session ID is required!")
     
-    question = json_input.question
+    question = request.question
     if not question:
         raise HTTPException(status_code=400, detail="Question is required!")
     
@@ -60,93 +59,14 @@ async def finpilot_endpoint(json : QueryRequestModel):
     return {"session_id" : session_id, "answer" : answer}
 
 
-
-@app.post("/upload-pdf")
-async def upload_pdf(
-    session_id: str = Form(...),  # 문자열은 Form 필드로 처리
-    pdf_files: list[UploadFile] = File(...)  # 파일 업로드는 File로 처리
-):
-    # files = json['pdf_files']
-    # session_id = json['session_id']
-
-    documents = []
-
-    for file in pdf_files:
-        if file.content_type != "application/pdf":
-            raise HTTPException(status_code=400, detail="Not a PDF file!")
-        
-        document = parse_pdf(file)
-        documents.append(document)
-
-    vectorstore = get_session_vectorstore(
-        redis_client=redis,
-        session_id=session_id
-    )
-
-    add_data_to_vectorstore_and_update_redis(
-        redis_client=redis,
-        session_id=session_id,
-        vector_store=vectorstore,
-        data=documents
-    )
-
-
-
-@app.post("/upload-csv")
-async def upload_csv(
-    session_id : str = Form(...),
-    csv_file : UploadFile = File(...)
-):
-    upload_path = Path(os.getcwd()) / "data" / f"{session_id}"
-    if not os.path.exists(upload_path):
-        os.makedirs(upload_path)
-    
-    if len(os.listdir(upload_path)) > 0:
-        delete_files_in_dir(upload_path)
-
-    
-    upload_file_path = upload_path / csv_file.filename
-
-    try :
-        with open(upload_file_path, "wb") as f:
-            content = await csv_file.read()
-            f.write(content)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"An error ocurred : {e}")
-
-
-
-
-@app.post("/delete-pdf")
-async def delete_pdf(json : DeletePDFRequestModel):
-    file_name = json.file_name
-    session_id = json.session_id
-
-    # vectorstore = get_session_vectorstore(session_id)
-    vectorstore = get_session_vectorstore(
-        redis_client=redis,
-        session_id=session_id
-    )
-
-    delete_data_from_vectorstore_and_update_redis(
-        redis_client=redis,
-        session_id=session_id,
-        vector_store=vectorstore,
-        file_name=file_name
-    )
-
-
-
 @app.post("/get-graph-image")
-async def get_graph_image(json : QueryRequestModel):
+async def get_graph_image(request : QueryRequestModel):
 
-    json_input = json.input
-
-    session_id = json_input.session_id
+    session_id = request.session_id
     if not session_id:
         raise HTTPException(status_code=400, detail="Session ID is required!")
     
-    question = json_input.question
+    question = request.question
     if not question:
         raise HTTPException(status_code=400, detail="Question is required!")
     
@@ -155,7 +75,8 @@ async def get_graph_image(json : QueryRequestModel):
     if not os.path.exists(folder_path):
         os.makedirs(folder_path)
     data_path = Path(os.getcwd()) / "data" / f"{session_id}"
-    
+    if not os.path.exists(data_path):
+        os.makedirs(data_path)
 
 
     pilot = get_session_app(
@@ -184,6 +105,92 @@ async def get_graph_image(json : QueryRequestModel):
     return JSONResponse(content={"images": images})
 
 
+@app.post("/upload-pdf")
+async def upload_pdf(
+    request : UploadPDFRequestModel
+    # session_id: str = Form(...),  # 문자열은 Form 필드로 처리
+    # pdf_files: list[UploadFile] = File(...)  # 파일 업로드는 File로 처리
+):
+    # files = request.file
+    # session_id = request.session_id
+
+    # documents = []
+
+    # for file in files:
+    #     if file.content_type != "application/pdf":
+    #         raise HTTPException(status_code=400, detail="Not a PDF file!")
+        
+    #     document = parse_pdf(file)
+    #     documents.append(document)
+    file = request.file
+    session_id = request.session_id
+
+    documents = []
+
+    if file.content_type != "application/pdf":
+        raise HTTPException(status_code=400, detail="Not a PDF file!")
+    
+    document = parse_pdf(file)
+    documents.append(document)
+
+    vectorstore = get_session_vectorstore(
+        redis_client=redis,
+        session_id=session_id
+    )
+
+    add_data_to_vectorstore_and_update_redis(
+        redis_client=redis,
+        session_id=session_id,
+        vector_store=vectorstore,
+        data=documents
+    )
+
+
+
+@app.post("/upload-csv")
+async def upload_csv(
+    request : UploadCSVRequestModel
+    # session_id : str = Form(...),
+    # csv_file : UploadFile = File(...)
+):
+    session_id = request.session_id
+    file = request.file
+
+    upload_path = Path(os.getcwd()) / "data" / f"{session_id}"
+    if not os.path.exists(upload_path):
+        os.makedirs(upload_path)
+    
+    if len(os.listdir(upload_path)) > 0:
+        delete_files_in_dir(upload_path)
+
+    
+    upload_file_path = upload_path / file.filename
+
+    try :
+        with open(upload_file_path, "wb") as f:
+            content = await file.read()
+            f.write(content)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"An error ocurred : {e}")
+
+
+@app.post("/delete-pdf")
+async def delete_pdf(json : DeletePDFRequestModel):
+    file_name = json.file_name
+    session_id = json.session_id
+
+    # vectorstore = get_session_vectorstore(session_id)
+    vectorstore = get_session_vectorstore(
+        redis_client=redis,
+        session_id=session_id
+    )
+
+    delete_data_from_vectorstore_and_update_redis(
+        redis_client=redis,
+        session_id=session_id,
+        vector_store=vectorstore,
+        file_name=file_name
+    )
 
 
 @app.get("/sessions")
@@ -196,4 +203,4 @@ async def list_sessions():
 
 
 if __name__ == "__main__" :
-    uvicorn.run("main:app", host="127.0.0.1", reload=True)
+    uvicorn.run("main:app", host="0.0.0.0", port=8000)
