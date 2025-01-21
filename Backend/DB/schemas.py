@@ -2,125 +2,48 @@ from pydantic import BaseModel, EmailStr
 from datetime import datetime
 from typing import Optional
 
-# -------------------
-# Pydantic 모델 정의
-# -------------------
+# Member Schema
+class MemberBase(BaseModel):
+    user_email: EmailStr
 
-# -------------------
-# 유저 정보 정의
-# -------------------
-class UserBase(BaseModel):
-    userEmail: EmailStr
-    loginTime: Optional[datetime] = None
-# Create 요청 스키마
-class UserCreate(UserBase):
-    pass  # 모든 필드를 그대로 사용
+class MemberCreate(MemberBase):
+    pass  # No additional fields; you can omit this schema if unnecessary
 
-# Update 요청 스키마 (부분 업데이트 허용)
-class UserUpdate(BaseModel):
-    loginTime: Optional[datetime]
-
-# Response 스키마
-class UserResponse(UserBase):
-    class Config:
-        orm_mode = True  # SQLAlchemy 모델과 호환되도록 설정
-
-# -------------------
-# 구글 독스 파일 정의
-# -------------------
-class FileBase(BaseModel):
-    userEmail: EmailStr
-    docsID: str
-    isCSV: bool
-    isPDF: bool
-
-# Create 요청 스키마
-class FileCreate(FileBase):
-    pass  # 모든 필드를 그대로 사용
-
-# Update 요청 스키마 (부분 업데이트 허용)
-class FileUpdate(BaseModel):
-    userEmail: EmailStr
-    docsID: str
-    isCSV: Optional[bool]
-    isPDF: Optional[bool]
-
-# Response 스키마
-class FileResponse(FileBase):
-    fileID: str  # Primary Key 포함
+class Member(MemberBase):
+    login_time: datetime
 
     class Config:
-        orm_mode = True  # SQLAlchemy 모델과 호환되도록 설정
+        orm_mode = True
 
-# -------------------
-# 질문 정의
-# -------------------
-class QnaBase(BaseModel):
+
+class QnABase(BaseModel):
+    user_email: EmailStr
+    docs_id: str
+
+class QnACreate(QnABase):
     question: str
-    answer: Optional[str] = None
-    fileID: Optional[str] = None  # fileID는 외래 키로 선택적 필드
-    isDel: bool = False
 
-# Create 요청 스키마
-class QnaCreate(QnaBase):
-    pass  # 모든 필드를 그대로 사용
-
-# Update 요청 스키마 (부분 업데이트 허용)
-class QnaUpdate(BaseModel):
-    question: Optional[str]
-    answer: Optional[str]
-    fileID: Optional[str]
-    isDel: Optional[bool]
-# Response 스키마
-class QnaResponse(QnaBase):
-    qnaID: int  # Primary Key 포함
+class QnA(QnABase):
+    session_id: str
+    question: str
+    answer: Optional[str] = None  # Included in response, not input
+    ask_time: datetime
 
     class Config:
-        orm_mode = True  # SQLAlchemy 모델과 호환되도록 설정
+        orm_mode = True
 
-# -------------------
-# csv 파일 정의
-# -------------------
-class CsvBase(BaseModel):
-    fileID: int
-    csvName: Optional[str] = None
-    csvTime: Optional[datetime] = None
-    isDel: bool
+# PDF Schema
+class PDFFileBase(BaseModel):
+    user_email: EmailStr
+    docs_id: str
 
-# Create 요청 스키마
-class CsvCreate(CsvBase):
-    pass  # 모든 필드를 그대로 사용
+class PDFFileCreate(PDFFileBase):
+    file_name: str
+    file_time: datetime = datetime.now()  # Default to current timestamp
 
-# Update 요청 스키마 (부분 업데이트 허용)
-class CsvUpdate(BaseModel):
-    csvName: Optional[str]
-    isDel: Optional[bool]
+class PDFFile(PDFFileBase):
+    file_name: str
+    file_time: datetime
 
-# Response 스키마
-class CsvResponse(CsvBase):
     class Config:
-        orm_mode = True  # SQLAlchemy 모델과 호환되도록 설정
-
-# -------------------
-# pdf 파일 정의
-# -------------------   
-class PdfBase(BaseModel):
-    fileID: int
-    pdfName: Optional[str] = None
-    pdfTime: Optional[datetime] = None
-    isDel: bool
-
-# Create 요청 스키마
-class PdfCreate(PdfBase):
-    pass  # 모든 필드를 그대로 사용
-
-# Update 요청 스키마 (부분 업데이트 허용)
-class PdfUpdate(BaseModel):
-    pdfName: Optional[str]
-    isDel: Optional[bool]
-
-# Response 스키마
-class PdfResponse(PdfBase):
-    class Config:
-        orm_mode = True  # SQLAlchemy 모델과 호환되도록 설정
-        
+        orm_mode = True
