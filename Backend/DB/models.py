@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, DateTime, ForeignKeyConstraint, PrimaryKeyConstraint
+from sqlalchemy import Column, String, DateTime, ForeignKey, ForeignKeyConstraint, PrimaryKeyConstraint
 from sqlalchemy.sql import func
 from .database import Base
 
@@ -12,7 +12,7 @@ class Member(Base):
 class QnA(Base):
     __tablename__ = "qna_tbl"
     session_id = Column(String(36), nullable=False)
-    user_email = Column(String(40), nullable=False)
+    user_email = Column(String(40), ForeignKey('member_tbl.user_email'), nullable=False)
     docs_id = Column(String(100), nullable=False)
     question = Column(String(1000), nullable=False)
     answer = Column(String(1000), nullable=True)
