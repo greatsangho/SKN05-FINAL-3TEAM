@@ -163,13 +163,13 @@ def delete_qna(db: Session, qna_id: int):
 # PDFFile CRUD Functions
 # -------------------
 def create_pdf_file(db: Session, user_email: str, docs_id: str, file_name: str):
-    # Validate that the QnA entry exists
-    qna_entry = db.query(QnA).filter(
-        QnA.user_email == user_email,
-        QnA.docs_id == docs_id
+    # Validate that the SessionID entry exists
+    session_entry = db.query(SessionID).filter(
+        SessionID.user_email == user_email,
+        SessionID.docs_id == docs_id
     ).first()
 
-    if not qna_entry:
+    if not session_entry:
         raise ValueError(f"QnA entry with user_email {user_email} and docs_id {docs_id} does not exist.")
 
     # Create a new PDF file entry
