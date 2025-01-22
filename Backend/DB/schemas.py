@@ -73,6 +73,8 @@ class PDFFileCreate(PDFFileBase):
 
 class PDFFile(PDFFileBase):
     pdf_id: int  # Auto-incremented primary key
+    # user_email: EmailStr
+    # docs_id: str
     file_name: str
     file_time: datetime  # Automatically set by the database
 

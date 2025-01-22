@@ -1,9 +1,15 @@
 from fastapi import HTTPException, UploadFile
 from dotenv import load_dotenv
 import requests
+import logging
 import os
 load_dotenv()
 runpod_url = os.getenv("RUNPOD_URL")
+
+# 로깅 설정
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 # -------------------
 # RunPod 통신 함수
 # -------------------
@@ -76,6 +82,7 @@ def send_graph_to_runpod(question: str, session_id: str, chat_option: str) -> li
         return images  # 이미지 리스트 반환 (file_name과 image_data 포함)
     except (ValueError, KeyError) as e:
         raise HTTPException(status_code=500, detail=f"Invalid response format: {str(e)}")
+
 # -------------------
 # RunPod으로 PDF 파일 및 session_id 전송 함수
 # -------------------
@@ -84,21 +91,27 @@ def send_pdf_to_runpod(file_path: str, session_id: str):
     RunPod으로 PDF 파일 경로와 session_id를 전송하는 함수.
     """
     try:
+        # RunPod API URL
         url = f"https://{runpod_url}-8000.proxy.runpod.net/upload-pdf"
         
         # 파일 경로에서 파일 읽기
         with open(file_path, "rb") as f:
+            # files와 data 구성
             files = {
                 "file": (os.path.basename(file_path), f, "application/pdf")
             }
             data = {"session_id": session_id}
+            
+            # 헤더 설정 (Content-Type은 requests가 자동으로 설정)
             headers = {
-                "accept": "application/json",
-                "content-type": "application/json"
+                "accept": "application/json"
             }
+            
+            # POST 요청 보내기
             response = requests.post(url, files=files, data=data, headers=headers)
-            response.raise_for_status()
+            response.raise_for_status()  # HTTP 오류 발생 시 예외 처리
 
+        # 응답 처리
         response_data = response.json()
         if response_data.get("status") != "success":
             raise RuntimeError(f"RunPod API returned an error: {response_data}")
@@ -108,6 +121,51 @@ def send_pdf_to_runpod(file_path: str, session_id: str):
     except requests.exceptions.RequestException as e:
         raise RuntimeError(f"Failed to communicate with RunPod: {str(e)}")
 
+
+def send_delete_pdf_request_to_runpod(file_name: str, session_id: str):
+    """
+    RunPod으로 PDF 삭제 요청을 보내는 함수.
+    """
+    try:
+        # RunPod API URL 설정
+        url = f"https://{runpod_url}-8000.proxy.runpod.net/delete-pdf"
+        logger.info(f"Sending delete request to RunPod for PDF file: {file_name}, session_id: {session_id}")
+
+        # 요청 페이로드와 헤더 구성
+        payload = {
+            "session_id": session_id,
+            "file_name": file_name,
+        }
+        headers = {
+            "Content-Type": "application/json",
+            "accept": "application/json",
+        }
+
+        # POST 요청 보내기
+        response = requests.post(url, json=payload, headers=headers)
+        response.raise_for_status()  # HTTP 오류 발생 시 예외 처리
+
+        # 응답 처리
+        try:
+            response_data = response.json()
+        except ValueError:
+            logger.error("Invalid JSON response from RunPod API")
+            raise RuntimeError("Invalid JSON response from RunPod API")
+
+        if response_data.get("status") != "success":
+            logger.error(f"RunPod API returned an error: {response_data}")
+            raise RuntimeError(f"RunPod API returned an error: {response_data}")
+
+        logger.info("Delete request successfully sent to RunPod")
+        return response_data
+
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Failed to communicate with RunPod: {str(e)}")
+        raise RuntimeError(f"Failed to communicate with RunPod: {str(e)}")
+    except Exception as e:
+        logger.error(f"Unexpected error: {str(e)}")
+        raise RuntimeError(f"Unexpected error occurred: {str(e)}")
+
 # -------------------
 # RunPod으로 CSV 파일 전송 함수
 # -------------------
@@ -116,37 +174,86 @@ def send_csv_to_runpod(file: UploadFile, session_id: str):
     RunPod으로 CSV 파일과 session_id를 전송하는 함수.
     """
     try:
+        # RunPod API URL 설정
         url = f"https://{runpod_url}-8000.proxy.runpod.net/upload-csv"
-        
+        logger.info(f"Sending CSV to RunPod: {file.filename}, session_id: {session_id}")
+
         # 파일 데이터를 multipart/form-data로 전송
         with file.file as f:
-            files = {"file": (file.filename, f, file.content_type)}
+            files = {
+                "file": (file.filename, f, file.content_type or "text/csv")
+            }
             data = {"session_id": session_id}  # session_id를 데이터로 포함
-            response = requests.post(url, files=files, data=data)
+            headers = {
+                "accept": "application/json"
+            }
 
-        response.raise_for_status()  # 요청 실패 시 예외 발생
+            # POST 요청 보내기
+            response = requests.post(url, files=files, data=data, headers=headers)
+            response.raise_for_status()  # HTTP 오류 발생 시 예외 처리
 
-        return response.json()  # RunPod 응답 반환
+        # 응답 처리
+        try:
+            response_data = response.json()
+        except ValueError:
+            logger.error("Invalid JSON response from RunPod API")
+            raise RuntimeError("Invalid JSON response from RunPod API")
+
+        if response_data.get("status") != "success":
+            logger.error(f"RunPod API returned an error: {response_data}")
+            raise RuntimeError(f"RunPod API returned an error: {response_data}")
+
+        logger.info("CSV successfully sent to RunPod")
+        return response_data
+
     except requests.exceptions.RequestException as e:
+        logger.error(f"Failed to communicate with RunPod: {str(e)}")
         raise RuntimeError(f"Failed to communicate with RunPod: {str(e)}")
-
+    except Exception as e:
+        logger.error(f"Unexpected error: {str(e)}")
+        raise RuntimeError(f"Unexpected error occurred: {str(e)}")
+    
 
 def send_delete_csv_request_to_runpod(file_name: str, session_id: str):
+    """
+    RunPod으로 CSV 삭제 요청을 보내는 함수.
+    """
     try:
-        # Replace with your actual RunPod API endpoint and authentication details
-        url = f"https://{runpod_url}-8000.proxy.runpod.net/delete-pdf"
+        # RunPod API URL 설정
+        url = f"https://{runpod_url}-8000.proxy.runpod.net/delete-csv"
+        logger.info(f"Sending delete request to RunPod for file: {file_name}, session_id: {session_id}")
+
+        # 요청 페이로드와 헤더 구성
         payload = {
             "session_id": session_id,
             "file_name": file_name,
         }
         headers = {
-            # "Authorization": "Bearer YOUR_RUNPOD_API_KEY",  # Replace with your API key
             "Content-Type": "application/json",
+            "accept": "application/json",
         }
 
+        # POST 요청 보내기
         response = requests.post(url, json=payload, headers=headers)
-        response.raise_for_status()  # Raise an exception for HTTP errors
-        return response.json()
-    except requests.RequestException as e:
-        print(f"Error sending delete request to RunPod: {e}")
-        return {"status": "error", "message": str(e)}
+        response.raise_for_status()  # HTTP 오류 발생 시 예외 처리
+
+        # 응답 처리
+        try:
+            response_data = response.json()
+        except ValueError:
+            logger.error("Invalid JSON response from RunPod API")
+            raise RuntimeError("Invalid JSON response from RunPod API")
+
+        if response_data.get("status") != "success":
+            logger.error(f"RunPod API returned an error: {response_data}")
+            raise RuntimeError(f"RunPod API returned an error: {response_data}")
+
+        logger.info("Delete request successfully sent to RunPod")
+        return response_data
+
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Failed to communicate with RunPod: {str(e)}")
+        raise RuntimeError(f"Failed to communicate with RunPod: {str(e)}")
+    except Exception as e:
+        logger.error(f"Unexpected error: {str(e)}")
+        raise RuntimeError(f"Unexpected error occurred: {str(e)}")
