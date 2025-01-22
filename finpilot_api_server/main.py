@@ -1,18 +1,18 @@
+################################## Import Modules ##################################
+# Base Modules
 import os
 from pathlib import Path
-
-# FinPilot Application
-from finpilot.request_model import QueryRequestModel, UploadPDFRequestModel, DeletePDFRequestModel, UploadCSVRequestModel
+# FinPilot Modules
+from finpilot.request_model import QueryRequestModel, DeleteFileRequestModel
 from finpilot.vectorstore import add_data_to_vectorstore_and_update_redis, delete_data_from_vectorstore_and_update_redis
 from finpilot.session import get_session_app, get_session_vectorstore
 from finpilot.utils import parse_pdf, delete_files_in_dir, encode_img_base64
-
-from fastapi import FastAPI, HTTPException, File, UploadFile, Form
+# Server Modules
+from fastapi import FastAPI, HTTPException, UploadFile, Form, File
 from fastapi.responses import JSONResponse
 import uvicorn
 from redis import Redis
-
-# 특정 경고 무시
+# Ignore Warnings
 import warnings
 from langsmith.utils import LangSmithMissingAPIKeyWarning
 warnings.filterwarnings("ignore", category=LangSmithMissingAPIKeyWarning)
@@ -20,7 +20,8 @@ warnings.filterwarnings("ignore", category=LangSmithMissingAPIKeyWarning)
 
 
 
-# Environment Variable Setting
+
+################################## Environment Variable Setting ##################################
 # from config.secret_keys import OPENAI_API_KEY, TAVILY_API_KEY, USER_AGENT, POLYGON_API_KEY
 # os.environ["OPENAI_API_KEY"] = OPENAI_API_KEY
 # os.environ["TAVILY_API_KEY"] = TAVILY_API_KEY
@@ -29,113 +30,135 @@ warnings.filterwarnings("ignore", category=LangSmithMissingAPIKeyWarning)
 
 
 
-# Redis 연결
+
+
+################################## Create Redis Client ##################################
 redis = Redis(host="localhost", port=6379, decode_responses=False)
 
 
 
 
+
+################################## Initialize Fast API server ##################################
 app = FastAPI()
 
+
+
+
+
+################################## Invoke Answer (Non Image) ##################################
 @app.post("/query")
-async def finpilot_endpoint(request : QueryRequestModel):
-    # Session ID 가져오기
+async def finpilot_endpoint(
+    request : QueryRequestModel
+):
+    # Get Session ID
     session_id = request.session_id
     if not session_id:
         raise HTTPException(status_code=400, detail="Session ID is required!")
-    
+    # Get question
     question = request.question
     if not question:
         raise HTTPException(status_code=400, detail="Question is required!")
-    
+    # Get Chat option
     chat_option = request.chat_option
     if not chat_option:
         raise HTTPException(status_code=400, detail="Chat Option is required!")
     
-
+    # Create/Load the LangGraph Application according to Session ID
     pilot = get_session_app(
         redis_client=redis,
         session_id=session_id
     )
     
+    # invoke answer
     answer = pilot.invoke(question, session_id, chat_option)
 
+    # return answer
     return {"session_id" : session_id, "answer" : answer}
 
 
-@app.post("/get-graph-image")
-async def get_graph_image(request : QueryRequestModel):
 
+
+
+################################## Invoke Answer (Image) ##################################
+@app.post("/get-graph-image")
+async def get_graph_image(
+    request : QueryRequestModel
+):
+    # Get Session ID
     session_id = request.session_id
     if not session_id:
         raise HTTPException(status_code=400, detail="Session ID is required!")
-    
+    # Get question
     question = request.question
     if not question:
         raise HTTPException(status_code=400, detail="Question is required!")
-    
+    # Get Chat option
     chat_option = request.chat_option
     if not chat_option:
         raise HTTPException(status_code=400, detail="Chat Option is required!")
     
-
+    # Set Folder Path for Image saving
     folder_path = f"./charts/{session_id}/"
     if not os.path.exists(folder_path):
         os.makedirs(folder_path)
+    # Set Data Path for Get CSV Data
     data_path = Path(os.getcwd()) / "data" / f"{session_id}"
     if not os.path.exists(data_path):
         os.makedirs(data_path)
 
-
+    # Create/Load the LangGraph Application according to Session ID
     pilot = get_session_app(
         redis_client=redis,
         session_id=session_id
     )
 
+    # invoke answer
     while len(os.listdir(folder_path)) == 0:
         _ = pilot.invoke(question, session_id, chat_option)
 
-    
-    # PNG 파일 목록 가져오기
+    # Get PNG File list
     png_files = [f for f in os.listdir(folder_path) if f.endswith(".png")]
     if not png_files:
         raise HTTPException(status_code=404, detail="No PNG files found in the folder")
 
-
-    # 이미지 데이터를 Base64로 인코딩
+    # Encode Image to Base64 type
     images = encode_img_base64(folder_path, png_files)
     
-
+    # Delete Remaining CSV Files
     if len(os.listdir(data_path)) > 0:
         delete_files_in_dir(data_path)
     
 
-    # JSON 형태로 반환
+    # Return Image data as JSON Form
     return JSONResponse(content={"images": images})
 
 
+
+
+
+################################## Upload File (PDF) ##################################
 @app.post("/upload-pdf")
 async def upload_pdf(
-    # request : UploadPDFRequestModel
-    session_id: str = Form(...),  # 문자열은 Form 필드로 처리
-    file: UploadFile = File(...)  # 파일 업로드는 File로 처리
+    session_id: str = Form(...),
+    file: UploadFile = File(...)
 ):
-    # file = request.file
-    # session_id = request.session_id
-
-    documents = []
-
+    # Check File Type is PDF
     if file.content_type != "application/pdf":
         raise HTTPException(status_code=400, detail="Not a PDF file!")
     
+    # Parsing PDF File And Transform as Document object
+    documents = []
     document = parse_pdf(file)
     documents.append(document)
 
+    # Get VectorStore accoring to Session ID
     vectorstore = get_session_vectorstore(
         redis_client=redis,
         session_id=session_id
     )
 
+    # Add data to Session VectorStore & Update Redis Server Data
     add_data_to_vectorstore_and_update_redis(
         redis_client=redis,
         session_id=session_id,
@@ -143,29 +166,32 @@ async def upload_pdf(
         data=documents
     )
 
+    # Return Status (Task Complete)
     return {"status" : "success"}
 
 
 
+
+
+################################## Upload File (CSV) ##################################
 @app.post("/upload-csv")
 async def upload_csv(
-    # request : UploadCSVRequestModel
     session_id : str = Form(...),
     file : UploadFile = File(...)
 ):
-    # session_id = request.session_id
-    # file = request.file
-
+    # Set Path to save CSV File
     upload_path = Path(os.getcwd()) / "data" / f"{session_id}"
     if not os.path.exists(upload_path):
         os.makedirs(upload_path)
     
+    # Delete Any Remaing CSV Files
     if len(os.listdir(upload_path)) > 0:
         delete_files_in_dir(upload_path)
 
-    
+    # Set File Path
     upload_file_path = upload_path / file.filename
 
+    # Save File to Local dir
     try :
         with open(upload_file_path, "wb") as f:
             content = await file.read()
@@ -173,19 +199,30 @@ async def upload_csv(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"An error ocurred : {e}")
     
+    # Return Status (Task Complete)
     return {"status" : "success"}
 
 
-@app.post("/delete-pdf")
-async def delete_pdf(json : DeletePDFRequestModel):
-    file_name = json.file_name
-    session_id = json.session_id
 
+
+
+################################## Delete File (PDF) ##################################
+@app.post("/delete-pdf")
+async def delete_pdf(
+    request : DeleteFileRequestModel
+):
+    # Get file name
+    file_name = request.file_name
+    # Get Session ID
+    session_id = request.session_id
+
+    # Get VectorStore accoring to Session ID
     vectorstore = get_session_vectorstore(
         redis_client=redis,
         session_id=session_id
     )
-
+    
+    # delete data from Session VectorStore & Update Redis Server Data
     delete_data_from_vectorstore_and_update_redis(
         redis_client=redis,
         session_id=session_id,
@@ -193,9 +230,38 @@ async def delete_pdf(json : DeletePDFRequestModel):
         file_name=file_name
     )
 
+    # Return Status (Task Complete)
     return {"status" : "success"}
 
 
+
+
+
+################################## Delete File (CSV) ##################################
+@app.post("/delete-csv")
+async def delete_csv(
+    request : DeleteFileRequestModel
+):
+    # Get Session ID
+    session_id = request.session_id
+    
+    # Set Path to delete CSV File
+    delete_path = Path(os.getcwd()) / "data" / f"{session_id}"
+    if not os.path.exists(delete_path):
+        os.makedirs(delete_path)
+    
+    # Delete Any Remaing CSV Files
+    if len(os.listdir(delete_path)) > 0:
+        delete_files_in_dir(delete_path)
+    
+    # Return Status (Task Complete)
+    return {"status" : "success"}
+
+
+
+
+
+################################## 활성화 세션 정보 확인 ##################################
 @app.get("/sessions")
 async def list_sessions():
     # Redis에서 활성 세션 리스트 반환
@@ -205,6 +271,7 @@ async def list_sessions():
 
 
 
+################################## Fast API Server 실행 ##################################
 if __name__ == "__main__" :
-    uvicorn.run("main:app", host="0.0.0.0", port=8000)
-    # uvicorn.run("main:app", host='localhost', reload=True)
+    uvicorn.run("main:app", host="0.0.0.0", port=8000) # 배포
+    # uvicorn.run("main:app", host='localhost', reload=True) # 로컬 테스트
