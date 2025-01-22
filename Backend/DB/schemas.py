@@ -65,7 +65,9 @@ class PDFFileBase(BaseModel):
     user_email: EmailStr
     docs_id: str
 
-class DeletePDFRequest(PDFFileBase):
+# 요청 데이터 모델 정의
+class DeletePDFRequest(BaseModel):
+    session_id: str
     file_name: str
 
 class PDFFileCreate(PDFFileBase):
@@ -73,8 +75,6 @@ class PDFFileCreate(PDFFileBase):
 
 class PDFFile(PDFFileBase):
     pdf_id: int  # Auto-incremented primary key
-    # user_email: EmailStr
-    # docs_id: str
     file_name: str
     file_time: datetime  # Automatically set by the database
 

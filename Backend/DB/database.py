@@ -11,6 +11,16 @@ if not DATABASE_URL:
 # print(f"Using DATABASE_URL: {DATABASE_URL}")
 
 # -------------------
+# 데이터베이스 의존성
+# -------------------
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+# -------------------
 # 데이터베이스 설정
 # -------------------
 DATABASE_URL = os.getenv("DATABASE_URL")
