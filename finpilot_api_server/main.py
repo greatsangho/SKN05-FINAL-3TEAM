@@ -47,8 +47,8 @@ app = FastAPI()
 
 
 ################################## Invoke Answer (Non Image) ##################################
-@app.post("/query")
-async def finpilot_endpoint(
+@app.post("/query/non-image")
+async def query_non_image(
     request : QueryRequestModel
 ):
     # Get Session ID
@@ -71,7 +71,9 @@ async def finpilot_endpoint(
     )
     
     # invoke answer
+    print("[Server Log] INVOKING PILOT ANSWER (NON-IMAGE)")
     answer = pilot.invoke(question, session_id, chat_option)
+    print("[Server Log] PILOT ANSWER INVOKED")
 
     # return answer
     return {"session_id" : session_id, "answer" : answer}
@@ -81,8 +83,8 @@ async def finpilot_endpoint(
 
 
 ################################## Invoke Answer (Image) ##################################
-@app.post("/get-graph-image")
-async def get_graph_image(
+@app.post("/query/image")
+async def query_image(
     request : QueryRequestModel
 ):
     # Get Session ID
@@ -114,8 +116,10 @@ async def get_graph_image(
     )
 
     # invoke answer
+    print("[Server Log] INVOKING PILOT ANSWER (NON-IMAGE)")
     while len(os.listdir(folder_path)) == 0:
         _ = pilot.invoke(question, session_id, chat_option)
+    print("[Server Log] PILOT ANSWER INVOKED")
 
     # Get PNG File list
     png_files = [f for f in os.listdir(folder_path) if f.endswith(".png")]
@@ -124,10 +128,11 @@ async def get_graph_image(
 
     # Encode Image to Base64 type
     images = encode_img_base64(folder_path, png_files)
-    
-    # Delete Remaining CSV Files
-    if len(os.listdir(data_path)) > 0:
-        delete_files_in_dir(data_path)
+
+    if chat_option == "데이터 시각화 (Upload)":
+        # Delete Remaining CSV Files
+        if len(os.listdir(data_path)) > 0:
+            delete_files_in_dir(data_path)
     
 
     # Return Image data as JSON Form
@@ -138,7 +143,7 @@ async def get_graph_image(
 
 
 ################################## Upload File (PDF) ##################################
-@app.post("/upload-pdf")
+@app.post("/pdfs/upload")
 async def upload_pdf(
     session_id: str = Form(...),
     file: UploadFile = File(...)
@@ -174,7 +179,7 @@ async def upload_pdf(
 
 
 ################################## Upload File (CSV) ##################################
-@app.post("/upload-csv")
+@app.post("/csvs/upload")
 async def upload_csv(
     session_id : str = Form(...),
     file : UploadFile = File(...)
@@ -207,7 +212,7 @@ async def upload_csv(
 
 
 ################################## Delete File (PDF) ##################################
-@app.post("/delete-pdf")
+@app.post("/pdfs/delete")
 async def delete_pdf(
     request : DeleteFileRequestModel
 ):
@@ -238,7 +243,7 @@ async def delete_pdf(
 
 
 ################################## Delete File (CSV) ##################################
-@app.post("/delete-csv")
+@app.post("/csvs/delete")
 async def delete_csv(
     request : DeleteFileRequestModel
 ):

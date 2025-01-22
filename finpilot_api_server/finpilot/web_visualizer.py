@@ -78,6 +78,7 @@ class WebVisualizerProcess:
         updated_messages = add_messages(state["messages"], HumanMessage(content=question))
         state["messages"] = updated_messages
         
+        print("[Graph Log] WEB VISUALIZER AGENT WORKING ...")
         result = self.llm_with_tools.invoke(state["messages"])
         state["generation"] = result.content
         state["messages"] = add_messages(state["messages"], result)
@@ -87,7 +88,11 @@ class WebVisualizerProcess:
     def should_continue(self, state):
         messages = state["messages"]
         last_message = messages[-1]
+
+        print("[Graph Log] DECISION CONTINUE OR NOT ...")
         if not last_message.tool_calls:
+            print("[Graph Log] DECISION : END")
             return "end"
         else:
+            print("[Graph Log] DECISION : CONTINUE")
             return "continue"

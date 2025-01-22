@@ -31,26 +31,26 @@ def load_faiss_from_redis(redis_client, session_id):
     # Restore FAISS index
     faiss_binary = redis_client.get(f"{session_id}_faiss_index")
     if not faiss_binary:
-        raise ValueError(f"No FAISS index found for session '{session_id}'")
+        raise ValueError(f"[Server Log] NO FAISS INDEX FOUND FOR SESSION ID : {session_id}")
     faiss_array = np.frombuffer(faiss_binary, dtype=np.uint8)
     faiss_index = faiss.deserialize_index(faiss_array)
-    print(f"[Server Log] Number of vectors in FAISS index: {faiss_index.ntotal}")
+    print(f"[Server Log] NUMBER OF VECTORS IN LOAED VECTORSTORE INDEX : {faiss_index.ntotal}")
 
     # Restore FAISS Meta data
     metadata_binary = redis_client.get(f"{session_id}_faiss_metadata")
     if not metadata_binary:
-        raise ValueError(f"No metadata found for session '{session_id}'")
+        raise ValueError(f"[Server Log] NO METADATA FOUND FOR SESSION ID : {session_id}")
     metadata = dill.loads(metadata_binary)
     texts = metadata['texts']
     index_to_id = metadata['index_to_id']
 
     # Ensure Data integrity
-    assert isinstance(texts, dict), "[Server Log] Restored texts is not a dictionary!"
+    assert isinstance(texts, dict), "[Server Log] RESTORED TESTS IS NOT A DICTIONARY!"
     for doc_id, doc in texts.items():
-        assert isinstance(doc, Document), f"Document ID {doc_id} is not a valid Document object"
+        assert isinstance(doc, Document), f"[Servor Log] DOCUMENT ID '{doc_id}' IS NOT A VALID DOCUMENT OBJECT"
     assert isinstance(index_to_id, dict), "[Server Log] Restored index_to_id in not a dictionary!"
     for idx, doc_id in index_to_id.items():
-        assert doc_id in texts, f"[Server Log]Doc ID {doc_id} is missing in docstore"
+        assert doc_id in texts, f"[Server Log] DOCUMENT ID '{doc_id}' IS MISSING IN DOCSTORE"
 
     # Restore FAISS vectorStore
     vectorstore = FAISS(
@@ -66,7 +66,6 @@ def load_faiss_from_redis(redis_client, session_id):
 
 def save_faiss_to_redis(redis_client, session_id, vector_store : FAISS):
     faiss_buffer = faiss.serialize_index(vector_store.index)
-    # redis_client.set(f"{session_id}_faiss_index", faiss_buffer.tobytes())
     redis_client.set(f"{session_id}_faiss_index", np.array(faiss_buffer).tobytes())
     redis_client.expire(f"{session_id}_faiss_index", 3600)
 
@@ -78,7 +77,7 @@ def save_faiss_to_redis(redis_client, session_id, vector_store : FAISS):
     redis_client.set(f"{session_id}_faiss_metadata", metadata)
     redis_client.expire(f"{session_id}_faiss_metadata", 3600)
 
-    print(f"FAISS VectorStore saved to Redis for session '{session_id}'.")
+    print(f"[Server Log] FAISS VECTORSTORE SAVED TO REDIS FOR SESSION ID : {session_id}")
 
 
 def add_data_to_vectorstore_and_update_redis(redis_client, session_id, vector_store : FAISS, data : list[Document]):
@@ -88,10 +87,6 @@ def add_data_to_vectorstore_and_update_redis(redis_client, session_id, vector_st
     )
     doc_splits = text_splitter.split_documents(data)
 
-    # new_texts = [doc.page_content for doc in doc_splits]
-    # metadatas = [doc.metadata for doc in doc_splits]
-
-    # vector_store.add_texts(new_texts, metadata=metadatas)
     vector_store.add_documents(doc_splits)
     save_faiss_to_redis(
         redis_client=redis_client,
@@ -99,7 +94,7 @@ def add_data_to_vectorstore_and_update_redis(redis_client, session_id, vector_st
         vector_store=vector_store
     )
 
-    print(f"VectorStore updated and saved to Redis for Session '{session_id}'.")
+    print(f"[Server Log] VECTORSTORE UPDATED AND SAVED TO REDIS FOR SESSION ID : {session_id}")
 
 def delete_data_from_vectorstore_and_update_redis(redis_client, session_id, vector_store : FAISS, file_name):
 
@@ -109,7 +104,7 @@ def delete_data_from_vectorstore_and_update_redis(redis_client, session_id, vect
     ]
 
     if not doc_ids_to_delete:
-        print("No Such Files!")
+        print("[Server Log] NO SUCH FILES")
         return None
 
     faiss_ids_to_delete = [
@@ -117,7 +112,7 @@ def delete_data_from_vectorstore_and_update_redis(redis_client, session_id, vect
     ]
 
     if not faiss_ids_to_delete:
-        print("No vectors found to delete!")
+        print("[Server Log] NO VECTORS FOUND TO DELETE!")
         return None
     
     vector_store.index.remove_ids(np.array(faiss_ids_to_delete, dtype=np.int64))
@@ -134,4 +129,4 @@ def delete_data_from_vectorstore_and_update_redis(redis_client, session_id, vect
         vector_store=vector_store
     )
 
-    print(f"File Removed from VectorStore and saved to Redis for Session '{session_id}'.")
+    print(f"[Server Log] FILE REMOVED FROM VECTORSTORE AND SAVED TO REDIS FOR SESSION : {session_id}")

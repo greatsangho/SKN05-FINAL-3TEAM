@@ -17,21 +17,21 @@ class InnerVisualizerProcess:
     def __init__(self, session_id:str):
         try:
             self.DATA_DIR = Path(os.getcwd()) / 'data' / f"{session_id}"
-            print(f"[Server Log] FIND DATA IN PATH : {self.DATA_DIR}")
+            # print(f"[Server Log] FIND DATA IN PATH : {self.DATA_DIR}")
             
             files = os.listdir(self.DATA_DIR)
             csv_files = [file for file in files if file.endswith(".csv")]
-            print(f"[Server Log] CSV FILES IN DIR ARE : {len(csv_files)}")
+            # print(f"[Server Log] CSV FILES IN DIR ARE : {len(csv_files)}")
             self.data_path = self.DATA_DIR / csv_files[0]
-            print(f"[Server Log] CSV DATA PATH : {self.data_path}")
+            # print(f"[Server Log] CSV DATA PATH : {self.data_path}")
 
             data = pd.read_csv(self.data_path)
-            print(f"[Graph Log] FETCH DATA FROM PATH : {self.data_path}")
+            # print(f"[Graph Log] FETCH DATA FROM PATH : {self.data_path}")
         except : 
             self.DATA_DIR = "tmp/"
             self.data_path = "tmp.csv"
             data = pd.DataFrame()
-            print(f"[Server Log] No CSV FILE. SET TEMP PATH.")
+            # print(f"[Server Log] No CSV FILE. SET TEMP PATH.")
 
         doc_string_template = """
             Use this tool to execute Python code and generate the desired results.
