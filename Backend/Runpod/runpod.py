@@ -128,7 +128,7 @@ def send_delete_pdf_request_to_runpod(file_name: str, session_id: str):
     """
     try:
         # RunPod API URL 설정 (curl 명령과 일치하도록 수정)
-        url = f"https://fhpkmnl1q3gbuh-8000.proxy.runpod.net/pdfs/delete"
+        url = f"https://{runpod_url}-8000.proxy.runpod.net/pdfs/delete"
         
         # 요청 페이로드와 헤더 구성
         payload = {
