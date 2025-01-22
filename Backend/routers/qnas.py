@@ -11,7 +11,8 @@ router = APIRouter()
 # -------------------
 # 질문 기록 CRUD 엔드포인트 및 RunPod 연동
 # -------------------
-@router.post("/", response_model=schemas.QnA)
+# @router.post("/", response_model=schemas.QnA)
+@router.post("/")
 def create_qna(qna: schemas.QnACreate, db: Session = Depends(get_db)):
     """
     QnA 생성 엔드포인트:
@@ -36,9 +37,10 @@ def create_qna(qna: schemas.QnACreate, db: Session = Depends(get_db)):
                     session_id=session.session_id,
                     chat_option=qna.chat_option
                 )
-                # RunPod에서 반환된 그래프 데이터를 처리 ("images":[{},{}] 형태로 저장)
-                # answer = {"images": graph_response} # 바꾸기
-                answer = graph_response
+                
+                # RunPod에서 반환된 전체 JSON 응답 저장
+                answer = graph_response  # 전체 JSON 그대로 저장
+
             else:
                 # 일반 질문 처리
                 answer = send_question_to_runpod(
@@ -46,25 +48,28 @@ def create_qna(qna: schemas.QnACreate, db: Session = Depends(get_db)):
                     session_id=session.session_id,
                     chat_option=qna.chat_option
                 )
+                
+                # 3. QnA 데이터 생성 및 저장 (session_id 및 chat_option 포함)
+                new_qna = crud.create_qna(
+                    db=db,
+                    user_email=qna.user_email,
+                    docs_id=qna.docs_id,
+                    question=qna.question,
+                    session_id=session.session_id,
+                    chat_option=qna.chat_option,  # chat_option 명시적으로 전달
+                )
+                
+                # 4. RunPod에서 받은 답변을 QnA에 추가
+                new_qna.answer = answer  # 전체 JSON 응답 저장
+                db.commit()
+                db.refresh(new_qna)
+
+                return new_qna  # 프론트엔드로 그대로 전달
+            
         except Exception as e:
             raise HTTPException(status_code=502, detail="Failed to communicate with RunPod")
-
-        # 3. QnA 데이터 생성 및 저장 (session_id 및 chat_option 포함)
-        new_qna = crud.create_qna(
-            db=db,
-            user_email=qna.user_email,
-            docs_id=qna.docs_id,
-            question=qna.question,
-            session_id=session.session_id,
-            chat_option=qna.chat_option,  # chat_option 명시적으로 전달
-        )
         
-        # 4. RunPod에서 받은 답변을 QnA에 추가
-        new_qna.answer = answer
-        db.commit()
-        db.refresh(new_qna)
-
-        return new_qna
+        return answer
 
     except ValueError as ve:
         raise HTTPException(status_code=400, detail=str(ve))  # 잘못된 입력 처리

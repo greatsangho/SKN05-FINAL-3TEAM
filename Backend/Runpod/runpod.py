@@ -48,9 +48,9 @@ def send_question_to_runpod(question: str, session_id: str, chat_option: str) ->
     except (ValueError, KeyError) as e:
         raise HTTPException(status_code=500, detail=f"Invalid response format: {str(e)}")
   
-def send_graph_to_runpod(question: str, session_id: str, chat_option: str) -> list:
+def send_graph_to_runpod(question: str, session_id: str, chat_option: str) -> dict:
     """
-    RunPod API와 통신하여 그래프 요청을 보내고 base64 이미지 리스트를 반환하는 함수.
+    RunPod API와 통신하여 그래프 요청을 보내고 전체 JSON 응답을 반환하는 함수.
     """
     # RunPod API URL
     url = f"https://{runpod_url}-8000.proxy.runpod.net/query/image"
@@ -77,9 +77,8 @@ def send_graph_to_runpod(question: str, session_id: str, chat_option: str) -> li
 
     # 응답 처리
     try:
-        output = response.json()
-        images = output.get("images", [])
-        return images  # 이미지 리스트 반환 (file_name과 image_data 포함)
+        output = response.json()  # 전체 JSON 응답 파싱
+        return output  # 전체 JSON 응답 반환
     except (ValueError, KeyError) as e:
         raise HTTPException(status_code=500, detail=f"Invalid response format: {str(e)}")
 
