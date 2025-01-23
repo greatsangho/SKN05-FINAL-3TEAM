@@ -19,7 +19,7 @@ def send_question_to_runpod(question: str, session_id: str, chat_option: str) ->
     """
 
     # RunPod API URL
-    url = f"https://{runpod_url}-8000.proxy.runpod.net/query/non-image"
+    url = f"http://{runpod_url}/query/non-image"
 
     # 요청 헤더
     headers = {
@@ -53,7 +53,7 @@ def send_graph_to_runpod(question: str, session_id: str, chat_option: str) -> di
     RunPod API와 통신하여 그래프 요청을 보내고 전체 JSON 응답을 반환하는 함수.
     """
     # RunPod API URL
-    url = f"https://{runpod_url}-8000.proxy.runpod.net/query/image"
+    url = f"http://{runpod_url}/query/image"
 
     # 요청 헤더
     headers = {
@@ -91,7 +91,7 @@ def send_pdf_to_runpod(file_path: str, session_id: str):
     """
     try:
         # RunPod API URL
-        url = f"https://{runpod_url}-8000.proxy.runpod.net/pdfs/upload"
+        url = f"http://{runpod_url}/pdfs/upload"
         
         # 파일 경로에서 파일 읽기
         with open(file_path, "rb") as f:
@@ -127,7 +127,7 @@ def send_delete_pdf_request_to_runpod(file_name: str, session_id: str):
     """
     try:
         # RunPod API URL 설정 (curl 명령과 일치하도록 수정)
-        url = f"https://{runpod_url}-8000.proxy.runpod.net/pdfs/delete"
+        url = f"http://{runpod_url}/pdfs/delete"
         
         # 요청 페이로드와 헤더 구성
         payload = {
@@ -165,7 +165,7 @@ def send_csv_to_runpod(file: UploadFile, session_id: str):
     """
     try:
         # RunPod API URL 설정
-        url = f"https://{runpod_url}-8000.proxy.runpod.net/csvs/upload"
+        url = f"http://{runpod_url}/csvs/upload"
         logger.info(f"Sending CSV to RunPod: {file.filename}, session_id: {session_id}")
 
         # 파일 데이터를 multipart/form-data로 전송
@@ -210,7 +210,7 @@ def send_delete_csv_request_to_runpod(file_name: str, session_id: str):
     """
     try:
         # RunPod API URL 설정
-        url = f"https://{runpod_url}-8000.proxy.runpod.net/csvs/delete"
+        url = f"http://{runpod_url}/csvs/delete"
         logger.info(f"Sending delete request to RunPod for file: {file_name}, session_id: {session_id}")
 
         # 요청 페이로드와 헤더 구성
