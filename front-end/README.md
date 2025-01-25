@@ -12,7 +12,7 @@ FinPilot은 Google Docs와 원활하게 통합된 sLLM 기반 Chrome Extension�
 - [File Structure](#-file-structure)
 - [Tech Stack](#-tech-stack)
 - [Communication](#-communication)
-- [Setup and Installation](#-setup-and-installation)
+- [Setup and Installation](#%EF%B8%8F-setup-and-installation)
 - [How to Run](#-how-to-run)
 - [Contribution](#-contribution)
 - [Contact](#-contact)
@@ -145,12 +145,12 @@ front-end/
 ## 🚀 How to Run
 
 1. **Extension 실행**:
-   - Google Docs 페이지에서 문서 열기.
-   - Chrome 브라우저에서 우측 상단 FinPilot 확장 아이콘 우클릭.
+   - Google Docs 페이지에서 문서 열기
+   - Chrome 브라우저에서 우측 상단 FinPilot 확장 아이콘 우클릭
    - 측면 패널 열기 선택
 
 2. **AI 기능 테스트**:
-   - SidePanel에서 원하는 채팅 옵션 선택 후, 질문 입력.
+   - SidePanel에서 원하는 채팅 옵션 선택 후, 질문 입력
    - 생성된 텍스트 확인
    - apply 버튼으로 생성 텍스트가 Google Docs 문서에 자동으로 반영되는지 확인
 

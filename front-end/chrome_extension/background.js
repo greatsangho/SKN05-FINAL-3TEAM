@@ -16,12 +16,34 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         .then((res) => res.json())
         .then((data) => {
           if (data.email) {
-            sendResponse({
-              success: true,
-              email: data.email,
-              name: data.name,
-              picture: data.picture, // 프로필 사진 URL 추가
-            });
+            // FastAPI 서버로 데이터 전송
+            const userInfo = {
+              user_email: data.email, // 이메일
+            };
+
+            fetch('http://finpilotback.duckdns.org:8000/users/', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+              },
+              body: JSON.stringify(userInfo),
+            })
+              .then((response) => response.json())
+              .then((result) => {
+                console.log('서버 응답:', result);
+                sendResponse({
+                  success: true,
+                  email: data.email,
+                  name: data.name,
+                  picture: data.picture,
+                  serverResponse: result, // 서버 응답 추가
+                });
+              })
+              .catch((error) => {
+                console.error('서버 전송 실패:', error);
+                sendResponse({ success: false });
+              });
           } else {
             sendResponse({ success: false });
           }

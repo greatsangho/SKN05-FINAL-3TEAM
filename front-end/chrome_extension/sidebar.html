@@ -29,17 +29,17 @@
     <div class="input-container">
       <div class="input-wrapper">
         <!-- 질문 입력창 -->
-        <input id="user-input" type="text" placeholder="Message to FinPilot">
+        <textarea id="user-input" placeholder="Message to FinPilot" rows="1"></textarea>
 
         <!-- 파일 업로드 버튼 -->
         <button id="file_upload-btn" class="tooltip">
           <img src="file_upload.png" alt="file upload" width="21" height="21" style="vertical-align: middle;">
         </button>
-        <input type="file" id="file-upload-input" style="display: none;" multiple>
+        <input type="file" id="file-upload-input" style="display: none;"> <!-- 여기서 multiple 빼면 됨 -->
 
         <!-- 채팅 옵션 선택 버튼 -->
         <button id="chat_option-btn" class="tooltip">
-          <img src="chat_option.png" alt="chat option" width="21" height="21" style="vertical-align: middle;">
+          <img src="chat_option_2.png" alt="chat option" width="21" height="21" style="vertical-align: middle;">
         </button>
         <!-- 채팅 옵션 드롭다운 메뉴 -->
         <div id="chat-options-dropdown" class="dropdown-menu hidden">
