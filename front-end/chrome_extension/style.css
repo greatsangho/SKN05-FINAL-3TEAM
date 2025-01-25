@@ -16,8 +16,6 @@ body {
     width: 100%; /* 부모 요소 기준 100% */
     margin: auto;
     box-sizing: border-box; /* 패딩 포함 */
-
-    /* align-items: flex-start; */
 }
 
 h2 {
@@ -55,9 +53,7 @@ h2 {
     border-top: none; /* 상단 테두리 제거 */
     padding: 15px;
     background: #f9f9f9;
-    /* margin-bottom: 50px; */
     margin-bottom: 5px;
-    /* border-radius: 20px; */
     border-radius: 0 0 18px 18px;
     max-height: 400px;
     display: flex;
@@ -78,6 +74,9 @@ h2 {
     text-align: justify;
     padding: 10px;
     border-radius: 15px;
+
+    white-space: pre-line;  /* 줄바꿈 및 공백 유지 */
+    word-break: break-word; /* 긴 단어 줄바꿈 */
 }
 
 .chat-message.answer {
@@ -255,17 +254,43 @@ h2 {
     margin-bottom: 5px;
 }
   
-  /* 입력 필드 */
-  #user-input {
+/* 입력 필드 */
+#user-input {
     width: 100%; /* 래퍼의 너비를 따라감 */
     border: none;
     outline: none;
-    padding: 10px 50px 10px 15px; /* 오른쪽 버튼 공간 확보 */
+    padding: 10px 10px 10px 15px; /* 오른쪽 버튼 공간 확보 */
     border-radius: 50px;
     font-size: 15px;
+    font-family: Arial, sans-serif; 
     background: transparent;
-    text-indent: 55px; /* placeholder를 오른쪽으로 이동 */
-  }
+    margin-left: 55px;
+    margin-right: 40px;
+    overflow-y: auto;
+    resize: none;
+}
+
+#user-input::placeholder {
+    font-family: Arial, sans-serif;  /* 원하는 폰트 설정 */
+    font-size: 15px;                 /* 글자 크기 */
+    color: #aaa;                   /* 글자 색상 */
+}
+
+/* 스크롤바 스타일 */
+#user-input::-webkit-scrollbar {
+    width: 6px; /* 스크롤바 너비 조정 */
+}
+
+/* 스크롤바 막대 */
+#user-input::-webkit-scrollbar-thumb {
+    background-color: #ccc; /* 스크롤 색상 */
+    border-radius: 10px;
+}
+
+/* 스크롤바 트랙 (배경) */
+#user-input::-webkit-scrollbar-track {
+    background: transparent;
+}
 
 #user-input:focus {
     border-color: #C9E6FC;
@@ -345,7 +370,7 @@ h2 {
     background-color: #F1F4F8;
 }
 
-/* 스피너 */
+/* 버퍼링 스피너 */
 .spinner {
     position: absolute;
     top: 50%;
@@ -556,14 +581,6 @@ h2 {
     content: "전송"; /* 전송 버튼 말풍선 텍스트 */
 }
 
-
-
-
-
-
-
-
-
 /* 파일 목록 컨테이너 */
 .file-list-container {
     display: flex; /* 가로 방향으로 나열 */
@@ -632,14 +649,6 @@ h2 {
     background-color: #444;
 }
 
-
-
-
-
-
-
-
-
 /* 드롭다운 메뉴 스타일 */
 .dropdown-menu {
     position: absolute; /* 버튼 위로 위치 설정 */
@@ -707,15 +716,11 @@ h2 {
 }
 
 #selected-option {
-    /* display: inline-block; 텍스트 길이에 따라 가로 길이 조정 */
-    /* align-self: flex-start; 부모의 정렬 영향을 받지 않고 왼쪽 정렬 */
-    /* align-self: center;  */
     text-align: center;
     padding: 6px 12px; /* 내부 여백 */
     background: linear-gradient(135deg, #f6faff, #e3f2fd); /* 은은한 배경 그라데이션 */
     border: 1px solid #cfd8dc; /* 부드러운 회색 테두리 */
     border-bottom: none; /* 상단 테두리 제거 */
-    /* border-radius: 18px; 살짝 둥근 테두리 */
     border-radius: 18px 18px 0 0;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08); /* 가벼운 그림자 */
     font-family: "Poppins", sans-serif; /* 깔끔한 폰트 */
@@ -726,10 +731,6 @@ h2 {
     cursor: default; /* 클릭 불가 상태 */
     transition: box-shadow 0.2s ease, transform 0.2s ease; /* 부드러운 애니메이션 */
 }
-
-
-
-
 
 /* 파일첨부 에러 메시지 스타일 */
 #error-message {

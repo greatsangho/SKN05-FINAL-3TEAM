@@ -1,4 +1,6 @@
-// Google 로그인 //
+// ----------------
+//  Google 로그인
+// ----------------
 document.addEventListener('DOMContentLoaded', () => {
   // 버튼 요소 찾기
   const GloginButton = document.getElementById('GloginButton');

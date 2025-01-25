@@ -12,14 +12,21 @@
       "128": "icon_128.png"
     }
   },
-  "permissions": ["sidePanel", "storage", "tabs", "identity", "activeTab", "scripting"],
+  "icons": {
+  "16": "icon_16.png",
+  "32": "icon_32.png",
+  "48": "icon_48.png",
+  "64": "icon_64.png",
+  "128": "icon_128.png"
+  },
+  "permissions": ["sidePanel", "storage", "tabs", "identity", "activeTab"],
   "oauth2": {
-    "client_id": "970264365741-8sn3q9gtrjhmkguujdn52opl26hfk4u4.apps.googleusercontent.com", 
+    "client_id": "418635019716-3jeh91e777h9s9dl4c2608ke4fftaf5n.apps.googleusercontent.com",
     "scopes": [
       "openid", "email", "profile",
       "https://www.googleapis.com/auth/documents",
       "https://www.googleapis.com/auth/userinfo.profile","https://www.googleapis.com/auth/userinfo.email",
-      "https://www.googleapis.com/auth/script.projects"
+      "https://www.googleapis.com/auth/drive.file"
     ]
   }, 
   "options_page": "./web/login/login.html",
