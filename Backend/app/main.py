@@ -20,6 +20,10 @@ add_middlewares(app)
 async def hello():
     return {"hello": "/docs for more info"}
 
+@app.get("/health")
+def health_check():
+    return {"status": "healthy"}
+
 # -------------------
 # 기능 라우터 처리
 # -------------------
