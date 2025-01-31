@@ -1,3 +1,5 @@
+version: '3.8'
+
 services:
   fastapi:
     build:
@@ -37,8 +39,9 @@ services:
     volumes:
       - ./certbot/www:/var/www/certbot # 인증 요청 처리 경로 공유
       - /etc/letsencrypt:/etc/letsencrypt # 인증서 저장 경로 공유
-    entrypoint: "/bin/sh -c 'while :; do certbot renew && sleep 12h; done;'"
+    entrypoint: "/bin/sh -c 'while :; do certbot renew --webroot --webroot-path=/var/www/certbot -d ${DOMAIN} -m ${EMAIL} --agree-tos && sleep 12h; done;'"
 
 networks:
   app-network:
+    name: app-network # 명시적 네트워크 이름 사용
     driver: bridge # 명시적 네트워크 드라이버 사용 (선택 사항)
