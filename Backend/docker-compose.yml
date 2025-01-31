@@ -6,13 +6,13 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: fastapi
-    platform: linux/amd64  # 아키텍처 명시적 지정
+    platform: linux/amd64
     expose:
       - "8000"
     networks:
       - app-network
     environment:
-      - TZ=Asia/Seoul  # 시간대 설정
+      - TZ=Asia/Seoul
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 30s
@@ -24,31 +24,37 @@ services:
     container_name: swag
     platform: linux/amd64
     depends_on:
-      - fastapi
+      fastapi:
+        condition: service_healthy
+    cap_add:
+      - NET_ADMIN
     ports:
       - "80:80"
       - "443:443"
     volumes:
-      - ./nginx:/config  # SWAG 설정 폴더 전체 매핑
-      - /etc/letsencrypt:/etc/letsencrypt  # 인증서 공유
+      - ./nginx:/config/nginx/site-confs  # 설정 파일 매핑
+      - ./certificates:/etc/letsencrypt
     environment:
-      - URL=www.finpilotback.duckdns.org
-      - EMAIL=greatsangho@gmail.com
+      - PUID=1000
+      - PGID=1000
+      - TZ=Asia/Seoul
+      - URL=finpilotback.duckdns.org  # www 제거 (wildcard 포함시 필수)
       - SUBDOMAINS=wildcard
       - VALIDATION=duckdns
-      - DUCKDNSTOKEN=
-      - TZ=Asia/Seoul
+      - DUCKDNSTOKEN=${DUCKDNSTOKEN}
+      - EMAIL=greatsangho@gmail.com
+      - STAGING=false  # 테스트 시 true로 변경
     networks:
       - app-network
     restart: unless-stopped
-    cap_add:
-      - NET_ADMIN  # 네트워크 기능 확장
 
 networks:
   app-network:
     driver: bridge
-    attachable: true
+    ipam:
+      config:
+        - subnet: 172.20.0.0/24
 
 volumes:
-  letsencrypt:
+  certificates:
     driver: local

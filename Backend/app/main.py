@@ -10,7 +10,11 @@ load_dotenv()
 
 Base.metadata.create_all(bind=engine)
 
-app = FastAPI()
+# app = FastAPI()
+app = FastAPI(
+    servers=[{"url": "https://finpilotback.duckdns.org", "description": "Production"}],
+    openapi_url="/openapi.json"  # 프록시 환경에서 문서 경로 보정
+)
 
 # Add middleware
 add_middlewares(app)
@@ -21,8 +25,8 @@ async def hello():
     return {"hello": "/docs for more info"}
 
 @app.get("/health")
-def health_check():
-    return {"status": "healthy"}
+async def health_check():
+    return {"status": "ok"}
 
 # -------------------
 # 기능 라우터 처리
