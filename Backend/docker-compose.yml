@@ -36,7 +36,8 @@ services:
     volumes:
       - ./certbot/www:/var/www/certbot # 인증 요청 처리 경로 공유
       - /etc/letsencrypt:/etc/letsencrypt # 인증서 저장 경로 공유
-    entrypoint: "/bin/sh -c 'while :; do certbot renew --webroot --webroot-path=/var/www/certbot -d finpilotback.duckdns.org -d www.finpilotback.duckdns.org -m greatsangho@gmail.com --agree-tos && sleep 12h; done;'"
+    entrypoint: "/bin/sh -c 'while :; do certbot renew --webroot --webroot-path=/var/www/certbot -d finpilotback.duckdns.org -d www.finpilotback.duckdns.org -m greatsangho@gmail.com --agree-tos || certbot certonly --webroot --webroot-path=/var/www/certbot --email greatsangho@gmail.com --agree-tos --no-eff-email -d finpilotback.duckdns.org -d www.finpilotback.duckdns.org; sleep 12h; done;'"
+
 
 
 networks:
