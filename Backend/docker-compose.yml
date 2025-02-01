@@ -45,7 +45,7 @@ services:
       - VALIDATION=duckdns
       - DUCKDNSTOKEN=${DUCKDNSTOKEN}
       - EMAIL=greatsangho@gmail.com
-      - STAGING=true  # 테스트 시 true로 변경
+      - STAGING=false  # 테스트 시 true로 변경
     networks:
       - app-network
     restart: unless-stopped
