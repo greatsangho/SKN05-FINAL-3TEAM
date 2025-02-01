@@ -40,8 +40,8 @@ services:
       - PUID=1000
       - PGID=1000
       - TZ=Asia/Seoul
-      - URL=finpilotback.duckdns.org  # www 제거 (wildcard 포함시 필수)
-      - SUBDOMAINS=wildcard
+      - URL=finpilotback.duckdns.org
+      - SUBDOMAINS=www
       - VALIDATION=duckdns
       - DUCKDNSTOKEN=${DUCKDNSTOKEN}
       - EMAIL=greatsangho@gmail.com
