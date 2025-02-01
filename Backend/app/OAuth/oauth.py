@@ -13,6 +13,7 @@ REDIRECT_URI = os.getenv("REDIRECT_URI")
 # 웹 상에서 구글 로그인 기능 --> 크롬 익스텐션에서 불필요(미사용)
 # 웹 상에서 구글 로그인 시 사용 가능
 # Initialize OAuth client with required scopes
+# Scope 부분에서 구글 권한 요청
 oauth = OAuth()
 oauth.register(
     name='google',

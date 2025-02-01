@@ -1,8 +1,0 @@
-# change this file to .env
-
-# GOOGLE_CLIENT_ID=
-# GOOGLE_CLIENT_SECRET=
-# REDIRECT_URI=
-DATABASE_URL=mysql+pymysql://<USER>:<PASSWORD>@<RDS_ENDPOINT>:<PORT>/<DATABASE_NAME>
-RUNPOD_URL=https://api.runpod.ai/v2/<POD_ID>/runsync
-RUNPOD_API_KEY=
