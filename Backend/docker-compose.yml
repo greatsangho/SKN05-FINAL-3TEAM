@@ -41,7 +41,7 @@ services:
       - PGID=1000
       - TZ=Asia/Seoul
       - URL=finpilotback.duckdns.org
-      - SUBDOMAINS=www
+      - SUBDOMAINS=
       - VALIDATION=duckdns
       - DUCKDNSTOKEN=${DUCKDNSTOKEN}
       - EMAIL=greatsangho@gmail.com
