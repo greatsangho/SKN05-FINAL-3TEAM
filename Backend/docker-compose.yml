@@ -34,7 +34,7 @@ services:
       - "80:80"
       - "443:443"
     volumes:
-      - ./nginx:/config/nginx/site-confs  # 설정 파일 매핑
+      - ./nginx/site-confs:/config/nginx/site-confs  # 설정 파일 매핑
       - ./certificates:/etc/letsencrypt
     environment:
       - PUID=1000
