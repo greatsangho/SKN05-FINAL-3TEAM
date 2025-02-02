@@ -10,6 +10,7 @@ from finpilot.writer import WriterProcess
 from finpilot.text_magician import TextMagicianProcess
 from finpilot.web_visualizer import WebVisualizerProcess
 from finpilot.inner_visualizer import InnerVisualizerProcess
+from finpilot.draft import DraftProcess
 from finpilot.router import route_question
 
 def create_application(memory : LimitedMemorySaver, vector_store : FAISS, session_id : str):
@@ -27,6 +28,7 @@ def create_application(memory : LimitedMemorySaver, vector_store : FAISS, sessio
         generation : str
         messages : Annotated[list, add_messages]
         documents : List[str]
+        outlines : List[str]
     
     workflow = StateGraph(State)
 
@@ -34,6 +36,7 @@ def create_application(memory : LimitedMemorySaver, vector_store : FAISS, sessio
     text_magician_process = TextMagicianProcess()
     web_visualizer_process = WebVisualizerProcess(session_id=session_id)
     inner_visualizer_process = InnerVisualizerProcess(session_id=session_id)
+    draft_process = DraftProcess(session_id=session_id)
 
     ################## Add Nodes ##################
 
@@ -54,6 +57,10 @@ def create_application(memory : LimitedMemorySaver, vector_store : FAISS, sessio
     ## inner_visualizer
     workflow.add_node("inner_visualizer", inner_visualizer_process.inner_visualizer_node)
 
+    ## draft
+    workflow.add_node("make_outline_node", draft_process.make_outline_node)
+    workflow.add_node("write_draft_paragraph_node", draft_process.write_draft_paragraph_node)
+    
 
     ################## add edges ##################
     ## Route Question
@@ -64,7 +71,8 @@ def create_application(memory : LimitedMemorySaver, vector_store : FAISS, sessio
             "writer" : "retriever",
             "text_magician" : "text_magician",
             "web_visualizer" : "web_visualizer",
-            "inner_visualizer" : "inner_visualizer"
+            "inner_visualizer" : "inner_visualizer",
+            "draft" : "make_outline_node"
         }
     )
 
@@ -108,6 +116,11 @@ def create_application(memory : LimitedMemorySaver, vector_store : FAISS, sessio
 
     # inner_visualizer process
     workflow.add_edge("inner_visualizer", END)
+
+
+    # draft process
+    workflow.add_edge("make_outline_node", "write_draft_paragraph_node")
+    workflow.add_edge("write_draft_paragraph_node", END)
 
 
 
