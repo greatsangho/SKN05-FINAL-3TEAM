@@ -35,3 +35,5 @@ dill
 pymupdf4llm
 numpy
 tabulate
+tavily-python
+yfinance

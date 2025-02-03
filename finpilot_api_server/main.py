@@ -22,11 +22,11 @@ warnings.filterwarnings("ignore", category=LangSmithMissingAPIKeyWarning)
 
 
 ################################## Environment Variable Setting ##################################
-from config.secret_keys import OPENAI_API_KEY, TAVILY_API_KEY, USER_AGENT, POLYGON_API_KEY
-os.environ["OPENAI_API_KEY"] = OPENAI_API_KEY
-os.environ["TAVILY_API_KEY"] = TAVILY_API_KEY
-os.environ["USER_AGENT"] = USER_AGENT
-os.environ["POLYGON_API_KEY"] = POLYGON_API_KEY
+# from config.secret_keys import OPENAI_API_KEY, TAVILY_API_KEY, USER_AGENT, POLYGON_API_KEY
+# os.environ["OPENAI_API_KEY"] = OPENAI_API_KEY
+# os.environ["TAVILY_API_KEY"] = TAVILY_API_KEY
+# os.environ["USER_AGENT"] = USER_AGENT
+# os.environ["POLYGON_API_KEY"] = POLYGON_API_KEY
 
 
 
@@ -278,5 +278,5 @@ async def list_sessions():
 
 ################################## Fast API Server 실행 ##################################
 if __name__ == "__main__" :
-    # uvicorn.run("main:app", host="0.0.0.0", port=8000) # 배포
-    uvicorn.run("main:app", host='localhost', reload=True) # 로컬 테스트
+    uvicorn.run("main:app", host="0.0.0.0", port=8000) # 배포
+    # uvicorn.run("main:app", host='localhost', reload=True) # 로컬 테스트
