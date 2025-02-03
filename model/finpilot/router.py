@@ -1,10 +1,9 @@
 ######################################## Import Modules ########################################
-from pydantic import BaseModel, Field
-from typing import Literal
-from langchain_openai import ChatOpenAI
-from langchain_core.messages import HumanMessage, SystemMessage
-from langchain_core.prompts import ChatPromptTemplate
-
+# from pydantic import BaseModel, Field
+# from typing import Literal
+# from langchain_openai import ChatOpenAI
+# from langchain_core.messages import HumanMessage, SystemMessage
+# from langchain_core.prompts import ChatPromptTemplate
 
 
 def route_question(state):
@@ -20,21 +19,50 @@ def route_question(state):
 	
 	print("[Graph Log] ROUTE QUESTION ...")
 	
-	question = state["question"]
+	chat_option = state["chat_option"]
 	
 	
-	if ('요약' in question) or ('확장' in question):
+	if chat_option == "요약 / 확장":
 		print("[Graph Log] ROUTE QUESTION to 'text_magician'")
 		return "text_magician"
-	elif ('조사' in question) and ('시각화' in question):
+	elif chat_option == "데이터 시각화 (Web)":
 		print("[Graph Log] ROUTE QUESTION to 'web_visualizer'")
 		return "web_visualizer"
-	elif (('주어진' in question) and ('시각화' in question)) or (('업로드' in question) and ('시각화' in question)):
+	elif chat_option == "데이터 시각화 (Upload)":
 		print("[Graph Log] ROUTE QUESTION to 'inner_visualizer'")
 		return "inner_visualizer"
-	elif ('생성' in question) or ('작성' in question):
+	elif chat_option == "단락 생성":
 		print("[Graph Log] ROUTE QUESTION to 'writer'")
 		return "writer"
+
+# def route_question(state):
+# 	"""
+# 	Route question to certain process
+	
+# 	Args : 
+# 		state (dict) : The current graph state
+		
+# 	Returns : 
+# 		str : Next node to call
+# 	"""
+	
+# 	print("[Graph Log] ROUTE QUESTION ...")
+	
+# 	question = state["question"]
+	
+	
+# 	if ('요약' in question) or ('확장' in question):
+# 		print("[Graph Log] ROUTE QUESTION to 'text_magician'")
+# 		return "text_magician"
+# 	elif ('조사' in question) and ('시각화' in question):
+# 		print("[Graph Log] ROUTE QUESTION to 'web_visualizer'")
+# 		return "web_visualizer"
+# 	elif (('주어진' in question) and ('시각화' in question)) or (('업로드' in question) and ('시각화' in question)):
+# 		print("[Graph Log] ROUTE QUESTION to 'inner_visualizer'")
+# 		return "inner_visualizer"
+# 	elif ('생성' in question) or ('작성' in question):
+# 		print("[Graph Log] ROUTE QUESTION to 'writer'")
+# 		return "writer"
 
 
 
