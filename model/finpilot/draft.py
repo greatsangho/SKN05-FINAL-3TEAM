@@ -226,7 +226,7 @@ class DraftProcess:
 
         response = self.outliner.invoke({"question" : question})
 
-        state["outlines"] = response.outlines
+        state["outlines"] = response.outlines[::-1]
 
         print("[Graph Log] Created outlines :")
         print(f"{state['outlines']}")
@@ -236,51 +236,62 @@ class DraftProcess:
     def write_draft_paragraph_node(self, state) :
         question = state["question"]
         outlines = state["outlines"]
+        outline = outlines.pop()
 
-        for outline in outlines:
-            print(f"[Graph Log] Current Outline Title : {outline}")
+        today = datetime.today().strftime("%Y-%m-%d")
 
-            draft_prompt = f"""
-                오늘은 {self.today} 입니다.
-                당신은 훌륭한 분석가 입니다. 당신은 사용자가 요청한 문서의 초안을 작성해야합니다.
-                이를 위해 다음의 지침에 따라 초안의 목차에 대한 단락을 최신 정보를 활용하여 작성하세요 :
-                
-                <지침>
-                1. 사용자의 요청에 대해 현재 주어진 목차에 대한 단락을 작성하세요.
-                2. 단락 작성 간 필요한 경우 특정 기업에 대한 '주식', '재무재표' 데이터를 수집하세요.
-                3. 특정 기업에 대한 '주식', '재무재표' 데이터를 수집이 필요하지 않은 경우, 뉴스와 웹 검색 만을 사용하여 단락을 작성해세요.
-                3. 단락 작성 간 충분한 근거를 제시하며 사실에 입각한 내용을 작성하세요.
-                4. 형식은 마크다운, 언어는 한국어를 사용하세요.
-                </지침>
+        print(f"[Graph Log] Current Outline Title : {outline}")
 
-                사용자 요청과 현재 작성해야할 목차는 다음과 같습니다. :
-                <요청과 목차>
-                사용자 요청 : {question}
-                현재 목차 : {outline}
-                </요청과 목차>
+        draft_prompt = f"""
+            오늘은 {today} 입니다.
+            당신은 훌륭한 분석가 입니다. 당신은 사용자가 요청한 문서의 초안을 작성해야합니다.
+            이를 위해 다음의 지침에 따라 초안의 목차에 대한 단락을 최신 정보를 활용하여 작성하세요 :
+            
+            <지침>
+            1. 사용자의 요청에 대해 현재 주어진 목차에 대한 단락을 작성하세요.
+            2. 단락 작성 간 필요한 경우 특정 기업에 대한 '주식', '재무재표' 데이터를 수집하세요.
+            3. 특정 기업에 대한 '주식', '재무재표' 데이터를 수집이 필요하지 않은 경우, 뉴스와 웹 검색 만을 사용하여 단락을 작성해세요.
+            3. 단락 작성 간 충분한 근거를 제시하며 사실에 입각한 내용을 작성하세요.
+            4. 형식은 마크다운, 언어는 한국어를 사용하세요.
+            </지침>
 
-                주식, 재무재표 데이터를 수집하기 위해 제공한 tools를 사용하며 해당 tool을 사용하면 아래의 경로에 데이터를 저장합니다.
-                해당 경로의 데이터를 활용하여 데이터를 분석하세요.
-                <데이터 출처>
-                주식 데이터 : {os.path.relpath(self.data_dir / 'stock_data.csv', os.getcwd())}
-                재무재표 데이터 : {os.path.relpath(self.data_dir / 'finance_data.csv', os.getcwd())}
-                </데이터 출처>
-            """
+            사용자 요청과 현재 작성해야할 목차는 다음과 같습니다. :
+            <요청과 목차>
+            사용자 요청 : {question}
+            현재 목차 : {outline}
+            </요청과 목차>
 
-            draft_writer = create_react_agent(
-                model=self.paragraph_writer,
-                tools=self.tools,
-                state_modifier = draft_prompt
-            )
+            주식, 재무재표 데이터를 수집하기 위해 제공한 tools를 사용하며 해당 tool을 사용하면 아래의 경로에 데이터를 저장합니다.
+            해당 경로의 데이터를 활용하여 데이터를 분석하세요.
+            <데이터 출처>
+            주식 데이터 : {os.path.relpath(self.data_dir / 'stock_data.csv', os.getcwd())}
+            재무재표 데이터 : {os.path.relpath(self.data_dir / 'finance_data.csv', os.getcwd())}
+            </데이터 출처>
+        """
 
-            response = draft_writer.invoke(state)
+        draft_writer = create_react_agent(
+            model=self.paragraph_writer,
+            tools=self.tools,
+            state_modifier = draft_prompt
+        )
 
-            state["messages"] = response["messages"]
-            content = ("\n" + response["messages"][-1].content)
-            print(f'[Graph Log] current contents : {content}')
-            try :
-                state["generation"] += content
-            except :
-                state["generation"] = content
+        response = draft_writer.invoke(state)
+
+        state["messages"] = response["messages"]
+        state["outlines"] = outlines
+        content = ("\n" + response["messages"][-1].content)
+        print(f'[Graph Log] current contents : {content}')
+        try :
+            state["generation"] += content
+        except :
+            state["generation"] = content
         
         return state
+    
+    def should_continue(self, state):
+        outlines = state["outlines"]
+
+        if len(outlines) == 0:
+            return "end"
+        else:
+            return "continue"

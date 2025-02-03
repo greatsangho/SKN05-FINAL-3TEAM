@@ -120,7 +120,14 @@ def create_application(memory : LimitedMemorySaver, vector_store : FAISS, sessio
 
     # draft process
     workflow.add_edge("make_outline_node", "write_draft_paragraph_node")
-    workflow.add_edge("write_draft_paragraph_node", END)
+    workflow.add_conditional_edges(
+        "write_draft_paragraph_node",
+        draft_process.should_continue,
+        {
+            "end" : END,
+            "continue" : "write_draft_paragraph_node"
+        }
+    )
 
 
 
