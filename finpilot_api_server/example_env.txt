@@ -1,0 +1,15 @@
+# change this file to .env
+
+# for OAuth(Required for web page project / Not need for Chrome extention)
+# GOOGLE_CLIENT_ID=
+# GOOGLE_CLIENT_SECRET=
+# REDIRECT_URI=
+
+# Required for location /Backend/app/.env
+SECRET_KEY=
+DATABASE_URL=mysql+pymysql://<USER>:<PASSWORD>@<RDS_ENDPOINT>:<PORT>/<DATABASE_NAME>
+NAMESPACE_UUID=12345678-1234-5678-1234-567812345678
+RUNPOD_URL=
+
+# Required for location /Backend/.env
+DUCKDNSTOKEN=

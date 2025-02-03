@@ -51,6 +51,9 @@ document.addEventListener("DOMContentLoaded", async () => {
           return;
         }
 
+        // 버퍼링 시작
+        showLoadingSpinner();
+
         try {
           // 사용자 정보 가져오기
           const response = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
@@ -80,7 +83,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             .then((res) => res.json())
             .then((data) => {
               console.log("서버 응답:", data);
-              alert("서버와 성공적으로 연결되었습니다!"); // 서버와 정상적으로 세션 연결
+              //alert("서버와 성공적으로 연결되었습니다!"); // 서버와 정상적으로 세션 연결
             })
             .catch((error) => {
               console.error("서버 전송 실패:", error);
@@ -94,6 +97,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         } catch (error) {
           console.error("사용자 정보 가져오기 실패:", error);
           alert("사용자 정보를 불러오는 중 오류가 발생했습니다.");
+        } finally{
+          hideLoadingSpinner();
         }
       });
     }
@@ -199,6 +204,28 @@ document.getElementById("send-btn").addEventListener("click", async () => {
                   leftIcon.style.height = "32px";
                   leftIcon.style.zIndex = "1";
 
+                  // 현재 시간 포맷팅 함수
+                  function getFormattedTime() {
+                    const now = new Date();
+                    return now.toLocaleString("ko-KR", { 
+                        year: "numeric", 
+                        month: "2-digit", 
+                        day: "2-digit", 
+                        hour: "2-digit", 
+                        minute: "2-digit", 
+                        second: "2-digit" 
+                    });
+                  }
+
+                  // 우측 하단 시간 표시 요소 추가
+                  const timestamp = document.createElement("small");
+                  timestamp.textContent = getFormattedTime();
+                  timestamp.style.position = "absolute";
+                  timestamp.style.bottom = "5px";
+                  timestamp.style.right = "10px";
+                  timestamp.style.color = "#888";
+                  timestamp.style.fontSize = "11.8px";
+
                   // 버튼 컨테이너 (기본적으로 숨김)
                   const buttonContainer = document.createElement("div");
                   buttonContainer.classList.add("image-buttons");
@@ -225,20 +252,65 @@ document.getElementById("send-btn").addEventListener("click", async () => {
                     button.style.cursor = "pointer";   // 마우스 오버 시 커서 변경
                     button.style.padding = "5px";      // 간격 조정
                   };
+
+                  // 스타일 추가 (툴팁을 위한 CSS 추가)
+                  const style = document.createElement("style");
+                  style.innerHTML = `
+                    .tooltip-container {
+                      position: relative;
+                      display: inline-block;
+                    }
+                    .tooltip-container .tooltip-text {
+                      visibility: hidden;
+                      width: auto;
+                      background-color: #333;
+                      color: #fff;
+                      text-align: center;
+                      border-radius: 5px;
+                      padding: 5px 8px;
+                      position: absolute;
+                      z-index: 20;
+                      top: -26px;
+                      right: 50%;
+                      transform: translateX(50%);
+                      font-size: 10px;
+                      white-space: nowrap;
+                      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+                      opacity: 0;
+                      transition: opacity 0.15s ease-in-out, visibility 0.15s ease-in-out;
+                    }
+                    .tooltip-container .tooltip-text::after {
+                      content: "";
+                      position: absolute;
+                      top: 100%;  /* 말풍선 아래쪽에 위치 */
+                      left: 50%;
+                      transform: translateX(-50%);
+                      border-width: 4px;
+                      border-style: solid;
+                      border-color: #333 transparent transparent transparent;
+                    }
+                    .tooltip-container:hover .tooltip-text {
+                      visibility: visible;
+                      opacity: 1;
+                    }
+                  `;
+                  document.head.appendChild(style);
       
                   // Apply 버튼 추가
                   const applyButton = document.createElement("button");
-                  applyButton.classList.add("apply-btn");
-                  applyButton.innerHTML = `<img src="./apply.png" alt="Apply" style="width: 16px; height: 16px;" class="tooltip-icon">`;
+                  applyButton.classList.add("apply-btn", "tooltip-container");
+                  applyButton.innerHTML = `
+                      <img src="./apply.png" alt="Apply" style="width: 16px; height: 16px;">
+                      <span class="tooltip-text">Apply to Docs</span>
+                  `;
       
                   // Copy 버튼 추가
                   const copyButton = document.createElement("button");
-                  copyButton.classList.add("copy-btn");
-                  copyButton.innerHTML = `<img src="./copy.png" alt="Copy" style="width: 16px; height: 16px;" class="tooltip-icon">`;
-
-                  // 툴팁 텍스트 추가
-                  copyButton.setAttribute("data-tooltip", "Copy");
-                  applyButton.setAttribute("data-tooltip", "Apply to Docs");
+                  copyButton.classList.add("copy-btn", "tooltip-container");
+                  copyButton.innerHTML = `
+                      <img src="./copy.png" alt="Copy" style="width: 16px; height: 16px;">
+                      <span class="tooltip-text">Copy</span>
+                  `;
       
                   // Apply 버튼 클릭 기능 (이미지 삽입)
                   applyButton.addEventListener("click", () => {
@@ -283,10 +355,6 @@ document.getElementById("send-btn").addEventListener("click", async () => {
                       }
                   });
 
-                  // title 속성으로 간단히 툴팁 추가 (대체 방법)
-                  applyButton.title = "Apply to Docs";
-                  copyButton.title = "Copy";
-
                   // 스타일 적용
                   styleButtons(copyButton);
                   styleButtons(applyButton);
@@ -295,39 +363,6 @@ document.getElementById("send-btn").addEventListener("click", async () => {
                   buttonContainer.appendChild(copyButton);
                   buttonContainer.appendChild(applyButton);
 
-                  // CSS 추가 (말풍선 스타일)
-                  const style = document.createElement("style");
-                  style.innerHTML = `
-                    .tooltip-icon {
-                      position: relative;
-                      border: none;
-                      background: none;
-                      cursor: pointer;
-                    }
-                    .tooltip-icon::after {
-                      content: attr(data-tooltip);
-                      position: absolute;
-                      top: -35px;
-                      left: 50%;
-                      transform: translateX(-50%);
-                      background-color: rgba(0, 0, 0, 0.85);
-                      color: white;
-                      padding: 5px 10px;
-                      border-radius: 5px;
-                      font-size: 12px;
-                      white-space: nowrap;
-                      opacity: 0;
-                      visibility: hidden;
-                      transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
-                      pointer-events: none;
-                    }
-                    .tooltip-icon:hover::after {
-                      opacity: 1;
-                      visibility: visible;
-                    }
-                  `;
-                  document.head.appendChild(style);
-
                   // 이미지 요소 생성
                   const imgElement = document.createElement("img");
                   imgElement.src = `data:image/png;base64,${image.image_data}`;
@@ -335,14 +370,27 @@ document.getElementById("send-btn").addEventListener("click", async () => {
                   imgElement.style.maxWidth = "100%";
                   imgElement.style.borderRadius = "10px";
                   imgElement.style.marginTop = "40px";
+                  imgElement.style.marginBottom = "22px"; // 이미지 하단 여백 조정
       
                   // 컨테이너에 이미지 및 버튼 추가
                   imageContainer.appendChild(leftIcon); // 항상 보이는 아이콘 추가
                   imageContainer.appendChild(buttonContainer); // 버튼 추가 (hover 시 표시)
                   imageContainer.appendChild(imgElement); // 이미지 추가
+                  imageContainer.appendChild(timestamp); 
       
                   // 메시지 창에 이미지 컨테이너 추가
                   document.getElementById("chat-box").appendChild(imageContainer);
+
+                  // 데이터 시각화 (Upload)옵션에서 답변 나오면 첨부한 csv파일 삭제
+                  if (currentSelectedOption === "데이터 시각화 (Upload)") {
+                    const fileCard = document.querySelector('.file-item');
+                    if (fileCard) {
+                        fileCard.remove();
+                    }
+                    existingCsvCount = 0;
+                    checkCsvRequirement(currentSelectedOption);
+                  }
+                  
               });
           } else {
             botMessageElement.innerHTML = `
@@ -350,13 +398,14 @@ document.getElementById("send-btn").addEventListener("click", async () => {
                  <br><span>이미지 데이터를 찾을 수 없습니다.</span>`;
           }
         } else {
-            // 일반 텍스트 메시지 처리
+            // 일반 텍스트 메시지 처리 (마크다운 파싱 적용)
             const botMessage = result.answer || "서버에서 응답을 받지 못했습니다.";
-            const askTimeFormatted = new Date(new Date(result.ask_time).getTime() + 9 * 60 * 60 * 1000).toLocaleString("ko-KR") || "질문 시간 정보 없음";
+            const askTimeFormatted = new Date(new Date(result.ask_time).getTime() + 9 * 60 * 60 * 1000).toLocaleString("ko-KR") || "시간 정보 없음";
 
             botMessageElement.innerHTML = `
                 <img src="icon_circle.png" alt="FinPilot Icon" width="32" height="32" style="margin-right: 3px; vertical-align: middle;"> 
-                <br><span>${botMessage}</span><br><br><small style="float: right; color: #888;">${askTimeFormatted}</small>`;
+                <br><span>${marked.parse(botMessage)}</span>
+                <br><small style="float: right; color: #888;">${askTimeFormatted}</small>`;
         }
 
         // Apply 버튼 추가
@@ -378,7 +427,9 @@ document.getElementById("send-btn").addEventListener("click", async () => {
                 result.images.forEach((image) => {
                     appendImageToGoogleDoc(image.image_data, "image/png");
                 });
-            } else {appendToGoogleDoc(result.answer);}
+            } else {appendToGoogleDoc(result.answer);
+              // applyContentToGoogleDoc(botMessageElement);
+            }
     
             const imgElement = applyButton.querySelector("img");
             imgElement.src = "copy_done.png";
@@ -394,9 +445,7 @@ document.getElementById("send-btn").addEventListener("click", async () => {
         // Copy 버튼 클릭 기능
         copyButton.addEventListener("click", async () => { 
             if (currentSelectedOption === "초안 작성" || currentSelectedOption === "단락 생성" || currentSelectedOption === "요약 / 확장") {
-                navigator.clipboard.writeText(result.answer).then(() => {
-                    console.log("응답이 클립보드에 복사되었습니다!");
-                })
+                copyElementToClipboard(botMessageElement);
             }else{
                 try {
                     // 이미지 Base64 데이터를 Blob으로 변환
@@ -475,37 +524,142 @@ document.getElementById("user-input").addEventListener("keydown", (event) => {
     }
 });
 
-// ------------------------
-// Google Docs에 텍스트 추가
-// ------------------------
-async function appendToGoogleDoc(content) {
+// ----------------------------------------
+// Google Docs에 텍스트 추가 (마크다운 적용)
+// ----------------------------------------
+async function appendToGoogleDoc(markdownContent) {
   showLoadingSpinner();
   try {
     const accessToken = await getAccessToken();
 
-    // Google Docs 문서 정보 가져오기
+    // 문서 끝 위치 가져오기
     const docInfoResponse = await fetch(
       `https://docs.googleapis.com/v1/documents/${DOCUMENT_ID}`,
       {
         method: "GET",
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
+        headers: { Authorization: `Bearer ${accessToken}` },
       }
     );
 
     if (!docInfoResponse.ok) {
-      const errorText = await docInfoResponse.text();
-      throw new Error(`문서 정보 가져오기 실패: ${errorText}`);
+      throw new Error("문서 정보 가져오기 실패");
     }
 
     const docInfo = await docInfoResponse.json();
+    let endIndex = docInfo.body.content.length > 1
+      ? docInfo.body.content[docInfo.body.content.length - 1].endIndex - 1
+      : 1;
 
-    // 문서의 끝 위치 계산
-    const contentLength = docInfo.body.content.length; // 문서 길이 계산
-    console.log("문서 길이:", contentLength);
+    // 마크다운을 HTML로 변환 후 DOM에 추가
+    const htmlContent = marked.parse(markdownContent);
+    const tempDiv = document.createElement("div");
+    tempDiv.innerHTML = htmlContent;
 
-    // Google Docs에 텍스트 추가
+    let requests = [];
+    let currentIndex = endIndex;
+    let seenElements = new Set();  // 중복 방지를 위한 Set
+
+    function parseElement(element) {
+      if (element.nodeType === Node.TEXT_NODE) {
+        const text = element.textContent.trim();
+        if (text.length > 0 && !seenElements.has(text)) {
+          seenElements.add(text);
+          requests.push({
+            insertText: {
+              location: { index: currentIndex },
+              text: text + "\n",
+            },
+          });
+          currentIndex += text.length + 1; // 개행 포함
+        }
+      } else if (element.nodeType === Node.ELEMENT_NODE) {
+        element.childNodes.forEach(parseElement);
+
+        let startIdx = currentIndex - element.innerText.length;
+        let endIdx = currentIndex;
+
+        switch (element.tagName) {
+          case "H1":
+            requests.push({
+              updateParagraphStyle: {
+                range: { startIndex: startIdx, endIndex: endIdx },
+                paragraphStyle: { namedStyleType: "HEADING_1" },
+                fields: "namedStyleType",
+              },
+            });
+            break;
+          case "H2":
+            requests.push({
+              updateParagraphStyle: {
+                range: { startIndex: startIdx, endIndex: endIdx },
+                paragraphStyle: { namedStyleType: "HEADING_2" },
+                fields: "namedStyleType",
+              },
+            });
+            break;
+          case "B":
+          case "STRONG":
+            requests.push({
+              updateTextStyle: {
+                range: { startIndex: startIdx, endIndex: endIdx },
+                textStyle: { bold: true },
+                fields: "bold",
+              },
+            });
+            break;
+          case "I":
+          case "EM":
+            requests.push({
+              updateTextStyle: {
+                range: { startIndex: startIdx, endIndex: endIdx },
+                textStyle: { italic: true },
+                fields: "italic",
+              },
+            });
+            break;
+          case "UL":
+            element.querySelectorAll("li").forEach((li) => {
+              const listItem = `• ${li.innerText}\n`;
+              if (!seenElements.has(listItem)) {
+                seenElements.add(listItem);
+                requests.push({
+                  insertText: {
+                    location: { index: currentIndex },
+                    text: listItem,
+                  },
+                });
+                currentIndex += listItem.length;
+              }
+            });
+            break;
+          case "OL":
+            let counter = 1;
+            element.querySelectorAll("li").forEach((li) => {
+              const listItem = `${counter}. ${li.innerText}\n`;
+              if (!seenElements.has(listItem)) {
+                seenElements.add(listItem);
+                requests.push({
+                  insertText: {
+                    location: { index: currentIndex },
+                    text: listItem,
+                  },
+                });
+                currentIndex += listItem.length;
+                counter++;
+              }
+            });
+            break;
+        }
+      }
+    }
+
+    tempDiv.childNodes.forEach(parseElement);
+
+    if (requests.length === 0) {
+      throw new Error("추출된 텍스트가 없습니다.");
+    }
+
+    // Google Docs API 요청 실행
     const response = await fetch(
       `https://docs.googleapis.com/v1/documents/${DOCUMENT_ID}:batchUpdate`,
       {
@@ -514,32 +668,81 @@ async function appendToGoogleDoc(content) {
           Authorization: `Bearer ${accessToken}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          requests: [
-            {
-              insertText: {
-                endOfSegmentLocation: {}, // 문서 끝에 삽입
-                text: `${content}\n\n`, // 새 2줄 포함 
-              },
-            },
-          ],
-        }),
+        body: JSON.stringify({ requests }),
       }
     );
 
     if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Google Docs 업데이트 실패: ${errorText}`);
+      throw new Error(`Google Docs 업데이트 실패: ${await response.text()}`);
     }
 
-    console.log("✅ Google Docs 업데이트 성공!");
-    // alert("Google Docs에 텍스트가 삽입되었습니다!");
+    console.log("✅ Google Docs 마크다운 적용 성공!");
+    alert("Google Docs에 서식이 적용된 상태로 추가되었습니다!");
+
   } catch (error) {
     console.error("❌ Google Docs API 오류:", error);
-    alert(`Google Docs 업데이트 중 문제가 발생했습니다: ${error.message}\n\nGoogle Docs 문서를 열고 다시 시도해주세요.`);
-  } finally{
+    alert(`Google Docs 업데이트 중 문제가 발생했습니다: ${error.message}`);
+  } finally {
     hideLoadingSpinner();
   }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// ---------------------------------
+// 클립보드에 HTML 콘텐츠 복사 함수
+// ---------------------------------
+async function copyElementToClipboard(element) {
+  if (!element) {
+      alert("복사할 내용이 없습니다.");
+      return;
+  }
+
+  // 불필요한 요소 (아이콘, 버튼, 시간 등) 제거하고 클립보드에 복사할 내용 추출
+  const clonedElement = element.cloneNode(true);
+
+  // 필요 없는 요소 제거 (버튼, 아이콘, 시간 등)
+  clonedElement.querySelectorAll("button, img[alt='FinPilot Icon'], small").forEach(el => el.remove());
+
+  // 클립보드에 복사할 순수한 HTML 콘텐츠 가져오기
+  const htmlContent = clonedElement.innerHTML;
+  const blob = new Blob([htmlContent], { type: "text/html" });
+
+  await navigator.clipboard.write([
+    // navigator.clipboard.Textwrite
+      new ClipboardItem({ "text/html": blob })
+  ]);
+
+  // alert("HTML 콘텐츠가 클립보드에 복사되었습니다. Google Docs에 붙여넣기하세요!");
 }
 
 // ---------------------------------------------------------------------------------
@@ -885,7 +1088,7 @@ async function sendPdfToServer(file) {
       const result = await response.json();
       console.log("서버 응답:", result);
   
-      alert(`PDF 파일 '${file.name}'이 서버에 성공적으로 업로드되었습니다.`); // 없앨지 말지 고민 중..
+      //alert(`PDF 파일 '${file.name}'이 서버에 성공적으로 업로드되었습니다.`); // 없앨지 말지 고민 중..
   } catch (error) {
       console.error("서버 전송 실패:", error);
       alert(`PDF 파일 업로드 중 오류 발생: ${file.name}(${error.message})`);
@@ -923,7 +1126,7 @@ async function sendcsvToServer(file) {
 
       const result = await response.json();
       console.log("서버 응답:", result);
-      alert(`CSV 파일 '${file.name}'이 서버에 성공적으로 업로드되었습니다.`); // 없앨지 말지 고민 중..
+      //alert(`CSV 파일 '${file.name}'이 서버에 성공적으로 업로드되었습니다.`); // 없앨지 말지 고민 중..
   } catch (error) {
       console.error("서버 전송 실패:", error);
       alert(`CSV 파일 업로드 중 오류 발생: ${file.name}(${error.message})`);
@@ -964,7 +1167,7 @@ async function delPdfToServer(fileName) {
   
       const result = await response.json();
       console.log("서버 응답:", result);
-      alert(`PDF 파일 '${fileName}'이 서버에서 성공적으로 삭제되었습니다.`);
+      //alert(`PDF 파일 '${fileName}'이 서버에서 성공적으로 삭제되었습니다.`);
     } catch (error) {
       console.error("서버 연결 실패:", error);
       alert(`PDF 파일 삭제 중 오류 발생: ${fileName} (${error.message})`);
@@ -1006,7 +1209,7 @@ async function delcsvToServer(fileName) {
 
     const result = await response.json();
     console.log("서버 응답:", result);
-    alert(`CSV 파일 '${fileName}'이 서버에서 성공적으로 삭제되었습니다.`);
+    //alert(`CSV 파일 '${fileName}'이 서버에서 성공적으로 삭제되었습니다.`);
   } catch (error) {
     console.error("서버 연결 실패:", error);
     alert(`CSV 파일 삭제 중 오류 발생: ${fileName} (${error.message})`);
