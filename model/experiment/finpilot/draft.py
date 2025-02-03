@@ -7,6 +7,7 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_community.document_loaders import WebBaseLoader
 from datetime import datetime
 
+
 from tavily import TavilyClient
 
 from typing import List, Annotated
@@ -21,12 +22,12 @@ import os
 
 
 class DraftProcess:
-    def __init__(self, data_dir):
+    def __init__(self, session_id):
         # Web Search API Client
         tavily_client = TavilyClient(api_key=os.environ["TAVILY_API_KEY"])
         # LLM API Client
         llm = ChatOpenAI(model='gpt-4o-mini', temperature=0, api_key=os.environ["OPENAI_API_KEY"])
-        self.data_dir = data_dir
+        self.data_dir = f'./data/{session_id}/'
 
 
         @tool
@@ -43,6 +44,8 @@ class DraftProcess:
                 str : path message about saved file
             """
             def fetch_ticker_list():
+                from pykrx import stock
+
                 tickers = stock.get_market_ticker_list(market="ALL")
 
                 return {
@@ -54,6 +57,7 @@ class DraftProcess:
             
             ticker_dict = fetch_ticker_list()
             stock_code = search_ticker_by_name(ticker_dict, corp_name.replace(" ", ""))
+            print(f"[Tool Log] stock_code : {stock_code}")
 
             stock = yf.download(
                 stock_code + '.KS', 
@@ -65,10 +69,10 @@ class DraftProcess:
             df = pd.DataFrame(index = stock.index)
             df[f'{stock_code}'] = stock['Close']
             
-            csv_path = data_dir / "stock_data.csv"
+            csv_path = self.data_dir + "stock_data.csv"
             df.to_csv(csv_path)
 
-            return f"Stockfile saved to {os.path.relpath(data_dir / 'stock_data.csv', os.getcwd())}"
+            return f"Stockfile saved to {os.path.relpath(self.data_dir + 'stock_data.csv', os.getcwd())}"
         
 
         @tool
@@ -106,8 +110,8 @@ class DraftProcess:
                 data = response.json()
                 if data['status'] == '000':
                     df = pd.DataFrame(data['list'])
-                    df.to_csv(data_dir / "finance_data.csv", encoding="utf-8")
-                    return f"finance data saved to {os.path.relpath(data_dir / 'finance_data.csv', os.getcwd())}"
+                    df.to_csv(self.data_dir + "finance_data.csv", encoding="utf-8")
+                    return f"finance data saved to {os.path.relpath(self.data_dir + 'finance_data.csv', os.getcwd())}"
                 else:
                     return f"Cannot find Data for {corp_name}"
             else:
@@ -173,8 +177,7 @@ class DraftProcess:
             loader = WebBaseLoader(urls)
             docs = loader.load()
             return "\n\n".join(
-                [f'<Document name="{doc.metadata.get("title", "")}">\n{doc.page_content}\n</Document>'
-                for doc in docs]
+                [f'<Document name="{doc.metadata.get("title", "")}">\n{doc.page_content}\n</Document>' for doc in docs]
             )
         
         self.tools = [fetch_stock_data, fetch_financial_data, analyze_csv_data, fetch_company_news, fetch_market_news, fetch_webpages_scrape]
@@ -264,8 +267,8 @@ class DraftProcess:
             주식, 재무재표 데이터를 수집하기 위해 제공한 tools를 사용하며 해당 tool을 사용하면 아래의 경로에 데이터를 저장합니다.
             해당 경로의 데이터를 활용하여 데이터를 분석하세요.
             <데이터 출처>
-            주식 데이터 : {os.path.relpath(self.data_dir / 'stock_data.csv', os.getcwd())}
-            재무재표 데이터 : {os.path.relpath(self.data_dir / 'finance_data.csv', os.getcwd())}
+            주식 데이터 : {os.path.relpath(self.data_dir + 'stock_data.csv', os.getcwd())}
+            재무재표 데이터 : {os.path.relpath(self.data_dir + 'finance_data.csv', os.getcwd())}
             </데이터 출처>
         """
 
