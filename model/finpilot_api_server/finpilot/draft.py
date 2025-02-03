@@ -7,6 +7,7 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_community.document_loaders import WebBaseLoader
 from datetime import datetime
 
+
 from tavily import TavilyClient
 
 from typing import List, Annotated
@@ -43,6 +44,8 @@ class DraftProcess:
                 str : path message about saved file
             """
             def fetch_ticker_list():
+                from pykrx import stock
+
                 tickers = stock.get_market_ticker_list(market="ALL")
 
                 return {
@@ -54,6 +57,7 @@ class DraftProcess:
             
             ticker_dict = fetch_ticker_list()
             stock_code = search_ticker_by_name(ticker_dict, corp_name.replace(" ", ""))
+            print(f"[Tool Log] stock_code : {stock_code}")
 
             stock = yf.download(
                 stock_code + '.KS', 
