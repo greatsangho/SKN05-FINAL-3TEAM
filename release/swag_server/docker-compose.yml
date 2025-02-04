@@ -1,58 +1,25 @@
 version: '3.8'
 
-services:
-  fastapi:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: fastapi
-    platform: linux/amd64
-    expose:
-      - "8000"
-    networks:
-      - app-network
-    environment:
-      - TZ=Asia/Seoul
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
-      interval: 5m
-      timeout: 10s
-      retries: 3
-
   swag:
     image: lscr.io/linuxserver/swag:latest
     container_name: swag
     platform: linux/amd64
-    depends_on:
-      fastapi:
-        condition: service_healthy
     cap_add:
       - NET_ADMIN
     ports:
       - "80:80"
       - "443:443"
     volumes:
-      - ./nginx/site-confs:/config/nginx/site-confs  # 설정 파일 매핑
-      - ./certificates:/etc/letsencrypt
+      - ./nginx/site-confs:/config/nginx/site-confs  # Nginx 설정 매핑
+      - ./certificates:/etc/letsencrypt              # 인증서 저장소 매핑
     environment:
       - PUID=1000
       - PGID=1000
       - TZ=Asia/Seoul
-      - URL=finpilotback.duckdns.org
+      - URL=finpilotback.duckdns.org                 # DuckDNS 도메인 이름
       - SUBDOMAINS=
-      - VALIDATION=duckdns
-      - DUCKDNSTOKEN=${DUCKDNSTOKEN}
-      - EMAIL=greatsangho@gmail.com
-      - STAGING=false  # 테스트 시 true로 변경
-    networks:
-      - app-network
+      - VALIDATION=duckdns                           # DuckDNS 인증 방식 사용
+      - DUCKDNSTOKEN=${DUCKDNSTOKEN}                 # DuckDNS 토큰 (환경 변수)
+      - EMAIL=greatsangho@gmail.com                  # 이메일 주소 (Let's Encrypt)
+      - STAGING=true                                 # 테스트 시 true, 실제 운영 시 false로 변경
     restart: unless-stopped
-
-networks:
-  app-network:
-    driver: bridge
-
-
-volumes:
-  certificates:
-    driver: local
