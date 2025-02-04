@@ -1,5 +1,5 @@
-def test_app(app, inputs):
-    for output in app.stream(inputs):
+def test_app(app, inputs, config):
+    for output in app.stream(inputs, config):
         node_name, node_state = list(output.items())[0]
         print(f"\n======================= {node_name} =======================\n")
         print("State")
