@@ -1,5 +1,6 @@
 ############################### Import Modules ###############################
 from finpilot.workflow import create_application
+# from langgraph.checkpoint.memory import MemorySaver
 from finpilot.memory import LimitedMemorySaver
 from langchain_community.vectorstores import FAISS
 
@@ -12,9 +13,12 @@ class FinPilot:
 
         config = {
             "configurable" : {"thread_id" : session_id},
-            "recursion_limit" : 25
+            "recursion_limit" : 40
         }
         
         result = self.app.invoke(inputs, config)
         
-        return result['generation']
+        return {
+            "generation" : result["generation"],
+            "source" : result["source"]
+        }

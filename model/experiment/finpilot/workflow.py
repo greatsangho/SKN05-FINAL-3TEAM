@@ -1,6 +1,7 @@
 from typing import Annotated, List
 from typing_extensions import TypedDict
 from langgraph.graph.message import add_messages
+# from langgraph.checkpoint.memory import MemorySaver
 from finpilot.memory import LimitedMemorySaver
 from langgraph.graph import START, END, StateGraph
 from langchain_community.vectorstores import FAISS
@@ -28,6 +29,7 @@ def create_application(memory : LimitedMemorySaver, vector_store : FAISS, sessio
         messages : Annotated[list, add_messages]
         documents : List[str]
         outlines : List[str]
+        source : List[str]
     
     workflow = StateGraph(State)
 
