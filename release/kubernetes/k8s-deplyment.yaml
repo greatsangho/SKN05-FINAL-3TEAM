@@ -1,30 +1,27 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: fastapi-deployment
-  labels:
-    app: fastapi-app
+  name: finpilot-deployment
 spec:
   replicas: 2
   selector:
     matchLabels:
-      app: fastapi-app
+      app: finpilot-app
   template:
     metadata:
       labels:
-        app: fastapi-app
+        app: finpilot-app
     spec:
       containers:
-        - name: fastapi-container
-          image: greatsangho/fastapi-app:latest  # 업로드한 Docker 이미지 이름
+        - name: finpilot-container
+          image: greatsangho/finpilot-app:latest
           ports:
             - containerPort: 8000
-          readinessProbe:                      # Readiness Probe 설정 (선택)
-            httpGet:
-              path: /health                    # FastAPI의 헬스체크 엔드포인트
-              port: 8000
-            initialDelaySeconds: 5
-            periodSeconds: 10
+          envFrom:
+            - configMapRef:
+                name: finpilot-configmap   # ConfigMap 참조.
+            - secretRef:
+                name: finpilot-secret     # Secret 참조.
 
 ---
 apiVersion: v1
