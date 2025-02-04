@@ -1,17 +1,17 @@
 version: '3.8'
+
 services:
   swag:
     image: lscr.io/linuxserver/swag:latest
     container_name: swag
-    platform: linux/amd64
     cap_add:
       - NET_ADMIN
     ports:
       - "80:80"
       - "443:443"
     volumes:
-      - ./nginx/site-confs:/config/nginx/site-confs  # Nginx 설정 매핑
-      - ./certificates:/etc/letsencrypt              # 인증서 저장소 매핑
+      - ./nginx/site-confs:/config/nginx/site-confs
+      - ./certificates:/etc/letsencrypt
     environment:
       - PUID=1000                                    # 사용자 ID
       - PGID=1000                                    # 그룹 ID
@@ -21,10 +21,9 @@ services:
       - VALIDATION=duckdns                           # DuckDNS 인증 방식 사용
       - DUCKDNSTOKEN=${DUCKDNSTOKEN}                 # DuckDNS 토큰 (환경 변수)
       - EMAIL=${EMAIL}                               # 이메일 주소 (Let's Encrypt)
-      - STAGING=true                                 # 테스트 시 true, 실제 운영 시 false로 변경
+      - STAGING=true 
     networks:
-      - k8s-network  # Kubernetes 네트워크와 연결
-    restart: unless-stopped
+      - k8s-network
 
 networks:
   k8s-network:
