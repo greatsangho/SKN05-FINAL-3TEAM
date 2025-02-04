@@ -15,7 +15,7 @@ from langchain_openai import ChatOpenAI
 from langgraph.prebuilt import ToolNode
 
 # Prompts
-from langchain_core.messages import HumanMessage
+from langchain_core.messages import HumanMessage, ToolMessage
 from langgraph.graph.message import add_messages
 
 
@@ -26,26 +26,15 @@ class WebVisualizerProcess:
         # web search tool
         tavily_search_tool = TavilySearchResults(max_results=3)
         @tool
-        def web_search_tool(state):
-            question = state["question"]
-            try : 
-                documents = state["documents"]
-            except :
-                documents = []
-
-            if isinstance(question, str):
-                query = question
-            else:
-                query = str(question.content) if hasattr(question, 'content') else str(question)
-            docs = tavily_search_tool.invoke({"query" : query})
-            web_results = [
-                Document(
-                    page_content=doc["content"],
-                    metadata={
-                        "source" : doc["url"]
-                    }
-                ) for doc in docs]
-            documents.extend(web_results)
+        def web_search_tool(input):
+            """
+            Use this tool for search information or data from web
+            """
+            print(input)
+            result = tavily_search_tool.invoke(input)
+            print(result)
+            return result
+            
 
         doc_string_template = """
             Use this tool to execute Python code and generate the desired results.

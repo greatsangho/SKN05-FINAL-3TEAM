@@ -7,7 +7,8 @@ from langchain_community.vectorstores import FAISS
 
 from finpilot.experimental.writer import WriterProcess
 from finpilot.text_magician import TextMagicianProcess
-from finpilot.web_visualizer import WebVisualizerProcess
+# from finpilot.web_visualizer import WebVisualizerProcess
+from finpilot.experimental.web_visualizer import WebVisualizerProcess
 from finpilot.inner_visualizer import InnerVisualizerProcess
 from finpilot.draft import DraftProcess
 from finpilot.router import route_question
