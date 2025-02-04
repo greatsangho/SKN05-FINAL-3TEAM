@@ -37,3 +37,4 @@ numpy
 tabulate
 tavily-python
 yfinance
+pykrx

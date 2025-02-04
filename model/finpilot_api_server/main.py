@@ -22,12 +22,11 @@ warnings.filterwarnings("ignore", category=LangSmithMissingAPIKeyWarning)
 
 
 ################################## Environment Variable Setting ##################################
-# from config.secret_keys import OPENAI_API_KEY, TAVILY_API_KEY, USER_AGENT, POLYGON_API_KEY
-# os.environ["OPENAI_API_KEY"] = OPENAI_API_KEY
-# os.environ["TAVILY_API_KEY"] = TAVILY_API_KEY
-# os.environ["USER_AGENT"] = USER_AGENT
-# os.environ["POLYGON_API_KEY"] = POLYGON_API_KEY
-
+from config.secret_keys import OPENAI_API_KEY, TAVILY_API_KEY, USER_AGENT, DART_API_KEY
+os.environ["OPENAI_API_KEY"] = OPENAI_API_KEY
+os.environ["TAVILY_API_KEY"] = TAVILY_API_KEY
+os.environ["USER_AGENT"] = USER_AGENT
+os.environ["DART_API_KEY"] = DART_API_KEY
 
 
 
@@ -69,11 +68,22 @@ async def query_non_image(
         redis_client=redis,
         session_id=session_id
     )
+
+    delete_path = Path(os.getcwd()) / "data" / f"{session_id}"
+    if not os.path.exists(delete_path):
+        os.makedirs(delete_path)
     
     # invoke answer
     print("[Server Log] INVOKING PILOT ANSWER (NON-IMAGE)")
     answer = pilot.invoke(question, session_id, chat_option)
     print("[Server Log] PILOT ANSWER INVOKED")
+
+    # delete LangGraph Application
+    del pilot
+
+    delete_path = Path(os.getcwd()) / "data" / f"{session_id}"
+    if len(os.listdir(delete_path)) > 0:
+        delete_files_in_dir(delete_path)
 
     # return answer
     return {"session_id" : session_id, "answer" : answer}
@@ -120,6 +130,9 @@ async def query_image(
     while len(os.listdir(folder_path)) == 0:
         _ = pilot.invoke(question, session_id, chat_option)
     print("[Server Log] PILOT ANSWER INVOKED")
+
+    # delete LangGraph Application
+    del pilot
 
     # Get PNG File list
     png_files = [f for f in os.listdir(folder_path) if f.endswith(".png")]
@@ -170,6 +183,8 @@ async def upload_pdf(
         vector_store=vectorstore,
         data=documents
     )
+
+    del vectorstore
 
     # Return Status (Task Complete)
     return {"status" : "success"}
@@ -235,6 +250,8 @@ async def delete_pdf(
         file_name=file_name
     )
 
+    del vectorstore
+
     # Return Status (Task Complete)
     return {"status" : "success"}
 
@@ -278,5 +295,5 @@ async def list_sessions():
 
 ################################## Fast API Server 실행 ##################################
 if __name__ == "__main__" :
-    uvicorn.run("main:app", host="0.0.0.0", port=8000) # 배포
-    # uvicorn.run("main:app", host='localhost', reload=True) # 로컬 테스트
+    # uvicorn.run("main:app", host="0.0.0.0", port=8000) # 배포
+    uvicorn.run("main:app", host='localhost', reload=True) # 로컬 테스트
