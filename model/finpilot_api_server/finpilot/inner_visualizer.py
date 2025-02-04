@@ -22,7 +22,8 @@ class InnerVisualizerProcess:
             files = os.listdir(self.DATA_DIR)
             csv_files = [file for file in files if file.endswith(".csv")]
             # print(f"[Server Log] CSV FILES IN DIR ARE : {len(csv_files)}")
-            self.data_path = self.DATA_DIR / csv_files[0]
+            self.csvfile = csv_files[0]
+            self.data_path = self.DATA_DIR / self.csvfile
             # print(f"[Server Log] CSV DATA PATH : {self.data_path}")
 
             data = pd.read_csv(self.data_path)
@@ -122,5 +123,6 @@ class InnerVisualizerProcess:
         # print(f"[Graph Log] Current Data Analize message : {result}")
         state["messages"] = add_messages(state["messages"], AIMessage(content=result['output']))
         state["generation"] = state["messages"][-1]
+        state["source"] = self.csvfile
 
         return state

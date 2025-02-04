@@ -29,6 +29,7 @@ def create_application(memory : LimitedMemorySaver, vector_store : FAISS, sessio
         messages : Annotated[list, add_messages]
         documents : List[str]
         outlines : List[str]
+        source : List[str]
     
     workflow = StateGraph(State)
 

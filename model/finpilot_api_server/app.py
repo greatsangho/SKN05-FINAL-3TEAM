@@ -87,7 +87,7 @@ async def query(
             delete_files_in_dir(data_path)
 
         # return answer
-        return {"session_id" : session_id, "answer" : answer}
+        return {"session_id" : session_id, "answer" : answer["generation"], "source" : answer["source"]}
     else:
         # Set Folder Path for Image saving
         chart_path = f"./charts/{session_id}/"
@@ -97,7 +97,7 @@ async def query(
         # invoke answer
         print("[Server Log] INVOKING PILOT ANSWER (NON-IMAGE)")
         while len(os.listdir(chart_path)) == 0:
-            _ = pilot.invoke(question, session_id, chat_option)
+            answer = pilot.invoke(question, session_id, chat_option)
         print("[Server Log] PILOT ANSWER INVOKED")
 
         # delete LangGraph Application
@@ -115,10 +115,9 @@ async def query(
             # Delete Remaining CSV Files
             if len(os.listdir(data_path)) > 0:
                 delete_files_in_dir(data_path)
-        
 
-        # Return Image data as JSON Form
-        return JSONResponse(content={"images": images})
+        
+        return JSONResponse(content={"images": images, "source" : answer["source"]})
 
 
 

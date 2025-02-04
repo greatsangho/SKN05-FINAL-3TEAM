@@ -1,5 +1,6 @@
 ########################### Import Modules ###########################
 import os
+import numpy as np
 
 from langchain_core.prompts import ChatPromptTemplate
 from pydantic import BaseModel, Field
@@ -166,6 +167,12 @@ class WriterProcess:
         question = state["question"]
         documents = state["documents"]
 
+        # save source of documents
+        source = []
+        for document in documents:
+            source.append(document.metadata["source"])
+        state["source"] = list(np.unique(source))
+
         updated_messages = add_messages(state["messages"], HumanMessage(content=question))
         state["messages"] = updated_messages
 
@@ -254,10 +261,13 @@ class WriterProcess:
             query = str(question.content) if hasattr(question, 'content') else str(question)
 
         docs = self.web_search_tool.invoke({"query" : query})
-        # web_results = "\n".join([doc["content"] for doc in docs])
-        web_results = [Document(page_content=doc["content"]) for doc in docs]
-        # web_results = Document(page_content=web_results)
-        # documents.append(web_results)
+        web_results = [
+            Document(
+                page_content=doc["content"],
+                metadata={
+                    "source" : doc["url"]
+                }
+            ) for doc in docs]
         documents.extend(web_results)
 
         state["documents"] = documents

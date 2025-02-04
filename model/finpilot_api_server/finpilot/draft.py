@@ -4,8 +4,10 @@ from langgraph.prebuilt import create_react_agent
 from langchain.agents.agent_types import AgentType
 from langchain_experimental.agents.agent_toolkits import create_pandas_dataframe_agent
 from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.messages import ToolMessage
 from langchain_community.document_loaders import WebBaseLoader
 from datetime import datetime
+import numpy as np
 
 
 from tavily import TavilyClient
@@ -18,6 +20,7 @@ import yfinance as yf
 import pandas as pd
 import requests
 import os
+import json
 
 
 
@@ -150,35 +153,66 @@ class DraftProcess:
             return result
 
         @tool
-        def fetch_company_news(company_name: str) -> str:
+        def fetch_company_news(query: str) -> str:
             """
-            Collect recent news for the given company.
+            Collect recent news for the given company or topic.
             
             Args :
-                company_name : Company name
+                query : web search query
+            
+            Returns :
+                web_search_result (dict) : web search results for given query
+                source (List[dict]) : url source of searched information
             """
-            search_results = tavily_client.search(query=f"recent news about {company_name}", days=7)
-            return f"Collected news and market data for {company_name}: \n{search_results}"
+            search_results = tavily_client.search(query=f"recent news about '{query}'", days=7)
+            source = []
+            for result in search_results["results"]:
+                source.append(result["url"])
+            source = list(np.unique(source))
+
+            return {
+                "web_search_result" : search_results,
+                "source" : source
+            }
 
         @tool
         def fetch_market_news(sector: str) -> str:
             """
-            Collect recent market datafor the given company's sector.
+            Collect recent market datafor the given industry sector.
             
             Args
-                sector (str) : company's sector
+                sector (str) : industry sector
+            Returns :
+                web_search_result (dict) : web search results for given query
+                source (List[dict]) : url source of searched information
             """
             search_results = tavily_client.search(query=f"{sector} industry news", days=7)
-            return f"Collected news and market data for {sector}: {search_results}"
+            source = []
+            for result in search_results["results"]:
+                source.append(result["url"])
+            source = list(np.unique(source))
+            return {
+                "web_search_result" : search_results,
+                "source" : source
+            }
 
         @tool
         def fetch_webpages_scrape(urls: List[str]) -> str:
             """Scrape the provided web pages for detailed information."""
             loader = WebBaseLoader(urls)
             docs = loader.load()
-            return "\n\n".join(
+            scrape_result = "\n\n".join(
                 [f'<Document name="{doc.metadata.get("title", "")}">\n{doc.page_content}\n</Document>' for doc in docs]
             )
+            source = []
+            for doc in docs:
+                source.append(doc.metadata.get("url", ""))
+            source = list(np.unique(source))
+            
+            return {
+                "web_scrap_result" : scrape_result,
+                "source" : source
+            }
         
         self.tools = [fetch_stock_data, fetch_financial_data, analyze_csv_data, fetch_company_news, fetch_market_news, fetch_webpages_scrape]
         
@@ -254,8 +288,9 @@ class DraftProcess:
             1. 사용자의 요청에 대해 현재 주어진 목차에 대한 단락을 작성하세요.
             2. 단락 작성 간 필요한 경우 특정 기업에 대한 '주식', '재무재표' 데이터를 수집하세요.
             3. 특정 기업에 대한 '주식', '재무재표' 데이터를 수집이 필요하지 않은 경우, 뉴스와 웹 검색 만을 사용하여 단락을 작성해세요.
-            3. 단락 작성 간 충분한 근거를 제시하며 사실에 입각한 내용을 작성하세요.
-            4. 형식은 마크다운, 언어는 한국어를 사용하세요.
+            4. 단락 작성 간 충분한 근거를 제시하며 사실에 입각한 내용을 작성하세요.
+            5. 주식, 재무재표, 웹 검색 으로 자료를 수집한 경우 반드시 그 출처를 명시하세요. (매우 중요)
+            6. 형식은 마크다운, 언어는 한국어를 사용하세요.
             </지침>
 
             사용자 요청과 현재 작성해야할 목차는 다음과 같습니다. :
@@ -278,12 +313,42 @@ class DraftProcess:
             state_modifier = draft_prompt
         )
 
+        # inputs = {
+        #     "question" : state["question"],
+        #     "outlines" : state["outlines"],
+        #     "messages" : state["messages"]
+        # }
+
         response = draft_writer.invoke(state)
+        # response = draft_writer.invoke(inputs)
 
         state["messages"] = response["messages"]
+        messages = response["messages"]
+        for message in messages:
+            if isinstance(message, ToolMessage):
+                if message.name in ["fetch_company_news", "fetch_market_news", "fetch_webpages_scrape"]:
+                    content_dict = json.loads(message.content)
+                    try : 
+                        state["source"].extend(content_dict["source"])
+                    except :
+                        state["source"] = []
+                        state["source"].extend(content_dict["source"])
+                elif message.name == "fetch_stock_data":
+                    try : 
+                        state["source"].append("주식 정보 참조 (Yahoo Finance)")
+                    except :
+                        state["source"] = []
+                        state["source"].append("주식 정보 참조 (Yahoo Finance)")
+                elif message.name == "fetch_financial_data":
+                    try :
+                        state["source"].append("재무재표 참조 (DART)")
+                    except :
+                        state["source"] = []
+                        state["source"].append("재무재표 참조 (DART)")
+        state["source"] = list(np.unique(state["source"]))
         state["outlines"] = outlines
-        content = ("\n" + response["messages"][-1].content)
-        print(f'[Graph Log] current contents : {content}')
+        last_message = messages[-1]
+        content = ("\n" + last_message.content)
         try :
             state["generation"] += content
         except :
@@ -294,7 +359,7 @@ class DraftProcess:
     def should_continue(self, state):
         outlines = state["outlines"]
 
-        if len(outlines) == 0:
+        if len(outlines) == 0:             
             return "end"
         else:
             return "continue"

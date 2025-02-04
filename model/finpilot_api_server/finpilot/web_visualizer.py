@@ -1,5 +1,7 @@
 ################################ Import Modules ################################
 import os
+import numpy as np
+import json
 
 # Define Tools
 from typing import Annotated
@@ -23,7 +25,27 @@ class WebVisualizerProcess:
     def __init__(self, session_id:str):
 
         # web search tool
-        web_search_tool = TavilySearchResults(max_results=3)
+        tavily_search_tool = TavilySearchResults(max_results=3)
+        @tool
+        def web_search_tool(input):
+            """
+            Use this tool for search information or data from web
+
+            Returns:
+                web_search_results (List[dict]) : list of dict that contains web search results
+                source (List[str]) : url source of searched data
+            """
+            web_results = tavily_search_tool.invoke(input)
+            urls = []
+            for web_result in web_results:
+                urls.append(web_result["url"])
+            urls = list(np.unique(urls))
+
+            return {
+                "web_search_results" : web_results,
+                "source" : urls
+            }
+            
 
         doc_string_template = """
             Use this tool to execute Python code and generate the desired results.
@@ -75,6 +97,14 @@ class WebVisualizerProcess:
     
     def web_visualizer_node(self, state):
         question = state["question"]
+
+        if len(state["messages"]) > 0:
+            if state["messages"][-1].name == "web_search_tool":
+                web_search_tool_message = state["messages"][-1]
+                content_str = web_search_tool_message.content
+                content = json.loads(content_str)
+                state["source"] = content["source"]
+                
         updated_messages = add_messages(state["messages"], HumanMessage(content=question))
         state["messages"] = updated_messages
         
