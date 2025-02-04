@@ -81,4 +81,4 @@ async def query():
 
 
 if __name__ == "__main__":
-    uvicorn.run("stream_app:server", host='localhost', reload=True)
+    uvicorn.run("stream_test:server", host='localhost', reload=True)

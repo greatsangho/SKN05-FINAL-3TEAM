@@ -10,6 +10,7 @@ from langchain_core.messages import HumanMessage, AIMessage
 # Writer
 from langchain import hub
 from langchain_core.output_parsers import StrOutputParser
+from langgraph.types import StreamWriter
 
 # define tools
 from langchain_community.tools.tavily_search import TavilySearchResults
@@ -23,7 +24,7 @@ from langchain_community.vectorstores import FAISS
 # messages
 from langgraph.graph.message import add_messages
 
-class WriterProcess:
+class ParagraphProcess:
     def __init__(self, vector_store : FAISS):
         llm = ChatOpenAI(
             model = "gpt-4o-mini",
@@ -126,7 +127,7 @@ class WriterProcess:
         self.retrieve = vector_store.as_retriever()
 
     
-    def retrieve_node(self, state):
+    async def retrieve_node(self, state):
         """
         Retrieve documents
 
@@ -138,20 +139,19 @@ class WriterProcess:
         """
         print("[Graph Log] RETRIEVE ...")
         question = state["question"]
-        # retrieve = load_test_retriever()
         
         try : 
             prev_documents = state["documents"]
-            retrieved_documents = self.retrieve.invoke(question)
+            retrieved_documents = await self.retrieve.ainvoke(question)
             documents = prev_documents + retrieved_documents
         except:
-            documents = self.retrieve.invoke(question)
+            documents = await self.retrieve.ainvoke(question)
 
         state["documents"] = documents
-        
+    
         return state
     
-    def write_node(self, state):
+    async def write_node(self, state, writer: StreamWriter):
         """
         Generate answer
 
@@ -176,7 +176,15 @@ class WriterProcess:
         updated_messages = add_messages(state["messages"], HumanMessage(content=question))
         state["messages"] = updated_messages
 
-        generation = self.writer.invoke({"context" : documents, "question" : question})
+        chunks = []
+        async for chunk in self.writer.astream(
+            {"context" : documents, "question" : question}
+        ):
+            writer(chunk)
+            chunks.append(chunk)
+        
+        generation = "".join(chunks)
+        # generation = self.writer.astream({"context" : documents, "question" : question})
 
         state["generation"] = generation
         updated_messages = add_messages(state["messages"], AIMessage(content=generation))
@@ -184,7 +192,7 @@ class WriterProcess:
 
         return state
     
-    def filter_documents_node(self, state):
+    async def filter_documents_node(self, state):
         """
         Determines whether the retrieved documents are relevant to the question.
 
@@ -196,13 +204,12 @@ class WriterProcess:
         """
 
         print("[Graph Log] FILTER DOCUMENTS ...")
-
         question = state["question"]
         documents = state["documents"]
 
         filtered_docs = []
         for doc in documents:
-            score = self.retrieval_grader.invoke(
+            score = await self.retrieval_grader.ainvoke(
                 {"question" : question, "documents" : doc.page_content}
             )
             relevance_grade = score.relevance_score
@@ -219,7 +226,7 @@ class WriterProcess:
         return state
     
 
-    def improve_query_node(self, state):
+    async def improve_query_node(self, state):
         """
         Transform the query to produce a better question.
 
@@ -234,13 +241,13 @@ class WriterProcess:
 
         question = state["question"]
 
-        improved_query = self.query_improver.invoke({"question" : question})
+        improved_query = await self.query_improver.ainvoke({"question" : question})
 
         state['question'] = improved_query.content
 
         return state
     
-    def web_search_node(self, state):
+    async def web_search_node(self, state):
         """
         Web search based on the re-phrased question.
 
@@ -260,7 +267,7 @@ class WriterProcess:
         else:
             query = str(question.content) if hasattr(question, 'content') else str(question)
 
-        docs = self.web_search_tool.invoke({"query" : query})
+        docs = await self.web_search_tool.ainvoke({"query" : query})
         web_results = [
             Document(
                 page_content=doc["content"],
@@ -274,7 +281,7 @@ class WriterProcess:
 
         return state
     
-    def decide_write_or_improve_query(self, state):
+    async def decide_write_or_improve_query(self, state):
         """
         Determines whether to generate an answer, or re-generate a question.
 
@@ -300,7 +307,7 @@ class WriterProcess:
             )
             return "improve_query"
     
-    def decide_to_regenerate_or_rewrite_query_or_end(self, state):
+    async def decide_to_regenerate_or_rewrite_query_or_end(self, state, writer:StreamWriter):
         """
         Determines whether the generation is grounded in the document and answers question.
 
@@ -317,7 +324,7 @@ class WriterProcess:
         documents = state["documents"]
         generation = state["generation"]
 
-        score = self.hallucination_grader.invoke(
+        score = await self.hallucination_grader.ainvoke(
             {"documents" : documents, "generation" : generation}
         )
         hallucination_grade = score.hallucination_score
@@ -327,13 +334,14 @@ class WriterProcess:
 
             print("[Graph Log] CHECK ANSWER IS USEFUL OR NOT ...")
 
-            score = self.answer_grader.invoke(
+            score = await self.answer_grader.ainvoke(
                 {"question" : question, "generation" : generation}
             )
             answer_grade = score.answer_score
 
             if answer_grade == "yes":
                 print("[Graph Log] DECISION : GENERATION ADDRESSES QUESTION")
+                writer(state)
 
                 return "useful"
             else :
