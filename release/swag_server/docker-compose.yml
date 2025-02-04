@@ -22,4 +22,10 @@ services:
       - DUCKDNSTOKEN=${DUCKDNSTOKEN}                 # DuckDNS 토큰 (환경 변수)
       - EMAIL=${EMAIL}                               # 이메일 주소 (Let's Encrypt)
       - STAGING=true                                 # 테스트 시 true, 실제 운영 시 false로 변경
+    networks:
+      - k8s-network  # Kubernetes 네트워크와 연결
     restart: unless-stopped
+
+networks:
+  k8s-network:
+    external: true  # Kubernetes 네트워크를 외부로 연결
