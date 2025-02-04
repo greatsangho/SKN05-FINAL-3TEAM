@@ -27,4 +27,4 @@ services:
 
 networks:
   k8s-network:
-    external: bridge
+    external: true  # Kubernetes 네트워크를 외부로 연결

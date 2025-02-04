@@ -27,10 +27,10 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: fastapi-service
+  name: finpilot-service
 spec:
   selector:
-    app: fastapi-app
+    app: finpilot-app
   ports:
     - protocol: TCP
       port: 80           # 서비스가 노출하는 포트 (SWAG와 연결)
