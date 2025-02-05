@@ -93,14 +93,14 @@ server = FastAPI()
 final_state = {}
 
 # Stream Query
-@server.post("/query")
-async def stream_app(query : str):
+@server.get("/query")
+async def stream_app():
     async def event_stream():
         global final_state
         try :
             async for stream_mode, chunk in app.astream(
                 input={
-                    "question" : query, 
+                    "question" : "최근 LLM 동향에 대한 인사이트를 작성해줘", 
                     "documents" : []
                 },
                 stream_mode=[ "custom"]
