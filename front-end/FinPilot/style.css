@@ -2,6 +2,7 @@ body {
     margin: 0;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background-color: #f4f4f4;
+    overflow: hidden;
 }
 
 .chat-container {
@@ -222,6 +223,72 @@ h2 {
     display: block;
 }
 
+/* source 버튼 스타일 */
+.chat-message.answer .source-btn {
+    display: none; /* 기본적으로 숨김 */
+    position: absolute;
+    top: 5px;
+    right: 55px; /* 버튼 왼쪽에 위치 */
+    background-color: transparent; /* 버튼 배경을 투명하게 설정 */
+    border: none;
+    border-radius: 5px;
+    padding: 5px;
+    cursor: pointer;
+    z-index: 10;
+    transition: background-color 0.3s ease, transform 0.3s ease;
+}
+
+/* source 버튼 이미지 스타일 */
+.chat-message.answer .source-btn img {
+    display: block;
+    margin: 0 auto; /* 이미지 가운데 정렬 */
+}   
+
+/* hover 시 source 버튼 표시 */
+.chat-message.answer:hover .source-btn {
+    display: block;
+}
+
+/* source 버튼 호버 시 말풍선 추가 */
+.chat-message.answer .source-btn::after {
+    content: "Source"; /* 말풍선 텍스트 */
+    display: none; /* 기본적으로 숨김 */
+    position: absolute;
+    bottom: 120%; /* 버튼 위로 위치 */
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #333; /* 말풍선 배경색 */
+    color: #fff; /* 말풍선 글자색 */
+    font-size: 10px;
+    padding: 5px 8px;
+    border-radius: 5px; /* 말풍선 본체 모서리 둥글게 */
+    white-space: nowrap; /* 텍스트 줄바꿈 방지 */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    z-index: 20;
+}
+
+/* 말풍선 꼬리 추가 */
+.chat-message.answer .source-btn::before {
+    content: "";
+    display: none; /* 기본적으로 숨김 */
+    position: absolute;
+    bottom: 110%; /* 말풍선 본체와 연결 */
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 8px solid transparent; /* 왼쪽 투명 삼각형 */
+    border-right: 6px solid transparent; /* 오른쪽 투명 삼각형 */
+    border-top: 8px solid #333; /* 위쪽 삼각형 (말풍선 배경색과 동일) */
+    z-index: 19; /* 본체 아래에 배치 */
+}
+
+/* 호버 시 말풍선 및 꼬리 표시 */
+.chat-message.answer .source-btn:hover::after,
+.chat-message.answer .source-btn:hover::before {
+    display: block;
+}
+
 /* 가로 및 세로 스크롤 간격 */
 .chat-container {
     padding-right: 10px; /* 세로 스크롤 간격 */
@@ -382,7 +449,7 @@ h2 {
     margin-top: -15px;
     border: 3px solid rgba(0, 0, 0, 0.2);
     border-radius: 50%; 
-    border-top-color: #4a90e2; /* 이거 파란색 계열로 바꿀지 의논 */
+    border-top-color: #4a90e2; 
     animation: spin 0.8s linear infinite;
     z-index: 1000; /* 최상단 레이어 */
     display: none; /* 초기 숨김 */
@@ -721,7 +788,7 @@ h2 {
     padding: 6px 12px; /* 내부 여백 */
     background: linear-gradient(135deg, #f6faff, #e3f2fd); /* 은은한 배경 그라데이션 */
     border: 1px solid #cfd8dc; /* 부드러운 회색 테두리 */
-    border-bottom: none; /* 상단 테두리 제거 */
+    border-bottom: none; /* 하단 테두리 제거 */
     border-radius: 18px 18px 0 0;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08); /* 가벼운 그림자 */
     font-family: "Poppins", sans-serif; /* 깔끔한 폰트 */
@@ -739,4 +806,93 @@ h2 {
     color: red;
     margin-top: 10px;
     text-align: center;
+}
+
+/* 📌 로딩 UI 스타일 */
+#loading-container {
+    display: none; /* 기본적으로 숨김 */
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 400px; /* 크기 조정 가능 */
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.15); /* 더 부드러운 그림자 효과 */
+    text-align: center;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+/* 📌 프로그레스 바 스타일 */
+#progress-bar-container {
+    width: 100%;
+    background-color: #ddd;
+    border-radius: 10px;
+    margin: 10px 0;
+    height: 10px;
+    position: relative;
+    overflow: hidden; /* 초과 영역 가리기 */
+}
+
+#progress-bar {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(to right, #00E5FF, #00C853);
+    /* background: linear-gradient(to right, #42A5F5, #1565C0); */
+    border-radius: 10px;
+    transition: width 0.4s ease-in-out;
+}
+
+/* 📌 랜덤 금융 명언 스타일 */
+#finance-tip {
+    font-size: 14px;
+    color: #444;
+    font-style: italic;
+    margin-top: 17px;
+}
+
+/* 📌 금융 퀴즈 스타일 */
+#quiz-container {
+    margin-top: 10px;
+}
+
+/* 📌 퀴즈 질문 */
+#quiz-question {
+    font-size: 15px;
+    font-weight: 600;
+    color: #333;
+    margin: 12px 0;
+}
+
+.quiz-option {
+    display: block;
+    margin: 5px auto;
+    padding: 8px;
+    width: 80%;
+    background: linear-gradient(to right, #64B5F6, #42A5F5);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s ease-in-out;
+    box-shadow: 0px 3px 6px rgba(0, 0, 0, 0.1);
+}
+
+.quiz-option:hover {
+    background: linear-gradient(to right, #42A5F5, #1E88E5);
+    /* background: linear-gradient(to right, #5ebef7, #0088cc); */
+}
+
+/* 📝 로딩 메시지 스타일 */
+#loading-message {
+    font-size: 16px;
+    font-weight: bold;
+    color: #333;
+    text-align: center;
+    margin-bottom: 10px;
 }

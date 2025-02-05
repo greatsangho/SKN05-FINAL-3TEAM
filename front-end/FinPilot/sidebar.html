@@ -19,7 +19,8 @@
     <div id="selected-option"></div>
 
     <div id="chat-box" class="chat-box">
-      <p id="greeting" class="greeting" style="display: none;"></p> <!-- 로그인 성공 시 사이드바에 환영인사 -->
+      <!-- 로그인 성공 시 사이드바에 환영인사 -->
+      <p id="greeting" class="greeting" style="display: none;"></p> 
     </div>
 
     <!-- 선택된 파일 목록을 표시할 영역 -->
@@ -75,10 +76,36 @@
       </div>
     </div>
   </div>
-  <!-- 로딩 버퍼링 스피너 -->
+
+  <!-- 기존 버퍼링 스피너 -->
   <div id="loading-spinner" class="spinner"></div>
+
+  <!-- 로딩 UI (프로그레스 바 + 금융 명언/팁 + 퀴즈) -->
+  <div id="loading-container">
+    <!-- 프로그레스 바 -->
+    <div id="progress-bar-container">
+        <div id="progress-bar"></div>
+    </div>
+
+    <!-- 📝 로딩 메시지 -->
+    <p id="loading-message">FinPilot이 답변을 준비하는 중..</p>
+
+    <!-- 금융 퀴즈 -->
+    <div id="quiz-container">
+        <p id="quiz-question"></p>
+        <button class="quiz-option" onclick="selectAnswer(0)"></button>
+        <button class="quiz-option" onclick="selectAnswer(1)"></button>
+        <button class="quiz-option" onclick="selectAnswer(2)"></button>
+    </div>
+
+    <!-- 금융 명언/팁 -->
+    <p id="finance-tip"></p>
+  </div>
+
+  <!-- js 삽입 -->_
   <script type="module" src="sidebar_final.js"></script>
   <script src="marked.min.js"></script>
   <script src="turndown.min.js"></script>
+
 </body>
 </html>

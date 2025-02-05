@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "FinPilot",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Boost your productivity with FinPilot, an AI-powered assistant for creating and editing financial documents in Google Docs.",
   "action": {
     "default_icon": {
