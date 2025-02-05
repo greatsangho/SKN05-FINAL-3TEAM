@@ -7,9 +7,10 @@ metadata:
     cert-manager.io/cluster-issuer: "letsencrypt-prod"
     acme.cert-manager.io/http01-edit-in-place: "true"
 spec:
+  ingressClassName: nginx
   tls:
   - hosts:
-    - finpilot.duckdns.org  # ← 도메인 변경!
+    - finpilot.duckdns.org
     secretName: finpilot-tls  # 인증서가 저장될 Secret 이름
   rules:
   - host: finpilot.duckdns.org
