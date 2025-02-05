@@ -4,9 +4,9 @@ metadata:
   name: finpilot-service
 spec:
   selector:
-    app: finpilot-app
+    app: finpilot-app  # 실제 Deployment/Pod 라벨과 일치해야 함
   ports:
     - protocol: TCP
       port: 80
-      targetPort: 8000
-  type: LoadBalancer
+      targetPort: 8000  # 컨테이너에서 애플리케이션이 리스닝하는 포트
+  type: ClusterIP
