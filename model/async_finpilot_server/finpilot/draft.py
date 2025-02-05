@@ -205,6 +205,7 @@ class DraftProcess:
             """Scrape the provided web pages for detailed information."""
             loader = WebBaseLoader(urls)
             docs = await loader.aload()
+            docs = await asyncio.gather(*docs)
             scrape_result = "\n\n".join(
                 [f'<Document name="{doc.metadata.get("title", "")}">\n{doc.page_content}\n</Document>' for doc in docs]
             )
