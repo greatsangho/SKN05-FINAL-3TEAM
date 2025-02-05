@@ -2,7 +2,6 @@ from fastapi import FastAPI
 from Middleware.mid_def import add_middlewares
 from DB.database import engine, SessionLocal
 from DB.models import Base
-from dotenv import load_dotenv
 from routers import users, sessions, qnas, pdfs, csvs
 import uvicorn
 from redis import Redis
@@ -10,7 +9,6 @@ from routers.qnas import qna_router
 from routers.pdfs import pdfs_router
 
 
-load_dotenv()
 
 Base.metadata.create_all(bind=engine)
 redis = Redis(host="localhost", port=6379, decode_responses=False)

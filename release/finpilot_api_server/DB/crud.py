@@ -1,7 +1,6 @@
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import func
 from .models import Member, SessionID, QnA, PDFFile
-from . import schemas
 import hashlib
 import uuid
 import os

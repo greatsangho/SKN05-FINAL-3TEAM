@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: finpilot-deployment
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: finpilot-app
+  template:
+    metadata:
+      labels:
+        app: finpilot-app
+    spec:
+      containers:
+        - name: finpilot-container
+          image: greatsangho/finpilot-app:latest
+          ports:
+            - containerPort: 8000 # 애플리케이션이 리스닝하는 포트
+          envFrom:
+            - configMapRef:
+                name: finpilot-config   # ConfigMap 참조.
+            - secretRef:
+                name: finpilot-secret   # Secret 참조.

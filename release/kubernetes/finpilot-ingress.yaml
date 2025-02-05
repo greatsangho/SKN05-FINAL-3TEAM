@@ -1,0 +1,25 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: finpilot-ingress
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    cert-manager.io/cluster-issuer: "letsencrypt-staging" # letsencrypt-prod
+    acme.cert-manager.io/http01-edit-in-place: "true"
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - finpilot.duckdns.org
+    secretName: finpilot-tls  # 인증서가 저장될 Secret 이름
+  rules:
+  - host: finpilot.duckdns.org
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: finpilot-service
+            port:
+              number: 80
