@@ -1,5 +1,0 @@
-# requierd .env list for https certification
-
-DOMAIN=
-EMAIL=
-DUCKDNSTOKEN=

@@ -3,23 +3,22 @@ kind: Ingress
 metadata:
   name: finpilot-ingress
   annotations:
-    # cert-manager가 Let's Encrypt를 통해 인증서를 요청하도록 지정
-    cert-manager.io/cluster-issuer: "letsencrypt-http"
-    # 필요시 추가 설정 (예: rewrite-target 등)
-    nginx.ingress.kubernetes.io/rewrite-target: /
+    kubernetes.io/ingress.class: "nginx"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    acme.cert-manager.io/http01-edit-in-place: "true"
 spec:
-  rules:
-    - host: finpilot.duckdns.org
-      http:
-        paths:
-          - path: /
-            pathType: Prefix
-            backend:
-              service:
-                name: finpilot-service  # 백엔드 ClusterIP 서비스 이름
-                port:
-                  number: 80
   tls:
-    - hosts:
-        - finpilot.duckdns.org
-      secretName: finpilot-tls  # 인증서가 저장될 secret 이름 (cert-manager가 자동으로 생성)
+  - hosts:
+    - finpilot.duckdns.org  # ← 도메인 변경!
+    secretName: finpilot-tls  # 인증서가 저장될 Secret 이름
+  rules:
+  - host: finpilot.duckdns.org
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: finpilot-service
+            port:
+              number: 80
