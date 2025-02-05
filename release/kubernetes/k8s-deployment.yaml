@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: finpilot-deployment
 spec:
-  replicas: 2
+  replicas: 3
   selector:
     matchLabels:
       app: finpilot-app
@@ -19,20 +19,6 @@ spec:
             - containerPort: 8000
           envFrom:
             - configMapRef:
-                name: finpilot-configmap   # ConfigMap 참조.
+                name: finpilot-config   # ConfigMap 참조.
             - secretRef:
                 name: finpilot-secret     # Secret 참조.
-
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: finpilot-service
-spec:
-  selector:
-    app: finpilot-app
-  ports:
-    - protocol: TCP
-      port: 80           # 서비스가 노출하는 포트 (SWAG와 연결)
-      targetPort: 8000   # 컨테이너 내부의 FastAPI 포트
-  type: ClusterIP         # 내부 네트워크에서만 접근 가능 (SWAG가 프록시 역할)
