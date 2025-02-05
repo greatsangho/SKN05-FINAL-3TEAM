@@ -22,3 +22,4 @@ spec:
                 name: finpilot-config   # ConfigMap 참조.
             - secretRef:
                 name: finpilot-secret   # Secret 참조.
+                
