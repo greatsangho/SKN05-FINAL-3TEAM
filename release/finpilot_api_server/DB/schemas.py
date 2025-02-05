@@ -1,6 +1,6 @@
 from pydantic import BaseModel, EmailStr
 from datetime import datetime
-from typing import Optional
+from typing import Optional, List
 
 # -------------------
 # Member Schema
@@ -53,6 +53,7 @@ class QnA(QnABase):
     answer: Optional[str] = None  # Nullable field for the answer
     chat_option: str
     ask_time: datetime  # Automatically set by the database
+    source: List[str]  # List of references
 
     class Config:
         orm_mode = True

@@ -4,10 +4,13 @@ from langgraph.prebuilt import create_react_agent
 from langchain.agents.agent_types import AgentType
 from langchain_experimental.agents.agent_toolkits import create_pandas_dataframe_agent
 from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.messages import ToolMessage
 from langchain_community.document_loaders import WebBaseLoader
 from datetime import datetime
+import numpy as np
 
-from tavily import TavilyClient
+
+from tavily import AsyncTavilyClient
 
 from typing import List, Annotated
 from pydantic import BaseModel
@@ -15,22 +18,25 @@ from operator import add
 
 import yfinance as yf
 import pandas as pd
-import requests
 import os
+import json
+import asyncio
+import httpx
 
 
 
 class DraftProcess:
     def __init__(self, session_id):
         # Web Search API Client
-        tavily_client = TavilyClient(api_key=os.environ["TAVILY_API_KEY"])
+        # tavily_client = TavilyClient(api_key=os.environ["TAVILY_API_KEY"])
+        tavily_client = AsyncTavilyClient(api_key=os.environ["TAVILY_API_KEY"])
         # LLM API Client
         llm = ChatOpenAI(model='gpt-4o-mini', temperature=0, api_key=os.environ["OPENAI_API_KEY"])
         self.data_dir = f'./data/{session_id}/'
 
 
         @tool
-        def fetch_stock_data(corp_name:str, start_date:str, end_date:str):
+        async def fetch_stock_data(corp_name:str, start_date:str, end_date:str):
             """
             Use this tool when you need to fetch stock data(주식) of certain company.
             
@@ -43,6 +49,8 @@ class DraftProcess:
                 str : path message about saved file
             """
             def fetch_ticker_list():
+                from pykrx import stock
+
                 tickers = stock.get_market_ticker_list(market="ALL")
 
                 return {
@@ -54,8 +62,10 @@ class DraftProcess:
             
             ticker_dict = fetch_ticker_list()
             stock_code = search_ticker_by_name(ticker_dict, corp_name.replace(" ", ""))
+            print(f"[Tool Log] stock_code : {stock_code}")
 
-            stock = yf.download(
+            stock = await asyncio.to_thread(
+                yf.download,
                 stock_code + '.KS', 
                 start=start_date, 
                 end=end_date, 
@@ -72,7 +82,7 @@ class DraftProcess:
         
 
         @tool
-        def fetch_financial_data(corp_name, report_year):
+        async def fetch_financial_data(corp_name, report_year):
             """
             Use this tool when you need to fetch financial data (재무재표).
             
@@ -99,7 +109,8 @@ class DraftProcess:
             }
 
             # API 호출
-            response = requests.get(url, params=params)
+            async with httpx.AsyncClient() as client:
+                response = await client.get(url, params=params)
 
             # JSON 응답 확인
             if response.status_code == 200:
@@ -115,7 +126,7 @@ class DraftProcess:
         
 
         @tool
-        def analyze_csv_data(query : str, data_path : str):
+        async def analyze_csv_data(query : str, data_path : str):
             """
             저장된 주식 데이터와 재무 데이터를 pandas_agent로 분석하고 질문에 답변합니다.
 
@@ -141,40 +152,72 @@ class DraftProcess:
                 prefix = custom_prefix # (옵션) prompt에 의도한 문장을 추가
             )
 
-            result = pandas_agent.invoke(query)
+            result = await pandas_agent.ainvoke(query)
 
             return result
 
         @tool
-        def fetch_company_news(company_name: str) -> str:
+        async def fetch_company_news(query: str) -> str:
             """
-            Collect recent news for the given company.
+            Collect recent news for the given company or topic.
             
             Args :
-                company_name : Company name
+                query : web search query
+            
+            Returns :
+                web_search_result (dict) : web search results for given query
+                source (List[dict]) : url source of searched information
             """
-            search_results = tavily_client.search(query=f"recent news about {company_name}", days=7)
-            return f"Collected news and market data for {company_name}: \n{search_results}"
+            search_results = await tavily_client.search(query=f"recent news about '{query}'", days=7)
+            source = []
+            for result in search_results["results"]:
+                source.append(result["url"])
+            source = list(np.unique(source))
+
+            return {
+                "web_search_result" : search_results,
+                "source" : source
+            }
 
         @tool
-        def fetch_market_news(sector: str) -> str:
+        async def fetch_market_news(sector: str) -> str:
             """
-            Collect recent market datafor the given company's sector.
+            Collect recent market datafor the given industry sector.
             
             Args
-                sector (str) : company's sector
+                sector (str) : industry sector
+            Returns :
+                web_search_result (dict) : web search results for given query
+                source (List[dict]) : url source of searched information
             """
-            search_results = tavily_client.search(query=f"{sector} industry news", days=7)
-            return f"Collected news and market data for {sector}: {search_results}"
+            search_results = await tavily_client.search(query=f"{sector} industry news", days=7)
+            source = []
+            for result in search_results["results"]:
+                source.append(result["url"])
+            source = list(np.unique(source))
+            return {
+                "web_search_result" : search_results,
+                "source" : source
+            }
 
         @tool
-        def fetch_webpages_scrape(urls: List[str]) -> str:
+        async def fetch_webpages_scrape(urls: List[str]) -> str:
             """Scrape the provided web pages for detailed information."""
             loader = WebBaseLoader(urls)
-            docs = loader.load()
-            return "\n\n".join(
+            docs = await loader.aload()
+            docs = await asyncio.gather(*docs)
+            scrape_result = "\n\n".join(
                 [f'<Document name="{doc.metadata.get("title", "")}">\n{doc.page_content}\n</Document>' for doc in docs]
             )
+            source = []
+            for doc in docs:
+                source.append(doc.metadata.get("url", ""))
+            source = list(np.unique(source))
+            
+            return {
+                "web_scrap_result" : scrape_result,
+                "source" : source
+            }
         
         self.tools = [fetch_stock_data, fetch_financial_data, analyze_csv_data, fetch_company_news, fetch_market_news, fetch_webpages_scrape]
         
@@ -220,10 +263,10 @@ class DraftProcess:
         
 
 
-    def make_outline_node(self, state):
+    async def make_outline_node(self, state):
         question = state["question"]
 
-        response = self.outliner.invoke({"question" : question})
+        response = await self.outliner.ainvoke({"question" : question})
 
         state["outlines"] = response.outlines[::-1]
 
@@ -232,7 +275,7 @@ class DraftProcess:
 
         return state
     
-    def write_draft_paragraph_node(self, state) :
+    async def write_draft_paragraph_node(self, state) :
         question = state["question"]
         outlines = state["outlines"]
         outline = outlines.pop()
@@ -250,8 +293,9 @@ class DraftProcess:
             1. 사용자의 요청에 대해 현재 주어진 목차에 대한 단락을 작성하세요.
             2. 단락 작성 간 필요한 경우 특정 기업에 대한 '주식', '재무재표' 데이터를 수집하세요.
             3. 특정 기업에 대한 '주식', '재무재표' 데이터를 수집이 필요하지 않은 경우, 뉴스와 웹 검색 만을 사용하여 단락을 작성해세요.
-            3. 단락 작성 간 충분한 근거를 제시하며 사실에 입각한 내용을 작성하세요.
-            4. 형식은 마크다운, 언어는 한국어를 사용하세요.
+            4. 단락 작성 간 충분한 근거를 제시하며 사실에 입각한 내용을 작성하세요.
+            5. 주식, 재무재표, 웹 검색 으로 자료를 수집한 경우 반드시 그 출처를 명시하세요. (매우 중요)
+            6. 형식은 마크다운, 언어는 한국어를 사용하세요.
             </지침>
 
             사용자 요청과 현재 작성해야할 목차는 다음과 같습니다. :
@@ -274,12 +318,36 @@ class DraftProcess:
             state_modifier = draft_prompt
         )
 
-        response = draft_writer.invoke(state)
+        response = await draft_writer.ainvoke(state)
 
         state["messages"] = response["messages"]
+        messages = response["messages"]
+
+        for message in messages:
+            if isinstance(message, ToolMessage):
+                if message.name in ["fetch_company_news", "fetch_market_news", "fetch_webpages_scrape"]:
+                    content_dict = json.loads(message.content)
+                    try : 
+                        state["source"].extend(content_dict["source"])
+                    except :
+                        state["source"] = []
+                        state["source"].extend(content_dict["source"])
+                elif message.name == "fetch_stock_data":
+                    try : 
+                        state["source"].append("주식 정보 참조 (Yahoo Finance)")
+                    except :
+                        state["source"] = []
+                        state["source"].append("주식 정보 참조 (Yahoo Finance)")
+                elif message.name == "fetch_financial_data":
+                    try :
+                        state["source"].append("재무재표 참조 (DART)")
+                    except :
+                        state["source"] = []
+                        state["source"].append("재무재표 참조 (DART)")
+        state["source"] = list(np.unique(state["source"]))
         state["outlines"] = outlines
-        content = ("\n" + response["messages"][-1].content)
-        print(f'[Graph Log] current contents : {content}')
+        last_message = messages[-1]
+        content = ("\n" + last_message.content)
         try :
             state["generation"] += content
         except :
@@ -287,10 +355,10 @@ class DraftProcess:
         
         return state
     
-    def should_continue(self, state):
+    async def should_continue(self, state):
         outlines = state["outlines"]
 
-        if len(outlines) == 0:
+        if len(outlines) == 0:         
             return "end"
         else:
             return "continue"

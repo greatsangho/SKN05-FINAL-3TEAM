@@ -4,6 +4,7 @@ from DB import schemas, crud
 from DB.database import get_db
 from DB import schemas, crud
 from .response.query import query_non_image, query_image
+import pickle
 
 qna_router = APIRouter()
 
@@ -12,7 +13,7 @@ qna_router = APIRouter()
 # -------------------
 # @router.post("/", response_model=schemas.QnA)
 @qna_router.post("/")
-def create_qna(qna: schemas.QnACreate, db: Session = Depends(get_db)):
+async def create_qna(qna: schemas.QnACreate, db: Session = Depends(get_db)):
     """
     QnA 생성 엔드포인트:
     1. 세션 확인 또는 생성
@@ -31,7 +32,7 @@ def create_qna(qna: schemas.QnACreate, db: Session = Depends(get_db)):
         try:
             if "데이터 시각화" in qna.chat_option:
                 # 데이터 시각화 요청인 경우 send_graph_to_runpod 호출
-                graph_response = query_image(
+                graph_response = await query_image(
                     question=qna.question,
                     session_id=session.session_id,
                     chat_option=qna.chat_option,
@@ -40,16 +41,16 @@ def create_qna(qna: schemas.QnACreate, db: Session = Depends(get_db)):
                 
                 # RunPod에서 반환된 전체 JSON 응답 저장
                 answer = graph_response  # 전체 JSON 그대로 저장
-
+                
             else:
                 # 일반 질문 처리
-                answer = query_non_image(
+                answer = await query_non_image(
                     question=qna.question,
                     session_id=session.session_id,
                     chat_option=qna.chat_option,
                     redis=qna_router.redis
                 )
-                
+
                 # 3. QnA 데이터 생성 및 저장 (session_id 및 chat_option 포함)
                 new_qna = crud.create_qna(
                     db=db,
@@ -57,14 +58,11 @@ def create_qna(qna: schemas.QnACreate, db: Session = Depends(get_db)):
                     docs_id=qna.docs_id,
                     question=qna.question,
                     session_id=session.session_id,
-                    chat_option=qna.chat_option,  # chat_option 명시적으로 전달
+                    chat_option=qna.chat_option,
+                    source=answer["source"],
+                    answer=answer["answer"]
                 )
                 
-                # 4. RunPod에서 받은 답변을 QnA에 추가
-                new_qna.answer = answer  # 전체 JSON 응답 저장
-                db.commit()
-                db.refresh(new_qna)
-
                 return new_qna  # 프론트엔드로 그대로 전달
             
         except Exception as e:
