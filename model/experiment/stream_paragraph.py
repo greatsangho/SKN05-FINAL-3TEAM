@@ -103,7 +103,7 @@ async def stream_app():
                     "question" : "최근 LLM 동향에 대한 인사이트를 작성해줘", 
                     "documents" : []
                 },
-                stream_mode=[ "custom"]
+                stream_mode=["custom"]
             ):
                 if isinstance(chunk, dict):
                     final_state = chunk
@@ -118,11 +118,12 @@ async def stream_app():
 # get source
 @server.get("/get_source")
 async def get_source():
-    return JSONResponse(content={"source" : final_state["source"]})
+    global final_state
+    source = final_state["source"]
+    final_state = {}
+    return JSONResponse(content={"source" : source})
 
 
 
 if __name__ == "__main__":
-    print("Start Server!")
-    # app.get_graph().draw_mermaid_png(output_file_path="./charts/graph.png")
     uvicorn.run("stream_paragraph:server", host='localhost', reload=True)
