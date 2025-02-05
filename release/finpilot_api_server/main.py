@@ -16,7 +16,7 @@ qna_router.redis = redis
 pdfs_router.redis = redis
 # app = FastAPI()
 app = FastAPI(
-    servers=[{"url": "https://finpilotback.duckdns.org", "description": "Production"}],
+    # servers=[{"url": "https://finpilotback.duckdns.org", "description": "Production"}],
     openapi_url="/openapi.json"  # 프록시 환경에서 문서 경로 보정
 )
 

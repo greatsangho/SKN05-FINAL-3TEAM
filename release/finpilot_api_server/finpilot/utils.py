@@ -34,14 +34,18 @@ def delete_files_in_dir(dir):
         print(f"[Server Log] ERROR : {e}")
 
 
-def encode_img_base64(folder_path, png_files):
+def encode_img_base64(folder_path, png_files, source):
     images = []
     for file_name in png_files:
         file_path = os.path.join(folder_path, file_name)
         try:
             with open(file_path, "rb") as img_file:
                 img_base64 = base64.b64encode(img_file.read()).decode("utf-8")
-                images.append({"file_name": file_name, "image_data": img_base64})
+                images.append({
+                    "file_name": file_name, 
+                    "image_data": img_base64, 
+                    "source" : source
+                })
             
             os.remove(file_path)
         except Exception as e:

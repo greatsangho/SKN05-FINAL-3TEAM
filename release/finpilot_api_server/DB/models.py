@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, DateTime, Integer, ForeignKey, ForeignKeyConstraint, PrimaryKeyConstraint
+from sqlalchemy import TEXT ,PickleType, Column, String, DateTime, Integer, ForeignKey, ForeignKeyConstraint, PrimaryKeyConstraint
 from sqlalchemy.sql import func
 from .database import Base
 
@@ -27,9 +27,10 @@ class QnA(Base):
     docs_id = Column(String(100), nullable=False)
     session_id = Column(String(36), ForeignKey('session_tbl.session_id'), nullable=False)
     question = Column(String(1000), nullable=False)
-    answer = Column(String(1000), nullable=True)
+    answer = Column(TEXT, nullable=True)
     chat_option = Column(String(20), nullable=False)
     ask_time = Column(DateTime, nullable=False, default=func.now())
+    source = Column(PickleType, nullable=False)
 
     __table_args__ = (
         ForeignKeyConstraint(

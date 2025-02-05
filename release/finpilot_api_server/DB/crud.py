@@ -94,7 +94,7 @@ def delete_session(db: Session, session_id: str):
 # -------------------
 # QnA CRUD Functions
 # -------------------
-def create_qna(db: Session, user_email: str, docs_id: str, question: str, session_id: str, chat_option: str):
+def create_qna(db: Session, user_email: str, docs_id: str, question: str, session_id: str, chat_option: str, source, answer):
     """
     QnA 레코드 생성 함수.
     """
@@ -107,15 +107,16 @@ def create_qna(db: Session, user_email: str, docs_id: str, question: str, sessio
 
     if not session:
         raise ValueError(f"Session with user_email {user_email} and docs_id {docs_id} does not exist.")
-
     # 새로운 QnA 레코드 생성
     new_qna = QnA(
         user_email=user_email,
         docs_id=docs_id,
         question=question,
+        answer=answer,
         ask_time=func.now(),
         chat_option=chat_option,
         session_id=session.session_id,
+        source=source,
     )
     
     db.add(new_qna)

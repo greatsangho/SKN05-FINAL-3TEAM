@@ -10,18 +10,31 @@ async def query_non_image(
 ):
 
     # Create/Load the LangGraph Application according to Session ID
-    pilot = get_session_app(
+    pilot = await get_session_app(
         redis_client=redis,
         session_id=session_id
     )
+
+    input = {
+        "question" : question,
+        "chat_option" : chat_option
+    }
+
+    config = {
+        "configurable" : {"thread_id" : session_id},
+        "recursion_limit" : 40
+    }
     
     # invoke answer
     print("[Server Log] INVOKING PILOT ANSWER (NON-IMAGE)")
-    answer = pilot.invoke(question, session_id, chat_option)
+    answer = await pilot.ainvoke(input=input, config=config)
     print("[Server Log] PILOT ANSWER INVOKED")
 
     # return answer
-    return answer
+    return {
+        "answer" : answer["generation"],
+        "source" : answer.get("source", [])
+    }
 
 
 async def query_image(
@@ -38,15 +51,24 @@ async def query_image(
         os.makedirs(data_path)
 
     # Create/Load the LangGraph Application according to Session ID
-    pilot = get_session_app(
+    pilot = await get_session_app(
         redis_client=redis,
         session_id=session_id
     )
 
+    input = {
+        "question" : question,
+        "chat_option" : chat_option
+    }
+
+    config = {
+        "configurable" : {"thread_id" : session_id},
+        "recursion_limit" : 40
+    }
+
     # invoke answer
     print("[Server Log] INVOKING PILOT ANSWER (NON-IMAGE)")
-    while len(os.listdir(folder_path)) == 0:
-        _ = pilot.invoke(question, session_id, chat_option)
+    answer = await pilot.ainvoke(input=input, config=config)
     print("[Server Log] PILOT ANSWER INVOKED")
 
     # Get PNG File list
@@ -55,7 +77,7 @@ async def query_image(
         raise HTTPException(status_code=404, detail="No PNG files found in the folder")
 
     # Encode Image to Base64 type
-    images = encode_img_base64(folder_path, png_files)
+    images = encode_img_base64(folder_path, png_files, source=answer["source"])
 
     if chat_option == "데이터 시각화 (Upload)":
         # Delete Remaining CSV Files
@@ -64,4 +86,6 @@ async def query_image(
     
 
     # Return Image data as JSON Form
-    return JSONResponse(content={"images": images})
+    return JSONResponse(content={
+        "images": images
+    })
