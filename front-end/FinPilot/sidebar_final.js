@@ -1,6 +1,16 @@
 // 문서 아이디 초기값 설정
 let DOCUMENT_ID = ""; 
 
+// 출처 임의로 줌
+const sourceData = [
+  "https://01022226280.tistory.com/entry/코스피-및-코스닥-지수-주요-동향과-기업-실적-분석",
+  "https://goodnewsideabox.kr/코스피-뉴스-요약-주요-이슈와-트렌드-분석/",
+  "https://iluilukr.tistory.com/entry/국내-증시-주식시장-주요-뉴스-및-시장-지표-그리고-2025-코스피지수-전망",
+  "https://neba.kr/코스피-전망과-주요-종목-분석으로-시작하는-투자/",
+  "https://smartideatips.kr/코스피-뉴스-요약-주요-이슈와-트렌드-분석/",
+  "https://speedmarket.tistory.com/7"
+];
+
 // 현재 활성탭을 가져와 문서 id 찾기
 function getDocumentIdFromActiveTab() {
   return new Promise((resolve, reject) => {
@@ -599,16 +609,29 @@ document.getElementById("send-btn").addEventListener("click", async () => {
 
                   // source 버튼 클릭 기능
                   sourceButton.addEventListener("click", () => {
-                    alert("source 버튼 클릭")
+                    showSourceModal(sourceData);
 
+                    // 이미지 변경
                     const imgElement = sourceButton.querySelector("img");
                     imgElement.src = "copy_done.png";
                     imgElement.alt = "Source finish";
+                        
                     setTimeout(() => {
                         imgElement.src = "./source.png";
                         imgElement.alt = "Source";
                     }, 1000);
                   });
+                  // sourceButton.addEventListener("click", () => {
+                  //   alert("source 버튼 클릭")
+
+                  //   const imgElement = sourceButton.querySelector("img");
+                  //   imgElement.src = "copy_done.png";
+                  //   imgElement.alt = "Source finish";
+                  //   setTimeout(() => {
+                  //       imgElement.src = "./source.png";
+                  //       imgElement.alt = "Source";
+                  //   }, 1000);
+                  // });
 
                   // 스타일 적용
                   styleButtons(sourceButton);
@@ -715,19 +738,32 @@ document.getElementById("send-btn").addEventListener("click", async () => {
         });
 
         // source 버튼 클릭 기능
-        sourceButton_.addEventListener("click", async () => { 
-            alert("source 버튼 클릭")
+        sourceButton_.addEventListener("click", () => {
+          showSourceModal(sourceData);
 
-            // 이미지 변경
-            const imgElement = sourceButton_.querySelector("img");
-            imgElement.src = "copy_done.png";
-            imgElement.alt = "Source finish";
-
-            setTimeout(() => {
-                imgElement.src = "./source.png";
-                imgElement.alt = "Source";
-            }, 1000);
+          // 이미지 변경
+          const imgElement = sourceButton_.querySelector("img");
+          imgElement.src = "copy_done.png";
+          imgElement.alt = "Source finish";
+              
+          setTimeout(() => {
+              imgElement.src = "./source.png";
+              imgElement.alt = "Source";
+          }, 1000);
         });
+        // sourceButton_.addEventListener("click", async () => { 
+        //     alert("source 버튼 클릭")
+
+        //     // 이미지 변경
+        //     const imgElement = sourceButton_.querySelector("img");
+        //     imgElement.src = "copy_done.png";
+        //     imgElement.alt = "Source finish";
+
+        //     setTimeout(() => {
+        //         imgElement.src = "./source.png";
+        //         imgElement.alt = "Source";
+        //     }, 1000);
+        // });
 
         document.getElementById("chat-box").appendChild(botMessageElement);
         chatBox.scrollTop = chatBox.scrollHeight;
@@ -1040,6 +1076,41 @@ async function getAccessToken() {
       });
     });
 }
+// --------------------------------------------------------
+// 📌 출처 버튼 기능 함수 (모달 UI + 출처 리스트 업데이트)
+// --------------------------------------------------------
+function showSourceModal(sourceData) {
+  const sourceModal = document.getElementById("source-modal");
+  const sourceList = document.getElementById("source-list");
+
+  if (!sourceModal || !sourceList) {
+      console.error("❌ ERROR: source-modal 또는 source-list를 찾을 수 없음.");
+      return;
+  }
+
+  // 기존 리스트 초기화 후 새로운 출처 추가
+  sourceList.innerHTML = sourceData
+      .map((url, index) => `<li>🔗 <a href="${url}" target="_blank">Reference ${index + 1}</a></li>`)
+      .join("");
+
+  // 모달 표시
+  // sourceModal.style.display = "flex";
+  // ✅ 모달 표시 (hidden 클래스 제거)
+  sourceModal.classList.remove("hidden");
+}
+
+// 📌 모달 닫기 기능 (닫기 버튼 및 바깥 클릭 시)
+document.querySelector(".close").addEventListener("click", () => {
+  document.getElementById("source-modal").classList.add("hidden");
+});
+
+window.addEventListener("click", (event) => {
+  const sourceModal = document.getElementById("source-modal");
+  if (event.target === sourceModal) {
+      sourceModal.classList.add("hidden");
+  }
+});
+
 // ---------------
 //   환영 인사
 // ---------------
