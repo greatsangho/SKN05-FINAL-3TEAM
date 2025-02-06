@@ -5,7 +5,7 @@ from DB.database import get_db
 from fastapi import File, UploadFile, Form
 import shutil
 import os
-from .response.pdfs import upload_pdf
+from .response.pdfs import upload_pdf, delete_pdf
 
 pdfs_router = APIRouter()
 
@@ -42,7 +42,7 @@ async def create_pdf(
         )
 
         # 4. RunPod으로 파일과 session_id 전송
-        upload_pdf(file=file, session_id=session_id, redis=pdfs_router.redis)
+        await upload_pdf(file=file, session_id=session_id, redis=pdfs_router.redis)
 
 
         return new_pdf_file
@@ -77,7 +77,7 @@ async def delete_pdf(
         session_id = session.session_id  # 세션 ID 가져오기
 
         # 2. RunPod에 PDF 삭제 요청 전송
-        runpod_response = delete_pdf(
+        runpod_response = await delete_pdf(
             file_name=file_name,
             session_id=session_id,
             redis=pdfs_router.redis

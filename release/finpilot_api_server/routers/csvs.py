@@ -32,7 +32,7 @@ async def upload_csv(
         session_id = session.session_id  # 세션 ID 가져오기
 
         # 3. RunPod으로 파일과 session_id 전송
-        upload_csvs(file=file, session_id=session_id)
+        await upload_csvs(file=file, session_id=session_id)
 
         return {
             "message": "CSV file processed successfully",
@@ -65,7 +65,7 @@ async def delete_csv(
         session_id = session.session_id  # 세션 ID 가져오기
 
         # 2. RunPod으로 삭제 요청 전송
-        delete_csvs(session_id=session_id)
+        await delete_csvs(session_id=session_id)
 
         return {
             "message": "CSV file deleted successfully",
