@@ -75,9 +75,13 @@ async def query_image(
     png_files = [f for f in os.listdir(folder_path) if f.endswith(".png")]
     if not png_files:
         raise HTTPException(status_code=404, detail="No PNG files found in the folder")
-
+    
+    source_value = answer["source"]
+    if isinstance(source_value, str):
+        source_value = [source_value]
+        
     # Encode Image to Base64 type
-    images = encode_img_base64(folder_path, png_files, source=answer["source"])
+    images = encode_img_base64(folder_path, png_files, source=source_value)
 
     if chat_option == "데이터 시각화 (Upload)":
         # Delete Remaining CSV Files
