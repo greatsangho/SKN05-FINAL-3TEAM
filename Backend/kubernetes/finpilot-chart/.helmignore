@@ -21,3 +21,7 @@
 .idea/
 *.tmproj
 .vscode/
+
+# Example files
+*secret.yaml.txt
+.example/
