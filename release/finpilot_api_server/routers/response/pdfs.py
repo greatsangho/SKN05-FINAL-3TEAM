@@ -2,7 +2,7 @@ from finpilot.utils import parse_pdf
 from finpilot.session import get_session_vectorstore
 from finpilot.vectorstore import add_data_to_vectorstore_and_update_redis, delete_data_from_vectorstore_and_update_redis
 
-async def upload_pdf(
+async def upload_pdfs(
     session_id, file, redis
 ):
     # Parsing PDF File And Transform as Document object
@@ -25,7 +25,7 @@ async def upload_pdf(
     )
 
 
-async def delete_pdf(
+async def delete_pdfs(
     file_name, session_id, redis
 ):
     # Get VectorStore accoring to Session ID
