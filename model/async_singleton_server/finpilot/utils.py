@@ -6,16 +6,21 @@ import os
 import base64
 
 
-def parse_pdf(file : UploadFile) -> Document:
+def parse_pdf(file : UploadFile, session_id) -> Document:
     # Pdf Parsing
     page_content = pymupdf4llm.to_markdown(fitz.open(stream=file.file.read(), filetype="pdf"), show_progress=True)
 
-    return Document(
+    document = Document(
         page_content=page_content,
         metadata={
-            "filename" : file.filename
+            "source" : file.filename,
+            "session_id" : session_id
         }
     )
+
+    print(document.metadata)
+
+    return document
 
 
 def delete_files_in_dir(dir):

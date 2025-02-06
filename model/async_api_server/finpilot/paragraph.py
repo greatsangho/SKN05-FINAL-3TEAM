@@ -146,7 +146,7 @@ class ParagraphProcess:
             documents = prev_documents + retrieved_documents
         except:
             documents = await self.retrieve.ainvoke(question)
-
+        
         state["documents"] = documents
     
         return state

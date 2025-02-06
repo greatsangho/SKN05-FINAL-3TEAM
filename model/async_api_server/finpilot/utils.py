@@ -13,7 +13,7 @@ def parse_pdf(file : UploadFile) -> Document:
     return Document(
         page_content=page_content,
         metadata={
-            "filename" : file.filename
+            "source" : file.filename
         }
     )
 

@@ -10,7 +10,6 @@ from langchain_core.messages import HumanMessage, AIMessage
 # Writer
 from langchain import hub
 from langchain_core.output_parsers import StrOutputParser
-from langgraph.types import StreamWriter
 
 # define tools
 from langchain_community.tools.tavily_search import TavilySearchResults
@@ -19,13 +18,13 @@ from langchain_community.tools.tavily_search import TavilySearchResults
 from langchain.schema import Document
 
 # load retriever
-from langchain_community.vectorstores import FAISS
+from langchain_chroma import Chroma
 
 # messages
 from langgraph.graph.message import add_messages
 
 class ParagraphProcess:
-    def __init__(self, vector_store : FAISS):
+    def __init__(self, vector_store : Chroma):
         llm = ChatOpenAI(
             model = "gpt-4o-mini",
             api_key=os.getenv("OPENAI_API_KEY"),
@@ -123,8 +122,9 @@ class ParagraphProcess:
 
         self.web_search_tool = TavilySearchResults(k=3)
 
-
-        self.retrieve = vector_store.as_retriever()
+        self.retrieve = vector_store.as_retriever(
+            dynamic_update=True
+        )
 
     
     async def retrieve_node(self, state):
@@ -139,14 +139,28 @@ class ParagraphProcess:
         """
         print("[Graph Log] RETRIEVE ...")
         question = state["question"]
+        session_id = state["session_id"]
+        print(f"session_id : {session_id}")
         
         try : 
             prev_documents = state["documents"]
-            retrieved_documents = await self.retrieve.ainvoke(question)
+            retrieved_documents = await self.retrieve.ainvoke(
+                input = question, 
+                filter={
+                        "session_id" : session_id
+                }
+            )
             documents = prev_documents + retrieved_documents
         except:
-            documents = await self.retrieve.ainvoke(question)
-
+            documents = await self.retrieve.ainvoke(
+                input = question, 
+                filter={
+                        "session_id" : session_id
+                }
+            )
+        
+        for doc in documents:
+            print(doc.metadata)
         state["documents"] = documents
     
         return state
@@ -259,7 +273,7 @@ class ParagraphProcess:
         else:
             query = str(question.content) if hasattr(question, 'content') else str(question)
 
-        docs = await self.web_search_tool.ainvoke({"query" : query})
+        docs = await self.web_search_tool.ainvoke({"query" : query, "days" : 30})
         web_results = [
             Document(
                 page_content=doc["content"],

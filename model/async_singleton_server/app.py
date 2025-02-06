@@ -4,18 +4,21 @@ import os
 from pathlib import Path
 # FinPilot Modules
 from finpilot.request_model import QueryRequestModel, DeleteFileRequestModel
-from finpilot.vectorstore import add_data_to_vectorstore_and_update_redis, delete_data_from_vectorstore_and_update_redis
-from finpilot.session import get_session_app, get_session_vectorstore
+from finpilot.vectorstore import add_data_to_vectorstore
+from finpilot.vectorstore import delete_data_from_vectorstore
+from finpilot.core import get_finpilot
 from finpilot.utils import parse_pdf, delete_files_in_dir, encode_img_base64
 # Server Modules
 from fastapi import FastAPI, HTTPException, UploadFile, Form, File
 from fastapi.responses import JSONResponse
 import uvicorn
-from redis import Redis
 # Ignore Warnings
 # import warnings
 # from langsmith.utils import LangSmithMissingAPIKeyWarning
 # warnings.filterwarnings("ignore", category=LangSmithMissingAPIKeyWarning)
+
+from langchain_chroma import Chroma
+from langchain_openai import OpenAIEmbeddings
 
 
 
@@ -35,22 +38,29 @@ os.environ["LANGSMITH_TRACING"] = LANGSMITH_TRACING
 
 
 
-
-################################## Create Redis Client ##################################
-redis = Redis(host="localhost", port=6379, decode_responses=False)
-
-
-
-
-
 ################################## Initialize Fast API server ##################################
 app = FastAPI()
 
 
 
 
+################################## Initialize Chroma Vector DB ##################################
+vector_store = Chroma(
+    embedding_function=OpenAIEmbeddings(
+        api_key=os.getenv("OPENAI_API_KEY")
+    ),
+    persist_directory="ChromaDB",
+)
 
-################################## Invoke Answer (Non Image) ##################################
+
+
+################################## Initialize FinPilot Application ##################################
+pilot = get_finpilot(
+    vector_store=vector_store
+)
+
+
+################################## Invoke Answer ##################################
 @app.post("/query")
 async def query(
     request : QueryRequestModel
@@ -67,16 +77,12 @@ async def query(
     chat_option = request.chat_option
     if not chat_option:
         raise HTTPException(status_code=400, detail="Chat Option is required!")
-    
-    # Create/Load the LangGraph Application according to Session ID
-    pilot = await get_session_app(
-        redis_client=redis,
-        session_id=session_id
-    )
 
     input = {
         "question" : question,
-        "chat_option" : chat_option
+        "chat_option" : chat_option,
+        "session_id" : session_id,
+        "documents" : []
     }
 
     config = {
@@ -94,9 +100,6 @@ async def query(
         print("[Server Log] INVOKING PILOT ANSWER (NON-IMAGE)")
         answer = await pilot.ainvoke(input=input, config=config)
         print("[Server Log] PILOT ANSWER INVOKED")
-
-        # delete LangGraph Application
-        del pilot
 
         if len(os.listdir(data_path)) > 0:
             delete_files_in_dir(data_path)
@@ -117,9 +120,6 @@ async def query(
         print("[Server Log] INVOKING PILOT ANSWER (IMAGE)")
         answer = await pilot.ainvoke(input=input, config=config)
         print("[Server Log] PILOT ANSWER INVOKED")
-
-        # delete LangGraph Application
-        del pilot
 
         # Get PNG File list
         png_files = [f for f in os.listdir(chart_path) if f.endswith(".png")]
@@ -152,24 +152,17 @@ async def upload_pdf(
     
     # Parsing PDF File And Transform as Document object
     documents = []
-    document = parse_pdf(file)
-    documents.append(document)
-
-    # Get VectorStore accoring to Session ID
-    vectorstore = get_session_vectorstore(
-        redis_client=redis,
+    document = parse_pdf(
+        file=file, 
         session_id=session_id
     )
+    documents.append(document)
 
-    # Add data to Session VectorStore & Update Redis Server Data
-    add_data_to_vectorstore_and_update_redis(
-        redis_client=redis,
-        session_id=session_id,
-        vector_store=vectorstore,
+    global vector_store
+    vector_store = add_data_to_vectorstore(
+        vector_store=vector_store,
         data=documents
     )
-
-    del vectorstore
 
     # Return Status (Task Complete)
     return {"status" : "success"}
@@ -220,22 +213,16 @@ async def delete_pdf(
     file_name = request.file_name
     # Get Session ID
     session_id = request.session_id
-
-    # Get VectorStore accoring to Session ID
-    vectorstore = get_session_vectorstore(
-        redis_client=redis,
-        session_id=session_id
-    )
     
     # delete data from Session VectorStore & Update Redis Server Data
-    delete_data_from_vectorstore_and_update_redis(
-        redis_client=redis,
-        session_id=session_id,
-        vector_store=vectorstore,
-        file_name=file_name
+    global vector_store
+    vector_store = delete_data_from_vectorstore(
+        vector_store=vector_store,
+        file_name=file_name,
+        session_id=session_id
     )
 
-    del vectorstore
+    # del vectorstore
 
     # Return Status (Task Complete)
     return {"status" : "success"}
@@ -263,17 +250,6 @@ async def delete_csv(
     
     # Return Status (Task Complete)
     return {"status" : "success"}
-
-
-
-
-
-################################## 활성화 세션 정보 확인 ##################################
-@app.get("/sessions")
-async def list_sessions():
-    # Redis에서 활성 세션 리스트 반환
-    keys = redis.keys("*")
-    return {"active_sessions" : [key for key in keys]}
 
 
 
