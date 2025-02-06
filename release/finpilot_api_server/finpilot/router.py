@@ -13,7 +13,7 @@ async def route_question(state):
 	print("[Graph Log] ROUTE QUESTION ...")
 	
 	chat_option = state["chat_option"]
-	if chat_option == "초안 생성":
+	if chat_option == "초안 작성":
 		print("[Graph Log] ROUTE QUESTION to 'draft'")
 		return "draft"
 	elif chat_option == "요약 / 확장":
