@@ -16,9 +16,9 @@ spec:
         - name: finpilot-container
           image: greatsangho/finpilot-app:latest
           ports:
-            - containerPort: 8000
+            - containerPort: 8000 # 애플리케이션이 리스닝하는 포트
           envFrom:
             - configMapRef:
                 name: finpilot-config   # ConfigMap 참조.
             - secretRef:
-                name: finpilot-secret     # Secret 참조.
+                name: finpilot-secret   # Secret 참조.
