@@ -88,7 +88,10 @@
     </div>
 
     <!-- 📝 로딩 메시지 -->
-    <p id="loading-message">FinPilot이 답변을 준비하는 중..</p>
+    <div id="loading-message-container">
+      <span id="loading-message">FinPilot이 답변을 준비하는 중...</span>
+      <span id="loading-spinner_" class="spinner_"></span>
+    </div>
 
     <!-- 금융 퀴즈 -->
     <div id="quiz-container">
@@ -106,16 +109,19 @@
   <div id="source-modal" class="modal hidden">
     <div class="modal-content">
         <span class="close">&times;</span>
-        <h3>Source Information</h3>
+        <h3>
+          <img src="source_h3.png" alt="source_h3 img" style="width: 19px; height: 19px; vertical-align: middle; margin-right: 5px;">
+          Source Information
+        </h3>
+        <!-- <h3>Source Information</h3> -->
         <p style="font-size: 14px; color: #666;">FinPilot이 제공한 답변의 출처를 확인하세요.</p>
         <ul id="source-list"></ul>
     </div>
   </div>
 
   <!-- js 삽입 -->_
-  <script type="module" src="sidebar_final.js"></script>
+  <script type="module" src="sidebar.js"></script>
   <script src="marked.min.js"></script>
-  <script src="turndown.min.js"></script>
 
 </body>
 </html>

@@ -161,6 +161,7 @@ function showLoadingUI() {
 function startLoadingAnimation() {
   const progressBar = document.getElementById("progress-bar");
   const loadingMessage = document.getElementById("loading-message");
+  const spinner = document.getElementById("loading-spinner_"); // 스피너 가져오기
 
   if (!progressBar || !loadingMessage) {
       console.error("❌ ERROR: progressBar 또는 loadingMessage 요소를 찾을 수 없음.");
@@ -182,6 +183,7 @@ function startLoadingAnimation() {
 
       progressBar.style.width = estimatedProgress + "%";
       loadingMessage.textContent = `FinPilot이 답변을 준비하는 중.. ${Math.floor(estimatedProgress)}%`;
+      spinner.style.display = "inline-block"; // ✅ 스피너 표시
       console.log(`🟢 진행률 업데이트: ${Math.floor(estimatedProgress)}%`);
 
       if (elapsedTime < maxTime) {
@@ -200,6 +202,7 @@ function startLoadingAnimation() {
       setTimeout(() => {
           progressBar.style.width = "100%";
           loadingMessage.textContent = "답변 생성이 완료되었습니다!";
+          spinner.style.display = "none"; // ✅ 스피너 숨김
           console.log("✅ 프로그레스 바 100% 도달!");
       }, remainingTime);
   }
@@ -229,29 +232,32 @@ function hideLoadingUI() {
 // 💡 4️⃣ 랜덤 금융 명언/팁 제공
 function displayRandomFinanceTip() {
   const financeTips = [
-    "💡 워렌 버핏: 좋은 투자란 기다림의 미학이다.",
-    "💡 벤저민 그레이엄: 현명한 투자자는 감정을 통제할 줄 알아야 한다.",
-    "💡 피터 린치: 당신이 이해하는 기업에 투자하라.",
-    "💡 존 보글: 장기적인 인내심이 가장 중요한 투자 전략이다.",
-    "💡 찰리 멍거: 단순한 원칙을 따르면서 복리의 힘을 활용하라.",
-    "💡 조지 소로스: 시장은 항상 틀릴 수 있다. 기회를 찾아라.",
-    "💡 존 템플턴: 가장 비관적인 시점에서 주식을 사라.",
-    "💡 하워드 막스: 위험을 낮추는 것은 수익을 희생하는 것이 아니다.",
-    "💡 제시 리버모어: 시장에서 가장 큰 위험은 당신 자신의 감정이다.",
-    "💡 레이 달리오: 모든 투자는 리스크 관리가 핵심이다.",
-    "💰 분산 투자: 하나의 자산에 집중하기보다 다양한 자산에 투자하세요.",
-    "📈 장기 투자: 단기 변동성을 신경 쓰지 말고 장기적인 성장에 집중하세요.",
-    "📊 손절매 전략: 손실을 감당할 수 있는 선에서 미리 정해두세요.",
-    "🔍 기업 분석: 재무제표를 확인하고 회사의 기본적인 가치를 분석하세요.",
-    "💳 신용 관리: 높은 이자를 부담하는 부채를 먼저 갚는 것이 중요합니다.",
-    "📉 감정적 투자 금지: 공포와 탐욕을 통제하고 감정적 결정을 피하세요.",
-    "💹 배당 투자: 꾸준한 배당을 지급하는 기업을 찾아보세요.",
-    "🕵️‍♂️ 시장 조사: 트렌드와 경제 흐름을 꾸준히 파악하세요.",
-    "🔄 리밸런싱: 포트폴리오를 정기적으로 점검하고 조정하세요."
+    `<img src="Advice.png" alt="투자" style="width:16px; height:16px;"> 워렌 버핏: 좋은 투자란 기다림의 미학이다.`,
+    `<img src="Advice.png" alt="감정 통제" style="width:16px; height:16px;"> 벤저민 그레이엄: 현명한 투자자는 감정을 통제할 줄 알아야 한다.`,
+    `<img src="Advice.png" alt="기업 투자" style="width:16px; height:16px;"> 피터 린치: 당신이 이해하는 기업에 투자하라.`,
+    `<img src="Advice.png" alt="장기 투자" style="width:16px; height:16px;"> 존 보글: 장기적인 인내심이 가장 중요한 투자 전략이다.`,
+    `<img src="Advice.png" alt="복리" style="width:16px; height:16px;"> 찰리 멍거: 단순한 원칙을 따르면서 복리의 힘을 활용하라.`,
+    `<img src="Advice.png" alt="기회" style="width:16px; height:16px;"> 조지 소로스: 시장은 항상 틀릴 수 있다. 기회를 찾아라.`,
+    `<img src="Advice.png" alt="매수 기회" style="width:16px; height:16px;"> 존 템플턴: 가장 비관적인 시점에서 주식을 사라.`,
+    `<img src="Advice.png" alt="위험 관리" style="width:16px; height:16px;"> 하워드 막스: 위험을 낮추는 것은 수익을 희생하는 것이 아니다.`,
+    `<img src="Advice.png" alt="감정 통제" style="width:16px; height:16px;"> 제시 리버모어: 시장에서 가장 큰 위험은 당신 자신의 감정이다.`,
+    `<img src="Advice.png" alt="리스크 관리" style="width:16px; height:16px;"> 레이 달리오: 모든 투자는 리스크 관리가 핵심이다.`,
+    `<img src="diversified_investment.png" alt="분산 투자" style="width:16px; height:16px;"> 분산 투자: 하나의 자산에 집중하기보다 다양한 자산에 투자하세요.`,
+    `<img src="up_graph.png" alt="장기 투자" style="width:16px; height:16px;"> 장기 투자: 단기 변동성을 신경 쓰지 말고 장기적인 성장에 집중하세요.`,
+    `<img src="down_graph.png" alt="손절매" style="width:16px; height:16px;"> 손절매 전략: 손실을 감당할 수 있는 선에서 미리 정해두세요.`,
+    `<img src="Analysis.png" alt="기업 분석" style="width:16px; height:16px;"> 기업 분석: 재무제표를 확인하고 회사의 기본적인 가치를 분석하세요.`,
+    `<img src="credit.png" alt="신용 관리" style="width:16px; height:16px;"> 신용 관리: 높은 이자를 부담하는 부채를 먼저 갚는 것이 중요합니다.`,
+    `<img src="sad.png" alt="감정적 투자 금지" style="width:16px; height:16px;"> 감정적 투자 금지: 공포와 탐욕을 통제하고 감정적 결정을 피하세요.`,
+    `<img src="money_hand.png" alt="배당 투자" style="width:16px; height:16px;"> 배당 투자: 꾸준한 배당을 지급하는 기업을 찾아보세요.`,
+    `<img src="money.png" alt="시장 조사" style="width:16px; height:16px;"> 시장 조사: 트렌드와 경제 흐름을 꾸준히 파악하세요.`,
+    `<img src="rebalancing.png" alt="리밸런싱" style="width:16px; height:16px;"> 리밸런싱: 포트폴리오를 정기적으로 점검하고 조정하세요.`
   ];
 
+
   const randomTip = financeTips[Math.floor(Math.random() * financeTips.length)];
-  document.getElementById("finance-tip").textContent = randomTip;
+  // document.getElementById("finance-tip").textContent = randomTip;
+  document.getElementById("finance-tip").innerHTML = randomTip;
+
 }
 
 // 🎯 5️⃣ 금융 퀴즈 제공
@@ -341,14 +347,14 @@ function loadRandomQuiz() {
       button.textContent = randomQuiz.options[index];
       button.onclick = () => {
           if (index === randomQuiz.correct) {
-              alert("✅ 정답입니다!");
+              alert("🎯 정답입니다!");
 
               // 🚀 정답을 맞췄으므로 새로운 퀴즈 & 명언/팁 불러오기
               displayRandomFinanceTip(); // 새로운 금융 명언/팁 로드
               loadRandomQuiz(); // 새로운 금융 퀴즈 로드
               
           } else {
-              alert("❌ 오답입니다. 다시 시도해보세요.");
+              alert("⚠ 오답입니다! 다시 시도해보세요.");
           }
       };
   });
@@ -599,11 +605,13 @@ document.getElementById("send-btn").addEventListener("click", async () => {
 
                   // source 버튼 클릭 기능
                   sourceButton.addEventListener("click", () => {
-                    alert("source 버튼 클릭")
+                    showSourceModal(image.source);
 
+                    // 이미지 변경
                     const imgElement = sourceButton.querySelector("img");
                     imgElement.src = "copy_done.png";
                     imgElement.alt = "Source finish";
+                        
                     setTimeout(() => {
                         imgElement.src = "./source.png";
                         imgElement.alt = "Source";
@@ -715,18 +723,18 @@ document.getElementById("send-btn").addEventListener("click", async () => {
         });
 
         // source 버튼 클릭 기능
-        sourceButton_.addEventListener("click", async () => { 
-            alert("source 버튼 클릭")
+        sourceButton_.addEventListener("click", () => {
+          showSourceModal(result.source);
 
-            // 이미지 변경
-            const imgElement = sourceButton_.querySelector("img");
-            imgElement.src = "copy_done.png";
-            imgElement.alt = "Source finish";
-
-            setTimeout(() => {
-                imgElement.src = "./source.png";
-                imgElement.alt = "Source";
-            }, 1000);
+          // 이미지 변경
+          const imgElement = sourceButton_.querySelector("img");
+          imgElement.src = "copy_done.png";
+          imgElement.alt = "Source finish";
+              
+          setTimeout(() => {
+              imgElement.src = "./source.png";
+              imgElement.alt = "Source";
+          }, 1000);
         });
 
         document.getElementById("chat-box").appendChild(botMessageElement);
@@ -1040,6 +1048,47 @@ async function getAccessToken() {
       });
     });
 }
+// --------------------------------------------------------
+// 📌 출처 버튼 기능 함수 (모달 UI + 출처 리스트 업데이트)
+// --------------------------------------------------------
+function showSourceModal(sourceData) {
+  const sourceModal = document.getElementById("source-modal");
+  const sourceList = document.getElementById("source-list");
+
+  if (!sourceModal || !sourceList) {
+      console.error("❌ ERROR: source-modal 또는 source-list를 찾을 수 없음.");
+      return;
+  }
+
+  // 기존 리스트 초기화 후 새로운 출처 추가
+  sourceList.innerHTML = sourceData
+  .map((url) => {
+    const shortUrl = url.length > 50 ? url.slice(0, 48) + ".." : url; // URL 길이가 50자 초과 시 줄이기
+    const isValidUrl = url.startsWith("http://") || url.startsWith("https://"); // URL 형식 확인
+
+    return `<li>
+      <img src="link.png" alt="Link Icon" style="width: 14px; height: 14px; vertical-align: middle; margin-right: 5px;">
+      ${isValidUrl ? `<a href="${url}" target="_blank" title="${url}">${shortUrl}</a>` : shortUrl}
+    </li>`;
+  })
+  .join("");
+
+  // ✅ 모달 표시 (hidden 클래스 제거)
+  sourceModal.classList.remove("hidden");
+}
+
+// 📌 모달 닫기 기능 (닫기 버튼 및 바깥 클릭 시)
+document.querySelector(".close").addEventListener("click", () => {
+  document.getElementById("source-modal").classList.add("hidden");
+});
+
+window.addEventListener("click", (event) => {
+  const sourceModal = document.getElementById("source-modal");
+  if (event.target === sourceModal) {
+      sourceModal.classList.add("hidden");
+  }
+});
+
 // ---------------
 //   환영 인사
 // ---------------
@@ -1212,8 +1261,6 @@ async function sendPdfToServer(file) {
 
       const result = await response.json();
       console.log("서버 응답:", result);
-  
-      //alert(`PDF 파일 '${file.name}'이 서버에 성공적으로 업로드되었습니다.`); // 없앨지 말지 고민 중..
   } catch (error) {
       console.error("서버 전송 실패:", error);
       alert(`PDF 파일 업로드 중 오류 발생: ${file.name}(${error.message})`);
@@ -1251,7 +1298,6 @@ async function sendcsvToServer(file) {
 
       const result = await response.json();
       console.log("서버 응답:", result);
-      //alert(`CSV 파일 '${file.name}'이 서버에 성공적으로 업로드되었습니다.`); // 없앨지 말지 고민 중..
   } catch (error) {
       console.error("서버 전송 실패:", error);
       alert(`CSV 파일 업로드 중 오류 발생: ${file.name}(${error.message})`);
@@ -1378,6 +1424,13 @@ chatOptionImage.src = optionImages[currentSelectedOption];
 // 드롭다운 표시/숨김 토글
 chatOptionButton.addEventListener('click', () => {
     chatDropdownMenu.classList.toggle('hidden'); // 숨김/표시 전환
+});
+
+// ✅ 바깥 영역 클릭 시 드롭다운 닫기
+window.addEventListener("click", (event) => {
+  if (!chatDropdownMenu.contains(event.target) && !chatOptionButton.contains(event.target)) {
+    chatDropdownMenu.classList.toggle('hidden'); // 숨김/표시 전환
+  }
 });
 
 // 각 옵션 클릭 시 동작

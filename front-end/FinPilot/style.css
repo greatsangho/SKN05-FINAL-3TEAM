@@ -942,27 +942,24 @@ h2 {
 
 /* 모달 제목 스타일 */
 .modal-content h3 {
-    font-size: 18px;
+    font-size: 20px;
     font-weight: bold;
     display: flex;
     align-items: center;
     gap: 8px;
     border-bottom: 2px solid #ddd;
     padding-bottom: 10px;
-    margin-bottom: 15px;
+    margin-bottom: 25px;
 }
-
-/* 핀(📌) 아이콘 스타일 */
-/* .modal-content h3::before {
-    content: "📌";
-    font-size: 18px;
-} */
 
 /* 출처 리스트 스타일 */
 #source-list {
     list-style: none;
     padding: 0;
     margin: 0;
+    max-height: 300px; /* ✅ 최대 높이 설정 (필요에 따라 조정 가능) */
+    overflow-y: auto; /* ✅ 세로 스크롤 가능하도록 설정 */
+    padding-right: 5px; /* ✅ 스크롤바와 텍스트 간격 조정 */
 }
 
 #source-list li {
@@ -987,4 +984,36 @@ h2 {
 #source-list li a:hover {
     color: #0056b3;
     text-decoration: underline;
+}
+
+/* 스크롤바 스타일 (크롬, 엣지) */
+#source-list::-webkit-scrollbar {
+    width: 6px; /* 스크롤바 너비 */
+}
+
+#source-list::-webkit-scrollbar-thumb {
+    background-color: #ccc; /* 스크롤바 색상 */
+    border-radius: 10px;
+}
+
+#source-list::-webkit-scrollbar-thumb:hover {
+    background-color: #aaa; /* 마우스 오버 시 색상 */
+}
+
+/* 로딩 메시지 컨테이너 */
+#loading-message-container {
+    display: flex;
+    /* align-items: center; */
+    align-items: baseline;
+    gap: 8px; /* 텍스트와 스피너 간격 */
+}
+
+/* 작은 스피너 스타일 */
+.spinner_ {
+    width: 13px;
+    height: 13px;
+    border: 2px solid #5196e4;
+    border-top: 2px solid transparent;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
 }
