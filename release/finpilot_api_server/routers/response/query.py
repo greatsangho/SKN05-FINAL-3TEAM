@@ -21,13 +21,16 @@ async def query_non_image(
         "configurable" : {"thread_id" : session_id},
         "recursion_limit" : 40
     }
+
+    data_path = Path(os.getcwd()) / "data" / f"{session_id}"
+    if not os.path.exists(data_path):
+        os.makedirs(data_path)
     
     # invoke answer
     print("[Server Log] INVOKING PILOT ANSWER (NON-IMAGE)")
     answer = await pilot.ainvoke(input=input, config=config)
     print("[Server Log] PILOT ANSWER INVOKED")
 
-    data_path = Path(os.getcwd()) / "data" / f"{session_id}"
     if len(os.listdir(data_path)) > 0:
         await delete_files_in_dir(data_path)
 
