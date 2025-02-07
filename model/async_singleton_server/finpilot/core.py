@@ -4,7 +4,7 @@ from typing_extensions import TypedDict
 from langgraph.graph.message import add_messages
 from finpilot.memory import LimitedMemorySaver
 from langgraph.graph import START, END, StateGraph
-from langchain_community.vectorstores import FAISS
+from langchain_chroma import Chroma
 
 from finpilot.paragraph import ParagraphProcess
 from finpilot.length_control import LengthControlProcess
@@ -14,7 +14,7 @@ from finpilot.draft import DraftProcess
 from finpilot.router import route_question
 
 def get_finpilot( 
-        vector_store : FAISS, 
+        vector_store : Chroma, 
     ):
     class State(TypedDict):
         """

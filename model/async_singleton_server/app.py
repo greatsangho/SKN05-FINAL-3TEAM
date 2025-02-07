@@ -83,7 +83,9 @@ async def query(
         "question" : question,
         "chat_option" : chat_option,
         "session_id" : session_id,
-        "documents" : []
+        "documents" : [],
+        "generation" : "",
+        "source" : []
     }
 
     config = {
