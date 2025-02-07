@@ -20,9 +20,10 @@ def route_question(state):
 	print("[Graph Log] ROUTE QUESTION ...")
 	
 	chat_option = state["chat_option"]
-	
-	
-	if chat_option == "요약 / 확장":
+	if chat_option == "초안 생성":
+		print("[Graph Log] ROUTE QUESTION to 'draft_writer'")
+		return "draft"
+	elif chat_option == "요약 / 확장":
 		print("[Graph Log] ROUTE QUESTION to 'text_magician'")
 		return "text_magician"
 	elif chat_option == "데이터 시각화 (Web)":

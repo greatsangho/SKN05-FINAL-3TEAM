@@ -1,7 +1,6 @@
 /config/
-/model_lab/config/
-/rag-chroma/
-/faiss_storage/
+/langgraph_lab/config/
+/async_stream_lab/config/
 
 .env
 *.pyc

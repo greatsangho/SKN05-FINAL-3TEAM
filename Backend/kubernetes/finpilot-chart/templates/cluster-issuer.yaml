@@ -1,0 +1,15 @@
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-staging # letsencrypt-prod로 변경 가능
+spec:
+  acme:
+    server: https://acme-v02.api.letsencrypt.org/directory
+    email: greatsangho@gmail.com
+    privateKeySecretRef:
+      name: letsencrypt-staging # letsencrypt-prod로 변경 가능
+    solvers:
+    - http01:
+        ingress:
+          class: nginx
+          
