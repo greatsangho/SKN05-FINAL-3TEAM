@@ -9,52 +9,33 @@ from typing import Annotated
 from langchain_experimental.utilities import PythonREPL
 from langchain_core.tools import tool
 from langchain_openai import ChatOpenAI
-from langchain_core.messages import HumanMessage
+from langchain_core.messages import HumanMessage, SystemMessage
 from langgraph.graph.message import add_messages
 
 
 class VisualizeUploadDataProcess:
-    def __init__(self, session_id:str):
-        self.session_id = session_id
-
-        try:
-            self.DATA_DIR = Path(os.getcwd()) / 'data' / f"{session_id}"
-            
-            files = os.listdir(self.DATA_DIR)
-            csv_files = [file for file in files if file.endswith(".csv")]
-            self.csvfile = csv_files[0]
-            self.data_path = self.DATA_DIR / self.csvfile
-
-            data = pd.read_csv(self.data_path)
-
-        except : 
-            self.DATA_DIR = "tmp/"
-            self.data_path = "tmp.csv"
-            data = pd.DataFrame()
-
-        doc_string_template = """
+    def __init__(self):
+        repl = PythonREPL()
+        def python_repl(
+            code : Annotated[str, "The Python code to execute to generate and save your chart."]
+        ):
+            """
             Use this tool to execute Python code and generate the desired results.
 
-            Write Python code that generates a graph and saves the graph image in the './charts/{session_id}/' folder.
+            Write Python code that generates a graph and saves the graph in to image.
 
             If the specified folder does not exist, create the folder at the given path.
 
             Follow the requirements below to write the code:
 
-            1. Save the generated graph image in the './charts/{session_id}/' folder.
+            1. Save the generated graph in to image.
             2. The image format should be PNG.
             3. chart labels should be written in English.
             4. Ensure proper cleanup of resources used by Matplotlib to prevent memory leaks.
             5. use 'matplotlib.use('Agg')' for run matplotlib
             
             The result should be fully functional Python code. Add comments to explain each step of the code.
-        """
-
-        # python code interpreter
-        repl = PythonREPL()
-        def python_repl(
-            code : Annotated[str, "The Python code to execute to generate your chart."]
-        ):
+            """
 
             try : 
                 result = repl.run(code)
@@ -67,23 +48,30 @@ class VisualizeUploadDataProcess:
                 result_str + "\n\nIf you have completed all tasks, repond with FINAL ANSWER."
             )
         
-        python_repl.__doc__ = doc_string_template.format(session_id=session_id)
-        python_repl_tool = tool(python_repl)
+        self.python_repl_tool = tool(python_repl)
+   
+    
+    async def visualize_node(self, state):
+        question = state["question"]
+        session_id = state["session_id"]
 
-        ################################ Define AGent ################################
-
-        
+        DATA_DIR = Path(os.getcwd()) / 'data' / f'{session_id}'
+        files = os.listdir(DATA_DIR)
+        csv_files = [file for file in files if file.endswith(".csv")]
+        csvfile = csv_files[0]
+        data_path = DATA_DIR / csvfile
+        data = pd.read_csv(data_path)
 
         custom_prefix = f"""
-        You are an exceptional data analyst with datafram. Your mission is to adhere to the following tasks while analyzing data, generating charts, and saving them:
+            You are an exceptional data analyst with datafram. Your mission is to adhere to the following tasks while analyzing data, generating charts, and saving them:
 
-        1. Visualize the provided data in the format requested by the user and save the chart in the ./charts/{session_id}/ folder.
-        2. Analyze the provided data not only in the way requested by the user but also from various perspectives to uncover valuable insights.
-        3. Visualize the discovered insights and save the charts in the ./charts/{session_id}/ folder.
-        
-        Always explain your reasoning clearly and support your conclusions with specific metrics. Conduct thorough analysis while maintaining objectivity.
+            1. Visualize the provided data in the format requested by the user and save the chart in the ./charts/{session_id}/ folder.
+            2. Analyze the provided data not only in the way requested by the user but also from various perspectives to uncover valuable insights.
+            3. Visualize the discovered insights and save the charts in the ./charts/{session_id}/ folder.
+            
+            Always explain your reasoning clearly and support your conclusions with specific metrics. Conduct thorough analysis while maintaining objectivity.
 
-        data path : {self.data_path}
+            data path : {data_path}
         """
 
         self.pandas_agent = create_pandas_dataframe_agent(
@@ -92,39 +80,31 @@ class VisualizeUploadDataProcess:
                 api_key=os.getenv("OPENAI_API_KEY")
             ),
             [data],
-            extra_tools=[python_repl_tool],
+            extra_tools=[self.python_repl_tool],
             verbose=True,
             agent_type = AgentType.OPENAI_FUNCTIONS,
             allow_dangerous_code=True,
             prefix = custom_prefix
         )
-    
-    async def visualize_node(self, state):
-        question = state["question"]
-        state["messages"] = add_messages(state["messages"], HumanMessage(content=question))
+
+        updated_messages = add_messages(state["messages"], HumanMessage(content=question))
+        state["messages"] = updated_messages
 
         result = await self.pandas_agent.ainvoke(
             input={
-                "input" : {"messages" : [
-                        HumanMessage(
-                            content = f"""
-                                Analyze given data and Visualize Chart,
-
-                                Human Message : {question}
-                            """
-                        )
-                    ]
+                "input" : {"messages" : updated_messages
                 }
             }
         )
         state["messages"] = add_messages(state["messages"], AIMessage(content=result['output']))
         state["generation"] = state["messages"][-1]
-        state["source"] = self.csvfile
+        state["source"] = csvfile
 
         return state
     
     async def should_continue(self, state):
-        folder_path = f"./charts/{self.session_id}/"
+        session_id = state["session_id"]
+        folder_path = f"./charts/{session_id}/"
 
         print("[Graph Log] DECISION CONTINUE OR NOT ...")
         if len(os.listdir(folder_path)) != 0:

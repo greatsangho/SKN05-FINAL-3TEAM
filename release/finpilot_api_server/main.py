@@ -4,21 +4,39 @@ from DB.database import engine, SessionLocal
 from DB.models import Base
 from routers import users, sessions, qnas, pdfs, csvs
 import uvicorn
-from redis import Redis
+
 from routers.qnas import qna_router
 from routers.pdfs import pdfs_router
 
+from finpilot.core import get_finpilot
+from langchain_chroma import Chroma
+from langchain_openai import OpenAIEmbeddings
+import os
+
+# Ignore Warnings
+import warnings
+from langsmith.utils import LangSmithMissingAPIKeyWarning
+warnings.filterwarnings("ignore", category=LangSmithMissingAPIKeyWarning)
 
 
 Base.metadata.create_all(bind=engine)
-redis = Redis(host="localhost", port=6379, decode_responses=False)
-qna_router.redis = redis
-pdfs_router.redis = redis
+
 # app = FastAPI()
 app = FastAPI(
     # servers=[{"url": "https://finpilotback.duckdns.org", "description": "Production"}],
     openapi_url="/openapi.json"  # 프록시 환경에서 문서 경로 보정
 )
+
+vector_store = Chroma(
+    embedding_function=OpenAIEmbeddings(
+        api_key=os.getenv("OPENAI_API_KEY")
+    ),
+    persist_directory="ChromaDB"
+)
+pilot = get_finpilot(vector_store=vector_store)
+
+qna_router.pilot = pilot
+pdfs_router.vector_store = vector_store
 
 # Add middleware
 add_middlewares(app)

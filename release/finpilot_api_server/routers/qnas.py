@@ -9,7 +9,7 @@ import pickle
 qna_router = APIRouter()
 
 # -------------------
-# 질문 기록 CRUD 엔드포인트 및 RunPod 연동
+# 질문 기록 CRUD 엔드포인트 및 모델 연동
 # -------------------
 # @router.post("/", response_model=schemas.QnA)
 @qna_router.post("/")
@@ -17,7 +17,7 @@ async def create_qna(qna: schemas.QnACreate, db: Session = Depends(get_db)):
     """
     QnA 생성 엔드포인트:
     1. 세션 확인 또는 생성
-    2. RunPod 호출 (질문과 session_id 전달)
+    2. 모델 호출 (질문과 session_id 전달)
     3. QnA 데이터 생성 및 저장
     """
     try:
@@ -28,18 +28,18 @@ async def create_qna(qna: schemas.QnACreate, db: Session = Depends(get_db)):
             docs_id=qna.docs_id,
         )
 
-        # 2. RunPod 호출 (외부 서비스 연동) - chat_option에 따라 다른 함수 호출
+        # 2. 모델 호출 (외부 서비스 연동) - chat_option에 따라 다른 함수 호출
         try:
             if "데이터 시각화" in qna.chat_option:
-                # 데이터 시각화 요청인 경우 send_graph_to_runpod 호출
+                # 데이터 시각화 요청인 경우 query_image 호출
                 graph_response = await query_image(
                     question=qna.question,
                     session_id=session.session_id,
                     chat_option=qna.chat_option,
-                    redis=qna_router.redis  # 데이터 시각화 요청은 Redis 사용하지 않음
+                    pilot=qna_router.pilot
                 )
                 
-                # RunPod에서 반환된 전체 JSON 응답 저장
+                # 모델에서 반환된 전체 JSON 응답 저장
                 answer = graph_response  # 전체 JSON 그대로 저장
                 
             else:
@@ -48,7 +48,7 @@ async def create_qna(qna: schemas.QnACreate, db: Session = Depends(get_db)):
                     question=qna.question,
                     session_id=session.session_id,
                     chat_option=qna.chat_option,
-                    redis=qna_router.redis
+                    pilot=qna_router.pilot
                 )
 
                 # 3. QnA 데이터 생성 및 저장 (session_id 및 chat_option 포함)
@@ -66,7 +66,7 @@ async def create_qna(qna: schemas.QnACreate, db: Session = Depends(get_db)):
                 return new_qna  # 프론트엔드로 그대로 전달
             
         except Exception as e:
-            raise HTTPException(status_code=502, detail="Failed to communicate with RunPod")
+            raise HTTPException(status_code=502, detail="Failed to invoke the model: " + str(e))
         
         return answer
 

@@ -13,7 +13,9 @@ from finpilot.visualize_upload_data import VisualizeUploadDataProcess
 from finpilot.draft import DraftProcess
 from finpilot.router import route_question
 
-async def get_finpilot(memory : LimitedMemorySaver, vector_store : FAISS, session_id : str):
+def get_finpilot( 
+        vector_store : FAISS, 
+    ):
     class State(TypedDict):
         """
         Represents the state of graph.
@@ -24,20 +26,22 @@ async def get_finpilot(memory : LimitedMemorySaver, vector_store : FAISS, sessio
             documents : list of documents
         """
         chat_option : str
+        session_id : str
         question : str
         generation : str
         messages : Annotated[list, add_messages]
         documents : List[str]
         outlines : List[str]
         source : List[str]
-    
+
+    limited_memory = LimitedMemorySaver(capacity=10)
     workflow = StateGraph(State)
 
     paragraph_process = ParagraphProcess(vector_store=vector_store)
     length_control_process = LengthControlProcess()
-    visualize_web_data_process = VisualizeWebDataProcess(session_id=session_id)
-    visualize_upload_data_process = VisualizeUploadDataProcess(session_id=session_id)
-    draft_process = DraftProcess(session_id=session_id)
+    visualize_web_data_process = VisualizeWebDataProcess()
+    visualize_upload_data_process = VisualizeUploadDataProcess()
+    draft_process = DraftProcess()
 
     ################## Add Nodes ##################
 
@@ -139,6 +143,6 @@ async def get_finpilot(memory : LimitedMemorySaver, vector_store : FAISS, sessio
 
 
     ################## Compile Workflow ##################
-    app = workflow.compile(checkpointer=memory)
+    app = workflow.compile(checkpointer=limited_memory)
     
     return app

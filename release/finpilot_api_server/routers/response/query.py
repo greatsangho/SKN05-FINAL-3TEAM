@@ -1,4 +1,3 @@
-from finpilot.session import get_session_app
 import os
 from pathlib import Path
 from fastapi import HTTPException
@@ -6,18 +5,16 @@ from finpilot.utils import delete_files_in_dir, encode_img_base64
 from fastapi.responses import JSONResponse
 
 async def query_non_image(
-    question, session_id, chat_option, redis
+    question, session_id, chat_option, pilot
 ):
-
-    # Create/Load the LangGraph Application according to Session ID
-    pilot = await get_session_app(
-        redis_client=redis,
-        session_id=session_id
-    )
 
     input = {
         "question" : question,
-        "chat_option" : chat_option
+        "chat_option" : chat_option,
+        "session_id" : session_id,
+        "documents" : [],
+        "generation" : "",
+        "source" : []
     }
 
     config = {
@@ -30,6 +27,10 @@ async def query_non_image(
     answer = await pilot.ainvoke(input=input, config=config)
     print("[Server Log] PILOT ANSWER INVOKED")
 
+    data_path = Path(os.getcwd()) / "data" / f"{session_id}"
+    if len(os.listdir(data_path)) > 0:
+        await delete_files_in_dir(data_path)
+
     # return answer
     return {
         "answer" : answer["generation"],
@@ -38,7 +39,7 @@ async def query_non_image(
 
 
 async def query_image(
-    question, session_id, chat_option, redis
+    question, session_id, chat_option, pilot
 ):
     
     # Set Folder Path for Image saving
@@ -50,15 +51,11 @@ async def query_image(
     if not os.path.exists(data_path):
         os.makedirs(data_path)
 
-    # Create/Load the LangGraph Application according to Session ID
-    pilot = await get_session_app(
-        redis_client=redis,
-        session_id=session_id
-    )
-
     input = {
         "question" : question,
-        "chat_option" : chat_option
+        "chat_option" : chat_option,
+        "session_id" : session_id,
+        "documents" : []
     }
 
     config = {
@@ -81,12 +78,12 @@ async def query_image(
         source_value = [source_value]
         
     # Encode Image to Base64 type
-    images = encode_img_base64(folder_path, png_files, source=source_value)
+    images = await encode_img_base64(folder_path, png_files, source=source_value)
 
     if chat_option == "데이터 시각화 (Upload)":
         # Delete Remaining CSV Files
         if len(os.listdir(data_path)) > 0:
-            delete_files_in_dir(data_path)
+            await delete_files_in_dir(data_path)
     
 
     # Return Image data as JSON Form

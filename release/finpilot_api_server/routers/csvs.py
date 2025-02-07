@@ -20,7 +20,7 @@ async def upload_csv(
 ):
     """
     클라이언트가 업로드한 CSV 파일과 함께 user_email 및 docs_id를 받아서,
-    session_id와 파일을 RunPod으로 전송.
+    session_id와 파일을  Model로 전달.
     """
     try:
         # 1. 파일 형식 확인 (CSV만 허용)
@@ -31,7 +31,7 @@ async def upload_csv(
         session = crud.create_session(db=db, user_email=user_email, docs_id=docs_id)
         session_id = session.session_id  # 세션 ID 가져오기
 
-        # 3. RunPod으로 파일과 session_id 전송
+        # 3. Model로 파일과 session_id 전달
         await upload_csvs(file=file, session_id=session_id)
 
         return {
@@ -56,15 +56,14 @@ async def delete_csv(
     db: Session = Depends(get_db)
 ):
     """
-    클라이언트가 요청한 user_email, docs_id, file_name을 받아서,
-    RunPod에 삭제 요청을 보냄.
+    클라이언트가 요청한 user_email, docs_id, file_name을 받아서, 삭제.
     """
     try:
         # 1. 세션 확인 또는 생성
         session = crud.create_session(db=db, user_email=user_email, docs_id=docs_id)
         session_id = session.session_id  # 세션 ID 가져오기
 
-        # 2. RunPod으로 삭제 요청 전송
+        # 2. 삭제
         await delete_csvs(session_id=session_id)
 
         return {

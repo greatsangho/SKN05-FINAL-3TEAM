@@ -44,8 +44,8 @@ async def create_pdf(
             file_name=file.filename,
         )
 
-        # 4. RunPod으로 파일과 session_id 전송 (await 사용)
-        await upload_pdfs(file=file, session_id=session_id, redis=pdfs_router.redis)
+        # 4. VertorDB에 저장
+        pdfs_router.vector_store = await upload_pdfs(file=file, session_id=session_id, vector_store=pdfs_router.vector_store)
 
         return new_pdf_file
 
@@ -70,7 +70,7 @@ async def delete_pdf(
 ):
     """
     PDF 삭제 엔드포인트:
-    1. RunPod에 PDF 삭제 요청 전송.
+    1. Vector Store에서 PDF 파일 삭제.
     2. 데이터베이스에서 PDF 파일 정보 확인 및 삭제.
     """
     try:
@@ -78,11 +78,11 @@ async def delete_pdf(
         session = crud.create_session(db=db, user_email=user_email, docs_id=docs_id)
         session_id = session.session_id  # 세션 ID 가져오기
 
-        # 2. RunPod에 PDF 삭제 요청 전송
-        runpod_response = await delete_pdfs(
+        # 2. Vector Store에서 PDF 파일 삭제
+        pdfs_router.vector_store = await delete_pdfs(
             file_name=file_name,
             session_id=session_id,
-            redis=pdfs_router.redis
+            vector_store=pdfs_router.vector_store
         )
 
         # 4. 데이터베이스에서 PDF 파일 확인
@@ -100,7 +100,7 @@ async def delete_pdf(
         if not success:
             raise HTTPException(status_code=500, detail="Failed to delete PDF file from database")
 
-        return {"message": "PDF file deleted successfully", "runpod_response": runpod_response}
+        return {"message": "PDF file deleted successfully"}
 
     except HTTPException as http_exc:
         raise http_exc  # FastAPI HTTP 예외는 그대로 전달

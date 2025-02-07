@@ -1,6 +1,8 @@
 ########################### Import Modules ###########################
 import os
 import numpy as np
+import asyncio
+from joblib import Parallel, delayed
 
 from langchain_core.prompts import ChatPromptTemplate
 from pydantic import BaseModel, Field
@@ -10,7 +12,6 @@ from langchain_core.messages import HumanMessage, AIMessage
 # Writer
 from langchain import hub
 from langchain_core.output_parsers import StrOutputParser
-from langgraph.types import StreamWriter
 
 # define tools
 from langchain_community.tools.tavily_search import TavilySearchResults
@@ -19,13 +20,21 @@ from langchain_community.tools.tavily_search import TavilySearchResults
 from langchain.schema import Document
 
 # load retriever
-from langchain_community.vectorstores import FAISS
+from langchain_chroma import Chroma
 
 # messages
 from langgraph.graph.message import add_messages
 
+def cvt_2_doc(doc):
+    return Document(
+        page_content=doc["content"],
+        metadata={
+            "source" : doc["url"]
+        }
+    )
+
 class ParagraphProcess:
-    def __init__(self, vector_store : FAISS):
+    def __init__(self, vector_store : Chroma):
         llm = ChatOpenAI(
             model = "gpt-4o-mini",
             api_key=os.getenv("OPENAI_API_KEY"),
@@ -123,8 +132,9 @@ class ParagraphProcess:
 
         self.web_search_tool = TavilySearchResults(k=3)
 
-
-        self.retrieve = vector_store.as_retriever()
+        self.retrieve = vector_store.as_retriever(
+            dynamic_update=True
+        )
 
     
     async def retrieve_node(self, state):
@@ -139,13 +149,24 @@ class ParagraphProcess:
         """
         print("[Graph Log] RETRIEVE ...")
         question = state["question"]
+        session_id = state["session_id"]
         
         try : 
             prev_documents = state["documents"]
-            retrieved_documents = await self.retrieve.ainvoke(question)
+            retrieved_documents = await self.retrieve.ainvoke(
+                input = question, 
+                filter={
+                        "session_id" : session_id
+                }
+            )
             documents = prev_documents + retrieved_documents
         except:
-            documents = await self.retrieve.ainvoke(question)
+            documents = await self.retrieve.ainvoke(
+                input = question, 
+                filter={
+                        "session_id" : session_id
+                }
+            )
 
         state["documents"] = documents
     
@@ -198,20 +219,8 @@ class ParagraphProcess:
         print("[Graph Log] FILTER DOCUMENTS ...")
         question = state["question"]
         documents = state["documents"]
-
-        filtered_docs = []
-        for doc in documents:
-            score = await self.retrieval_grader.ainvoke(
-                {"question" : question, "documents" : doc.page_content}
-            )
-            relevance_grade = score.relevance_score
-
-            if relevance_grade == "yes":
-                print("[Relevance Grader Log] GRADE : DOCUMENT RELEVANT")
-                filtered_docs.append(doc)
-            else:
-                print("[Relevance Grader Log] GRADE : DOCUMENT NOT RELEVANT")
-                continue
+        
+        filtered_docs = await self.filter_documents(question=question, documents=documents)
 
         state["documents"] = filtered_docs
         
@@ -259,14 +268,10 @@ class ParagraphProcess:
         else:
             query = str(question.content) if hasattr(question, 'content') else str(question)
 
-        docs = await self.web_search_tool.ainvoke({"query" : query})
-        web_results = [
-            Document(
-                page_content=doc["content"],
-                metadata={
-                    "source" : doc["url"]
-                }
-            ) for doc in docs]
+        docs = await self.web_search_tool.ainvoke({"query" : query, "days" : 30})
+        
+        web_results = Parallel(n_jobs=4)(delayed(cvt_2_doc)(doc) for doc in docs)
+
         documents.extend(web_results)
 
         state["documents"] = documents
@@ -343,3 +348,24 @@ class ParagraphProcess:
             print("[Graph Log] DECISION : GENERATION IS NOT GROUNDED IN DOCUMENTS, RE-TRY")
             
             return "not supported"
+    
+    async def document_filter(self, question, doc):
+        score = await self.retrieval_grader.ainvoke(
+            {"question" : question, "documents" : doc.page_content}
+        )
+        relevance_grade = score.relevance_score
+
+        if relevance_grade == "yes":
+            print("[Relevance Grader Log] GRADE : DOCUMENT RELEVANT")
+            return doc
+        else:
+            print("[Relevance Grader Log] GRADE : DOCUMENT NOT RELEVANT")
+            return None
+
+    async def filter_documents(self, question, documents):
+        tasks = [self.document_filter(question=question, doc=doc) for doc in documents]
+        filtered_documents = await asyncio.gather(*tasks)
+
+        return [doc for doc in filtered_documents if doc is not None]
+    
+    

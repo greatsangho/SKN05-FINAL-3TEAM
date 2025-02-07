@@ -1,43 +1,31 @@
 from finpilot.utils import parse_pdf
-from finpilot.session import get_session_vectorstore
-from finpilot.vectorstore import add_data_to_vectorstore_and_update_redis, delete_data_from_vectorstore_and_update_redis
+from finpilot.vectorstore import add_data_to_vectorstore, delete_data_from_vectorstore
 
 async def upload_pdfs(
-    session_id, file, redis
+    session_id, file, vector_store
 ):
     # Parsing PDF File And Transform as Document object
     documents = []
-    document = parse_pdf(file)
+    document = await parse_pdf(file=file, session_id=session_id)
     documents.append(document)
 
-    # Get VectorStore accoring to Session ID
-    vectorstore = get_session_vectorstore(
-        redis_client=redis,
-        session_id=session_id
-    )
-
     # Add data to Session VectorStore & Update Redis Server Data
-    add_data_to_vectorstore_and_update_redis(
-        redis_client=redis,
-        session_id=session_id,
-        vector_store=vectorstore,
+    vector_store = await add_data_to_vectorstore(
+        vector_store=vector_store,
         data=documents
     )
 
+    return vector_store
+
 
 async def delete_pdfs(
-    file_name, session_id, redis
+    file_name, session_id, vector_store
 ):
-    # Get VectorStore accoring to Session ID
-    vectorstore = get_session_vectorstore(
-        redis_client=redis,
-        session_id=session_id
-    )
-    
     # delete data from Session VectorStore & Update Redis Server Data
-    delete_data_from_vectorstore_and_update_redis(
-        redis_client=redis,
+    vector_store = await delete_data_from_vectorstore(
         session_id=session_id,
-        vector_store=vectorstore,
+        vector_store=vector_store,
         file_name=file_name
     )
+
+    return vector_store

@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, ConfigDict
 from datetime import datetime
 from typing import Optional, List
 
@@ -6,6 +6,7 @@ from typing import Optional, List
 # Member Schema
 # -------------------
 class MemberBase(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
     user_email: EmailStr
 
 class MemberCreate(MemberBase):
@@ -13,15 +14,12 @@ class MemberCreate(MemberBase):
 
 class Member(MemberBase):
     login_time: datetime
-
-    class Config:
-        orm_mode = True  # Enable ORM mode for compatibility with SQLAlchemy models
-
-
+    
 # -------------------
 # SessionID Schema
 # -------------------
 class SessionIDBase(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
     user_email: EmailStr
     docs_id: str
 
@@ -31,14 +29,12 @@ class SessionIDCreate(SessionIDBase):
 class SessionID(SessionIDBase):
     session_id: str  # Unique session identifier
 
-    class Config:
-        orm_mode = True
-
 
 # -------------------
 # QnA Schema
 # -------------------
 class QnABase(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
     user_email: EmailStr
     docs_id: str
 
@@ -55,14 +51,11 @@ class QnA(QnABase):
     ask_time: datetime  # Automatically set by the database
     source: List[str]  # List of references
 
-    class Config:
-        orm_mode = True
-
-
 # -------------------
 # PDFFile Schema
 # -------------------
 class PDFFileBase(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
     user_email: EmailStr
     docs_id: str
 
@@ -79,13 +72,11 @@ class PDFFile(PDFFileBase):
     file_name: str
     file_time: datetime  # Automatically set by the database
 
-    class Config:
-        orm_mode = True
-
 # -------------------
 # CSVFile delete
 # -------------------
 class DeleteCSVRequest(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
     user_email: str
     docs_id: str
     file_name: str

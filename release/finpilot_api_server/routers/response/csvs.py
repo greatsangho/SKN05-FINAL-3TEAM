@@ -14,7 +14,7 @@ async def upload_csvs(
     
     # Delete Any Remaing CSV Files
     if len(os.listdir(upload_path)) > 0:
-        delete_files_in_dir(upload_path)
+        await delete_files_in_dir(upload_path)
 
     # Set File Path
     upload_file_path = upload_path / file.filename
@@ -38,4 +38,4 @@ async def delete_csvs(
     
     # Delete Any Remaing CSV Files
     if len(os.listdir(delete_path)) > 0:
-        delete_files_in_dir(delete_path)
+        await delete_files_in_dir(delete_path)
