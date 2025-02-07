@@ -207,8 +207,10 @@ class DraftProcess:
         async def fetch_webpages_scrape(urls: List[str]) -> str:
             """Scrape the provided web pages for detailed information."""
             loader = WebBaseLoader(urls)
-            docs = await loader.aload()
-            docs = await asyncio.gather(*docs)
+            async def load_docs(loader):
+                docs = await loader.aload()
+                return docs
+            docs = await asyncio.run(load_docs(loader))
             scrape_result = "\n\n".join(
                 [f'<Document name="{doc.metadata.get("title", "")}">\n{doc.page_content}\n</Document>' for doc in docs]
             )
