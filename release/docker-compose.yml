@@ -1,0 +1,68 @@
+version: '3.8'
+
+services:
+  fastapi:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: fastapi
+    platform: linux/amd64
+    expose:
+      - "8000"
+    networks:
+      - app-network
+    env_file:
+      - .env
+    environment:
+      - TZ=Asia/Seoul
+      - SECRET_KEY=${SECRET_KEY}
+      - DATABASE_URL=${DATABASE_URL}
+      - NAMESPACE_UUID=${NAMESPACE_UUID}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - TAVILY_API_KEY=${TAVILY_API_KEY}
+      - USER_AGENT=${USER_AGENT}
+      - DART_API_KEY=${DART_API_KEY}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+
+  swag:
+    image: lscr.io/linuxserver/swag:latest
+    container_name: swag
+    platform: linux/amd64
+    depends_on:
+      fastapi:
+        condition: service_healthy
+    cap_add:
+      - NET_ADMIN
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/site-confs:/config/nginx/site-confs  # 설정 파일 매핑
+      - ./certificates:/etc/letsencrypt
+    env_file:
+      - .env
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Asia/Seoul
+      - URL=finpilotback.duckdns.org
+      - SUBDOMAINS=
+      - VALIDATION=duckdns
+      - DUCKDNSTOKEN=${DUCKDNSTOKEN}
+      - EMAIL=greatsangho@gmail.com
+      - STAGING=true  # 테스트 시 true로 변경
+    networks:
+      - app-network
+    restart: unless-stopped
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  certificates:
+    driver: local
