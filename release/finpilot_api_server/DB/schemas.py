@@ -6,8 +6,10 @@ from typing import Optional, List
 # Member Schema
 # -------------------
 class MemberBase(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
     user_email: EmailStr
+
+    class Config:
+        orm_mode = True
 
 class MemberCreate(MemberBase):
     pass  # No additional fields for creation
@@ -19,9 +21,11 @@ class Member(MemberBase):
 # SessionID Schema
 # -------------------
 class SessionIDBase(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
     user_email: EmailStr
     docs_id: str
+
+    class Config:
+        orm_mode = True
 
 class SessionIDCreate(SessionIDBase):
     pass  # No additional fields for creation
@@ -34,9 +38,11 @@ class SessionID(SessionIDBase):
 # QnA Schema
 # -------------------
 class QnABase(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
     user_email: EmailStr
     docs_id: str
+
+    class Config:
+        orm_mode = True
 
 class QnACreate(QnABase):
     question: str
@@ -55,14 +61,19 @@ class QnA(QnABase):
 # PDFFile Schema
 # -------------------
 class PDFFileBase(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
     user_email: EmailStr
     docs_id: str
+
+    class Config:
+        orm_mode = True
 
 # 요청 데이터 모델 정의
 class DeletePDFRequest(BaseModel):
     session_id: str
     file_name: str
+
+    class Config:
+        orm_mode = True
 
 class PDFFileCreate(PDFFileBase):
     file_name: str  # Required field for creating a PDF file entry
@@ -76,7 +87,9 @@ class PDFFile(PDFFileBase):
 # CSVFile delete
 # -------------------
 class DeleteCSVRequest(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-    user_email: str
+    user_email: EmailStr  # EmailStr으로 타입 일관화
     docs_id: str
     file_name: str
+
+    class Config:
+        orm_mode = True
