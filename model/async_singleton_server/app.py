@@ -2,6 +2,7 @@
 # Base Modules
 import os
 from pathlib import Path
+import asyncio
 # FinPilot Modules
 from finpilot.request_model import QueryRequestModel, DeleteFileRequestModel
 from finpilot.vectorstore import add_data_to_vectorstore
@@ -102,7 +103,7 @@ async def query(
         print("[Server Log] PILOT ANSWER INVOKED")
 
         if len(os.listdir(data_path)) > 0:
-            delete_files_in_dir(data_path)
+            await delete_files_in_dir(data_path)
 
         # return answer
         return JSONResponse(content={
@@ -127,12 +128,12 @@ async def query(
             raise HTTPException(status_code=404, detail="No PNG files found in the folder")
 
         # Encode Image to Base64 type
-        images = encode_img_base64(chart_path, png_files, source=answer["source"])
+        images = await encode_img_base64(chart_path, png_files, source=answer["source"])
 
         if chat_option == "데이터 시각화 (Upload)":
             # Delete Remaining CSV Files
             if len(os.listdir(data_path)) > 0:
-                delete_files_in_dir(data_path)
+                await delete_files_in_dir(data_path)
         
         return JSONResponse(content={
             "images": images
@@ -152,14 +153,14 @@ async def upload_pdf(
     
     # Parsing PDF File And Transform as Document object
     documents = []
-    document = parse_pdf(
+    document = await parse_pdf(
         file=file, 
         session_id=session_id
     )
     documents.append(document)
 
     global vector_store
-    vector_store = add_data_to_vectorstore(
+    vector_store = await add_data_to_vectorstore(
         vector_store=vector_store,
         data=documents
     )
@@ -184,7 +185,7 @@ async def upload_csv(
     
     # Delete Any Remaing CSV Files
     if len(os.listdir(upload_path)) > 0:
-        delete_files_in_dir(upload_path)
+        await delete_files_in_dir(upload_path)
 
     # Set File Path
     upload_file_path = upload_path / file.filename
@@ -216,7 +217,7 @@ async def delete_pdf(
     
     # delete data from Session VectorStore & Update Redis Server Data
     global vector_store
-    vector_store = delete_data_from_vectorstore(
+    vector_store = await delete_data_from_vectorstore(
         vector_store=vector_store,
         file_name=file_name,
         session_id=session_id
@@ -246,7 +247,7 @@ async def delete_csv(
     
     # Delete Any Remaing CSV Files
     if len(os.listdir(delete_path)) > 0:
-        delete_files_in_dir(delete_path)
+        await delete_files_in_dir(delete_path)
     
     # Return Status (Task Complete)
     return {"status" : "success"}
