@@ -2,7 +2,7 @@
 FROM python:3.11
 
 # Install Redis Server
-RUN apt-get update && apt-get install -y redis-server
+RUN apt-get update
 
 # Set working directory
 WORKDIR /app
@@ -17,4 +17,4 @@ RUN pip install -r requirements.txt
 EXPOSE 6379 8000
 
 # Define entrypoint
-CMD ["bash", "-c", "redis-server & sleep 5 && python main.py"]
+CMD ["gunicorn", "main:app", "--workers", "3", "--worker-class", "uvicorn.workers.UvicornWorker", "--bind", "0.0.0.0:8000", "--access-logfile", "-"]
