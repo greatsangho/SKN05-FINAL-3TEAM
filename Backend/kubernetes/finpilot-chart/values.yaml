@@ -34,7 +34,7 @@ ingress:
   className: "nginx"  # 사용할 Ingress 클래스
   annotations:
     kubernetes.io/ingress.class: "nginx"
-    cert-manager.io/cluster-issuer: "letsencrypt-prod"  # cert-manager ClusterIssuer 이름 (테스트 시는 staging 사용 가능)
+    cert-manager.io/cluster-issuer: "letsencrypt-staging" # "letsencrypt-prod"  # cert-manager ClusterIssuer 이름 (테스트 시는 staging 사용 가능)
     acme.cert-manager.io/http01-edit-in-place: "true"
   hosts:
     - host: "finpilot.duckdns.org"  # 도메인 이름을 실제 사용하는 값으로 업데이트
