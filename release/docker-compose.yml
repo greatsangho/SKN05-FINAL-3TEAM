@@ -51,7 +51,7 @@ services:
       - TZ=Asia/Seoul
       - URL=finpilotback.duckdns.org
       - SUBDOMAINS=
-      - VALIDATION=duckdns
+      - VALIDATION=http # duckdns
       - DUCKDNSTOKEN=${DUCKDNSTOKEN}
       - EMAIL=greatsangho@gmail.com
       - STAGING=true  # 테스트 시 true로 변경
