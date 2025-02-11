@@ -95,8 +95,10 @@ h2 {
 .chat-message.answer .apply-btn {
     display: none; /* 기본적으로 숨김 */
     position: absolute;
-    top: 5px; /* 우측 상단 위치 */
-    right: 5px; /* Copy 버튼 오른쪽에 위치 */
+    /* top: 5px; */ /* 우측 상단 위치 */
+    bottom: 5px;
+    right: 5px; 
+    /* left: 55px; */
     background-color: transparent; /* 버튼 배경을 투명하게 설정 */
     border: none;
     border-radius: 5px;
@@ -161,8 +163,10 @@ h2 {
 .chat-message.answer .copy-btn {
     display: none; /* 기본적으로 숨김 */
     position: absolute;
-    top: 5px;
-    right: 30px; /* Apply 버튼 왼쪽에 위치 */
+    /* top: 5px; */
+    bottom: 5px;
+    right: 30px;
+    /* left: 30px; */
     background-color: transparent; /* 버튼 배경을 투명하게 설정 */
     border: none;
     border-radius: 5px;
@@ -227,8 +231,10 @@ h2 {
 .chat-message.answer .source-btn {
     display: none; /* 기본적으로 숨김 */
     position: absolute;
-    top: 5px;
-    right: 55px; /* 버튼 왼쪽에 위치 */
+    /* top: 5px; */
+    bottom: 5px;
+    right: 55px; 
+    /* left: 5px; */
     background-color: transparent; /* 버튼 배경을 투명하게 설정 */
     border: none;
     border-radius: 5px;

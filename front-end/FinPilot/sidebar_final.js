@@ -157,101 +157,7 @@ function showLoadingUI() {
   loadRandomQuiz();  // 금융 퀴즈 로드
 }
 
-// let progressInterval = null;
-// // ⏳ 2️⃣ 프로그레스 바 업데이트
-// function startLoadingAnimation(currentSelectedOption) {
-//   const progressBar = document.getElementById("progress-bar");
-//   const loadingMessage = document.getElementById("loading-message");
-//   const spinner = document.getElementById("loading-spinner_");
-
-//   if (!progressBar || !loadingMessage) {
-//       console.error("❌ ERROR: progressBar 또는 loadingMessage 요소를 찾을 수 없음.");
-//       return;
-//   }
-
-//   console.log("✅ startLoadingAnimation 실행됨!");
-//   let estimatedProgress = 1; // ✅ 진행률 초기화 (1%부터 시작)
-
-//   // ⏳ currentSelectedOption에 따라 maxTime, minTime 설정
-//   let maxTime, minTime;
-
-//   if (currentSelectedOption === "초안 작성") {
-//       maxTime = 60000 * 5; // 5분 
-//       minTime = 2000; // 2초
-//   } else if (currentSelectedOption === "단락 생성") { // 이거 시간 계산 해보기
-//       maxTime = 30000; // 30초 
-//       minTime = 2000; // 2초 
-//   } else if (currentSelectedOption === "요약 / 확장") {
-//       maxTime = 5000; // 5초 
-//       minTime = 2000; // 2초 
-//   } else if (currentSelectedOption === "데이터 시각화 (Web)") {
-//       maxTime = 60000 * 2; // 2분 
-//       minTime = 2000; // 2초 
-//   } else {
-//       maxTime = 60000 * 2; // 2분
-//       minTime = 2000; // 2초 
-//   }
-
-//   const startTime = Date.now();
-//   let isResponseReceived = false; // 응답 도착 상태 초기화
-
-//   // 🚀 초기 진행률을 1%부터 시작
-//   progressBar.style.width = "1%";
-//   loadingMessage.textContent = `FinPilot이 답변을 준비하는 중.. 1%`;
-//   spinner.style.display = "inline-block";
-
-//   function updateProgress() {
-//       if (isResponseReceived) return;
-
-//       const elapsedTime = Date.now() - startTime;
-//       estimatedProgress = Math.min((elapsedTime / maxTime) * 100, 99); // 최대 99%까지만 증가 // 여기서 렛 뺌
-
-//       // 🚀 진행률이 갑자기 99%로 올라가는 것 방지 (최소 증가량 조절)
-//       if (estimatedProgress < parseFloat(progressBar.style.width)) return;
-
-//       progressBar.style.width = estimatedProgress + "%";
-//       loadingMessage.textContent = `FinPilot이 답변을 준비하는 중.. ${Math.floor(estimatedProgress)}%`;
-//       console.log(`🟢 진행률 업데이트: ${Math.floor(estimatedProgress)}%`);
-
-//       if (elapsedTime >= maxTime) {
-//           console.log("🚨 서버 응답이 늦음! 프로그레스 바 100% 유지 중...");
-//           clearInterval(progressInterval); // ⛔ 업데이트 중단
-//           progressInterval = null;
-//       }
-//   }
-
-//   // 🚀 200ms 간격 대신, `maxTime`에 따라 업데이트 주기 조정
-//   let updateInterval = Math.max(maxTime / 100, 200); // 최소 200ms 보장
-//   console.log(`🔄 진행 바 업데이트 주기: ${updateInterval}ms`);
-//   progressInterval = setInterval(updateProgress, updateInterval);
-
-//   // 🚀 서버 응답이 도착하면 프로그레스 바를 즉시 100%로 만들기
-//   function completeProgress() {
-//         if (isResponseReceived) return;
-//         isResponseReceived = true;
-
-//         if (progressInterval) {
-//             clearTimeout(progressInterval);
-//             progressInterval = null;
-//         }
-
-//         const remainingTime = Math.max(minTime - (Date.now() - startTime), 0);
-//         setTimeout(() => {              
-//             progressBar.style.width = "100%";
-//             loadingMessage.textContent = "FinPilot이 마지막 점검을 마치는 중입니다.";
-//             spinner.style.display = "none";
-//             console.log("✅ 프로그레스 바 100% 도달!");
-
-//             // ✅ 다음 요청을 위해 진행률 다시 초기화
-//             estimatedProgress = 1;
-//         }, remainingTime);
-//   }
-
-//   return completeProgress; // ✅ 서버 응답 시 실행
-// }
-
 let progressInterval = null;
-
 // ⏳ 2️⃣ 프로그레스 바 업데이트
 function startLoadingAnimation(currentSelectedOption) {
     const progressBar = document.getElementById("progress-bar");
@@ -273,19 +179,19 @@ function startLoadingAnimation(currentSelectedOption) {
 
     let maxTime, minTime;
     if (currentSelectedOption === "초안 작성") {
-        maxTime = 2000 * 67; // 4.5초 * 67
+        maxTime = 60000 * 5; // 5분
         minTime = 2000; // 2초
     } else if (currentSelectedOption === "단락 생성") {
-        maxTime = 2000 * 7; // 4.5 * 7초
+        maxTime = 30000; // 30초
         minTime = 2000; // 2초
     } else if (currentSelectedOption === "요약 / 확장") {
-        maxTime = 2000; // 4.5초 
+        maxTime = 5000; // 5초
         minTime = 2000; // 2초
     } else if (currentSelectedOption === "데이터 시각화 (Web)") {
-        maxTime = 2000 * 27; // 
+        maxTime = 60000 * 2; // 2분 
         minTime = 2000; // 2초
     } else {
-        maxTime = 2000 * 27; // 
+        maxTime = 60000 * 2; // 2분
         minTime = 2000; // 2초
     }
 
@@ -531,7 +437,7 @@ document.getElementById("send-btn").addEventListener("click", async () => {
     // 로딩 스피너 표시
     // showLoadingSpinner();
     showLoadingUI(); // 🚀 로딩 UI 실행
-    const completeProgress = startLoadingAnimation(); // 🚀 프로그레스 바 시작
+    const completeProgress = startLoadingAnimation(currentSelectedOption); // 🚀 프로그레스 바 시작
 
     try {
         const requestData = {
@@ -808,11 +714,13 @@ document.getElementById("send-btn").addEventListener("click", async () => {
             // 일반 텍스트 메시지 처리 (마크다운 파싱 적용)
             const botMessage = result.answer || "서버에서 응답을 받지 못했습니다.";
             const askTimeFormatted = new Date(new Date(result.ask_time).getTime() + 9 * 60 * 60 * 1000).toLocaleString("ko-KR") || "시간 정보 없음";
+            // const askTimeFormatted = new Date(new Date(result.ask_time).getTime() + 9 * 60 * 60 * 1000)
+                // .toLocaleString("ko-KR", { year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" }) || "시간 정보 없음";
 
             botMessageElement.innerHTML = `
                 <img src="icon_circle.png" alt="FinPilot Icon" width="32" height="32" style="margin-right: 3px; vertical-align: middle;"> 
                 <br><span>${marked.parse(botMessage)}</span>
-                <br><small style="float: right; color: #888;">${askTimeFormatted}</small>`;
+                <br><small style="float: left; color: #888;">${askTimeFormatted}</small>`;
         }
 
         // Apply 버튼 추가
@@ -884,11 +792,9 @@ document.getElementById("send-btn").addEventListener("click", async () => {
 
     } catch (error) {
         console.error("❌ 오류:", error);
-        alert("서버에서 답변을 가져오는 중 오류 발생.\n\n'데이터 시각화 (Web)' 옵션일 경우, 해당 정보를 웹에서 찾을 수 없어 오류가 발생했습니다.");
+        alert("서버에서 답변을 가져오는 중 오류 발생.", error);
         hideLoadingUI(); // 오류 발생 시 로딩 UI 제거
     } finally {
-        // hideLoadingSpinner();
-        // hideLoadingUI();
         completeProgress(); // 🚀 서버 응답 도착 → 프로그레스 바 100% 도달
         setTimeout(() => {
             hideLoadingUI();
@@ -1015,7 +921,6 @@ async function copyElementToClipboard(element) {
   const blob = new Blob([htmlContent], { type: "text/html" });
 
   await navigator.clipboard.write([
-    // navigator.clipboard.Textwrite
       new ClipboardItem({ "text/html": blob })
   ]);
 }
@@ -1190,6 +1095,7 @@ async function getAccessToken() {
       });
     });
 }
+
 // --------------------------------------------------------
 // 📌 출처 버튼 기능 함수 (모달 UI + 출처 리스트 업데이트)
 // --------------------------------------------------------
@@ -1488,7 +1394,6 @@ async function delPdfToServer(fileName) {
       hideLoadingSpinner();
     }
 }
-
 
 // FastAPI 서버의 CSV 파일 삭제 함수 (비동기 함수)
 async function delcsvToServer(fileName) {
