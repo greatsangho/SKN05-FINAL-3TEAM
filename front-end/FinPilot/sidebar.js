@@ -72,7 +72,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             };
 
             // FastAPI 서버로 POST 요청
-            fetch('http://finpilotback.duckdns.org:8000/sessions/', { 
+            fetch('https://finpilotback.duckdns.org/sessions/', { 
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
@@ -152,16 +152,70 @@ function showLoadingUI() {
   loadingContainer.style.borderRadius = "10px";
   loadingContainer.style.boxShadow = "0px 4px 10px rgba(0, 0, 0, 0.1)";
 
-  startLoadingAnimation();  // 프로그레스 바 시작
+  startLoadingAnimation(currentSelectedOption);
+  // startLoadingAnimation();  // 프로그레스 바 시작
   displayRandomFinanceTip();  // 랜덤 금융 명언 표시
   loadRandomQuiz();  // 금융 퀴즈 로드
 }
 
 // ⏳ 2️⃣ 프로그레스 바 업데이트
-function startLoadingAnimation() {
+// function startLoadingAnimation() {
+//   const progressBar = document.getElementById("progress-bar");
+//   const loadingMessage = document.getElementById("loading-message");
+//   const spinner = document.getElementById("loading-spinner_"); // 스피너 가져오기
+
+//   if (!progressBar || !loadingMessage) {
+//       console.error("❌ ERROR: progressBar 또는 loadingMessage 요소를 찾을 수 없음.");
+//       return;
+//   }
+
+//   console.log("✅ startLoadingAnimation 실행됨!");
+
+//   const startTime = Date.now(); // ⏳ 요청 시작 시간 저장
+//   const maxTime = 10000; // 최대 대기 시간 (10초) 5분
+//   const minTime = 3000;  // 최소 진행 시간 (3초) 2분 30초
+//   let isResponseReceived = false; // 서버 응답 도착 여부
+
+//   function updateProgress() {
+//       if (isResponseReceived) return; // 🚀 응답이 도착하면 프로그레스 바 중지
+
+//       const elapsedTime = Date.now() - startTime;
+//       let estimatedProgress = Math.min((elapsedTime / maxTime) * 100, 99); // 🚀 최대 99%까지만 증가
+
+//       progressBar.style.width = estimatedProgress + "%";
+//       loadingMessage.textContent = `FinPilot이 답변을 준비하는 중.. ${Math.floor(estimatedProgress)}%`;
+//       spinner.style.display = "inline-block"; // ✅ 스피너 표시
+//       console.log(`🟢 진행률 업데이트: ${Math.floor(estimatedProgress)}%`);
+
+//       if (elapsedTime < maxTime) {
+//           setTimeout(updateProgress, 200); // 🚀 200ms마다 업데이트
+//       } else {
+//           console.log("🚨 서버 응답이 늦음! 프로그레스 바 100% 유지 중...");
+//       }
+//   }
+
+//   updateProgress();
+
+//   // 🚀 서버 응답이 도착하면 프로그레스 바를 즉시 100%로 만들기
+//   function completeProgress() {
+//       isResponseReceived = true; // 응답 도착 플래그 설정
+//       const remainingTime = Math.max(minTime - (Date.now() - startTime), 0); // 최소 진행 시간 보장
+//       setTimeout(() => {
+//           progressBar.style.width = "100%";
+//           loadingMessage.textContent = "답변 생성이 완료되었습니다!";
+//           spinner.style.display = "none"; // ✅ 스피너 숨김
+//           console.log("✅ 프로그레스 바 100% 도달!");
+//       }, remainingTime);
+//   }
+
+//   return completeProgress; // ✅ 이 함수를 서버 응답 시 실행
+// }
+
+// ⏳ 2️⃣ 프로그레스 바 업데이트
+function startLoadingAnimation(currentSelectedOption) {
   const progressBar = document.getElementById("progress-bar");
   const loadingMessage = document.getElementById("loading-message");
-  const spinner = document.getElementById("loading-spinner_"); // 스피너 가져오기
+  const spinner = document.getElementById("loading-spinner_");
 
   if (!progressBar || !loadingMessage) {
       console.error("❌ ERROR: progressBar 또는 loadingMessage 요소를 찾을 수 없음.");
@@ -170,35 +224,60 @@ function startLoadingAnimation() {
 
   console.log("✅ startLoadingAnimation 실행됨!");
 
-  const startTime = Date.now(); // ⏳ 요청 시작 시간 저장
-  const maxTime = 10000; // 최대 대기 시간 (10초)
-  const minTime = 3000;  // 최소 진행 시간 (3초)
-  let isResponseReceived = false; // 서버 응답 도착 여부
+  // ⏳ currentSelectedOption에 따라 maxTime, minTime 설정
+  let maxTime, minTime;
+
+  if (currentSelectedOption === "초안 작성") {
+      maxTime = 420000; // 7분 
+      minTime = 240000; // 4분 
+  } else if (currentSelectedOption === "단락 생성") {
+      maxTime = 180000; // 3분 
+      minTime = 30000; // 30초 
+  } else if (currentSelectedOption === "요약 / 확장") {
+      maxTime = 10000; // 10초 
+      minTime = 3000; // 3초 
+  } else if (currentSelectedOption === "데이터 시각화 (Web)") {
+      maxTime = 60000*3; // 3분 
+      minTime = 60000; // 1분 
+  } else {
+      maxTime = 60000*3; // 기본값 3분 
+      minTime = 60000; // 기본 최소 1분 
+  }
+
+  const startTime = Date.now();
+  let isResponseReceived = false;
+  let progressInterval;
 
   function updateProgress() {
-      if (isResponseReceived) return; // 🚀 응답이 도착하면 프로그레스 바 중지
+      if (isResponseReceived) return;
 
       const elapsedTime = Date.now() - startTime;
-      let estimatedProgress = Math.min((elapsedTime / maxTime) * 100, 99); // 🚀 최대 99%까지만 증가
+      let estimatedProgress = Math.min((elapsedTime / maxTime) * 100, 99); // 최대 99%까지만 증가
 
       progressBar.style.width = estimatedProgress + "%";
       loadingMessage.textContent = `FinPilot이 답변을 준비하는 중.. ${Math.floor(estimatedProgress)}%`;
-      spinner.style.display = "inline-block"; // ✅ 스피너 표시
+      spinner.style.display = "inline-block";
       console.log(`🟢 진행률 업데이트: ${Math.floor(estimatedProgress)}%`);
 
-      if (elapsedTime < maxTime) {
-          setTimeout(updateProgress, 200); // 🚀 200ms마다 업데이트
-      } else {
+      if (elapsedTime >= maxTime) {
           console.log("🚨 서버 응답이 늦음! 프로그레스 바 100% 유지 중...");
+          clearInterval(progressInterval); // ⛔ 업데이트 중단
       }
   }
 
-  updateProgress();
+  // 200ms마다 updateProgress 실행
+  progressInterval = setInterval(updateProgress, 200);
 
   // 🚀 서버 응답이 도착하면 프로그레스 바를 즉시 100%로 만들기
   function completeProgress() {
-      isResponseReceived = true; // 응답 도착 플래그 설정
-      const remainingTime = Math.max(minTime - (Date.now() - startTime), 0); // 최소 진행 시간 보장
+      if (isResponseReceived) return; // 중복 실행 방지
+      isResponseReceived = true;
+
+      clearInterval(progressInterval); // ⛔ 프로그레스 업데이트 중단
+
+      const elapsedTime = Date.now() - startTime;
+      const remainingTime = Math.max(minTime - elapsedTime, 0); // 최소 진행 시간 보장
+
       setTimeout(() => {
           progressBar.style.width = "100%";
           loadingMessage.textContent = "답변 생성이 완료되었습니다!";
@@ -207,8 +286,12 @@ function startLoadingAnimation() {
       }, remainingTime);
   }
 
-  return completeProgress; // ✅ 이 함수를 서버 응답 시 실행
+  return completeProgress; // ✅ 서버 응답 시 실행
 }
+
+
+
+
 
 // 🎯 3️⃣ 로딩 완료 후 UI 숨기기 (화면 흐림 제거 + 로딩 UI 숨김)
 function hideLoadingUI() {
@@ -399,7 +482,7 @@ document.getElementById("send-btn").addEventListener("click", async () => {
             chat_option: currentSelectedOption
         };
 
-        const response = await fetch("http://finpilotback.duckdns.org:8000/qnas/", {
+        const response = await fetch("https://finpilotback.duckdns.org/qnas/", {
             method: 'POST',
             headers: {
                 'Accept': 'application/json',
@@ -1250,7 +1333,7 @@ async function sendPdfToServer(file) {
   showLoadingSpinner();
 
   try {
-      const response = await fetch("http://finpilotback.duckdns.org:8000/pdfs/", {
+      const response = await fetch("https://finpilotback.duckdns.org/pdfs/", {
           method: 'POST',
           body: formData
       });
@@ -1287,7 +1370,7 @@ async function sendcsvToServer(file) {
   showLoadingSpinner();
 
   try {
-      const response = await fetch("http://finpilotback.duckdns.org:8000/csvs/", {
+      const response = await fetch("https://finpilotback.duckdns.org/csvs/", {
           method: 'POST',
           body: formData
       });
@@ -1322,7 +1405,7 @@ async function delPdfToServer(fileName) {
     showLoadingSpinner();
 
     try {
-      const response = await fetch("http://finpilotback.duckdns.org:8000/pdfs/", {
+      const response = await fetch("https://finpilotback.duckdns.org/pdfs/", {
         method: 'DELETE',
         headers: {
             "Content-Type": "application/x-www-form-urlencoded",
@@ -1364,7 +1447,7 @@ async function delcsvToServer(fileName) {
   showLoadingSpinner();
 
   try {
-    const response = await fetch("http://finpilotback.duckdns.org:8000/csvs/", {
+    const response = await fetch("https://finpilotback.duckdns.org/csvs/", {
       method: 'DELETE',
       headers: {
             "Content-Type": "application/x-www-form-urlencoded",
@@ -1428,8 +1511,12 @@ chatOptionButton.addEventListener('click', () => {
 
 // ✅ 바깥 영역 클릭 시 드롭다운 닫기
 window.addEventListener("click", (event) => {
-  if (!chatDropdownMenu.contains(event.target) && !chatOptionButton.contains(event.target)) {
-    chatDropdownMenu.classList.toggle('hidden'); // 숨김/표시 전환
+  if (
+      !chatDropdownMenu.contains(event.target) && // 드롭다운 내부 클릭 X
+      !chatOptionButton.contains(event.target) && // 버튼 클릭 X
+      !chatDropdownMenu.classList.contains('hidden') // 드롭다운이 열려 있을 때만
+  ) {
+      chatDropdownMenu.classList.add('hidden'); // ❗ 'hidden' 클래스 추가 (무조건 닫기)
   }
 });
 
