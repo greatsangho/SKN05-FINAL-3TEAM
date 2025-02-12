@@ -34,7 +34,7 @@
       "open_in_tab": true,
       "page": "./web/login/login.html"
   },
-  "host_permissions": ["https://api.openai.com/*","https://docs.google.com/*", "https://www.googleapis.com/*, https://finpilotback.duckdns.org/*"],
+  "host_permissions": ["https://api.openai.com/*","https://docs.google.com/*", "https://www.googleapis.com/*", "https://finpilotback.duckdns.org/*"],
   "side_panel": {
     "default_path": "sidebar.html",
     "default_title": "FinPilot Assistant"
