@@ -1,0 +1,14 @@
+.gitignore
+config/
+*.pyc
+*.venv
+*venv
+*.env
+*OAuth
+*ERD
+.env
+__pycache__/
+*.pyc
+*.pyo
+.git/
+.gitignore

@@ -155,7 +155,6 @@ python-dotenv==1.0.1
 python-multipart==0.0.20
 pytz==2025.1
 PyYAML==6.0.2
-redis==5.2.1
 regex==2024.11.6
 requests==2.32.3
 requests-oauthlib==2.0.0
@@ -163,7 +162,6 @@ requests-toolbelt==1.0.0
 rich==13.9.4
 rich-toolkit==0.13.2
 rsa==4.9
-runpod==1.7.7
 s3transfer==0.11.2
 seaborn==0.13.2
 setuptools==75.8.0
