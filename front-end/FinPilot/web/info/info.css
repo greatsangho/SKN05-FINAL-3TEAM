@@ -4,7 +4,7 @@
 }
 .info {
   background: #050a24;
-  height: 3700px; /* 이걸로 전체 페이지 길이 조절 */
+  height: 4600px; /* 이걸로 전체 페이지 길이 조절 */
   position: relative;
   overflow: hidden;
 }
