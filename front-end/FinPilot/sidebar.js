@@ -122,9 +122,9 @@ function hideLoadingSpinner() {
   if (chatContainer) chatContainer.classList.remove("loading"); // 흐림 효과 제거
 }
 
-// --------------------------------------------------------
+// --------------------------------------------------------------------------------------------
 // 🚀 1️⃣ 로딩 UI 표시 함수 (화면 흐려짐 + 중앙에 로딩 UI 표시 -> 프로그레스 바 + 금융 명언/퀴즈)
-// --------------------------------------------------------
+// --------------------------------------------------------------------------------------------
 function showLoadingUI() {
   const loadingContainer = document.getElementById("loading-container");
   const chatContainer = document.querySelector(".chat-container");
@@ -435,7 +435,6 @@ document.getElementById("send-btn").addEventListener("click", async () => {
     chatBox.appendChild(userMessage);
 
     // 로딩 스피너 표시
-    // showLoadingSpinner();
     showLoadingUI(); // 🚀 로딩 UI 실행
     const completeProgress = startLoadingAnimation(currentSelectedOption); // 🚀 프로그레스 바 시작
 
@@ -714,8 +713,6 @@ document.getElementById("send-btn").addEventListener("click", async () => {
             // 일반 텍스트 메시지 처리 (마크다운 파싱 적용)
             const botMessage = result.answer || "서버에서 응답을 받지 못했습니다.";
             const askTimeFormatted = new Date(new Date(result.ask_time).getTime() + 9 * 60 * 60 * 1000).toLocaleString("ko-KR") || "시간 정보 없음";
-            // const askTimeFormatted = new Date(new Date(result.ask_time).getTime() + 9 * 60 * 60 * 1000)
-                // .toLocaleString("ko-KR", { year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" }) || "시간 정보 없음";
 
             botMessageElement.innerHTML = `
                 <img src="icon_circle.png" alt="FinPilot Icon" width="32" height="32" style="margin-right: 3px; vertical-align: middle;"> 
@@ -833,9 +830,9 @@ document.getElementById("user-input").addEventListener("keydown", (event) => {
     }
 });
 
-// ----------------------------------------
+// ------------------------------------------
 // Google Docs에 텍스트 추가 (마크다운 적용 x)
-// ----------------------------------------
+// ------------------------------------------
 function removeMarkdownSyntax(content) {
   return content.replace(/[#*]/g, ""); // '#'과 '*' 제거
 }
@@ -901,9 +898,9 @@ async function appendToGoogleDoc(content) {
   }
 }
 
-// ---------------------------------
+// -------------------------------
 // 클립보드에 HTML 콘텐츠 복사 함수
-// ---------------------------------
+// -------------------------------
 async function copyElementToClipboard(element) {
   if (!element) {
       alert("복사할 내용이 없습니다.");
@@ -925,9 +922,9 @@ async function copyElementToClipboard(element) {
   ]);
 }
 
-// ---------------------------------------------------------------------------------
+// -------------------------------------------------------------------------------
 // Google Docs에 이미지 추가 (Google Drive에 이미지를 업로드하고 Google Docs에 삽입)
-// ---------------------------------------------------------------------------------
+// -------------------------------------------------------------------------------
 async function appendImageToGoogleDoc(base64Image, imageType = "image/png") {
     showLoadingSpinner();
     try {
@@ -1096,9 +1093,9 @@ async function getAccessToken() {
     });
 }
 
-// --------------------------------------------------------
+// ------------------------------------------------------
 // 📌 출처 버튼 기능 함수 (모달 UI + 출처 리스트 업데이트)
-// --------------------------------------------------------
+// ------------------------------------------------------
 function showSourceModal(sourceData) {
   const sourceModal = document.getElementById("source-modal");
   const sourceList = document.getElementById("source-list");
@@ -1137,9 +1134,9 @@ window.addEventListener("click", (event) => {
   }
 });
 
-// ---------------
-//   환영 인사
-// ---------------
+// ------------
+//  환영 인사
+// ------------
 document.addEventListener('DOMContentLoaded', () => {
   // Greeting 요소 가져오기
   const greetingElement = document.getElementById('greeting');
@@ -1156,7 +1153,10 @@ document.addEventListener('DOMContentLoaded', () => {
       greetingElement.textContent = `로그인이 필요합니다`;
       greetingElement.style.display = 'block';
       greetingElement.classList.add('login-required'); // 흐림 클래스 추가
-      document.getElementById("user-input").disabled = true;
+      document.getElementById("user-input").disabled = true; // 채팅창 비활성화
+      document.getElementById("file_upload-btn").disabled = true; // 파일첨부 버튼 비활성화
+      document.getElementById("chat_option-btn").disabled = true; // 채팅옵션 버튼 비활성화
+      document.getElementById("send-btn").disabled = true; // 전송 버튼 비활성화
     }
   });
 });
@@ -1436,9 +1436,9 @@ async function delcsvToServer(fileName) {
   }
 }
 
-// ---------------------
-//    채팅 옵션 선택
-// ---------------------
+// -------------------
+//   채팅 옵션 선택
+// -------------------
 // 드롭다운 버튼 및 메뉴 참조
 const chatOptionButton = document.getElementById('chat_option-btn');
 const chatOptionImage = chatOptionButton.querySelector('img');  // 이미지 요소 참조
@@ -1455,8 +1455,7 @@ const optionImages = {
 };
 
 // 기본값 설정
-// currentSelectedOption을 if문 같은걸 사용해서 각 옵션마다 다른 이벤트를 주면 될듯
-let currentSelectedOption = "단락 생성"; // 디폴트 값
+let currentSelectedOption = "요약 / 확장"; // 디폴트 값
 
 // 기본값 화면 상단 표시
 selectedOptionDiv.innerHTML = `
@@ -1495,7 +1494,6 @@ dropdownItems.forEach((item) => {
         item.classList.add('selected');
 
         // 선택된 옵션 업데이트
-        // const currentSelectedOption = item.textContent.trim(); // 항목의 텍스트 가져오기
         currentSelectedOption = item.textContent.trim(); 
         
         // 화면 상단에 표시

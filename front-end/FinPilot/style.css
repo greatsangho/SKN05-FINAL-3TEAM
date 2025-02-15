@@ -66,17 +66,14 @@ h2 {
     max-width: 70%;
     font-size: 14px;
     line-height: 1.5;
-    /* line-height: normal; */
 }
 
 .chat-message.question {
-    /* background-color: #C9E6FC; */
     background-color: #E7F2FC;
     align-self: flex-end;
     text-align: justify;
     padding: 10px;
     border-radius: 15px;
-
     white-space: pre-line;  /* 줄바꿈 및 공백 유지 */
     word-break: break-word; /* 긴 단어 줄바꿈 */
 }
@@ -84,7 +81,6 @@ h2 {
 .chat-message.answer {
     align-self: flex-start;
     text-align: justify;
-    /* background-color: #C9E6FC; */
     background-color: #F9F9F9;
     padding: 10px;  
     border-radius: 15px;
@@ -95,10 +91,8 @@ h2 {
 .chat-message.answer .apply-btn {
     display: none; /* 기본적으로 숨김 */
     position: absolute;
-    /* top: 5px; */ /* 우측 상단 위치 */
     bottom: 5px;
     right: 5px; 
-    /* left: 55px; */
     background-color: transparent; /* 버튼 배경을 투명하게 설정 */
     border: none;
     border-radius: 5px;
@@ -163,10 +157,8 @@ h2 {
 .chat-message.answer .copy-btn {
     display: none; /* 기본적으로 숨김 */
     position: absolute;
-    /* top: 5px; */
     bottom: 5px;
     right: 30px;
-    /* left: 30px; */
     background-color: transparent; /* 버튼 배경을 투명하게 설정 */
     border: none;
     border-radius: 5px;
@@ -231,10 +223,8 @@ h2 {
 .chat-message.answer .source-btn {
     display: none; /* 기본적으로 숨김 */
     position: absolute;
-    /* top: 5px; */
     bottom: 5px;
     right: 55px; 
-    /* left: 5px; */
     background-color: transparent; /* 버튼 배경을 투명하게 설정 */
     border: none;
     border-radius: 5px;
@@ -379,6 +369,21 @@ h2 {
     padding: 10px 50px 10px 15px; /* 기존 패딩 유지 */
     border-radius: 50px; /* 기존의 둥근 모서리 유지 */
     font-size: 15px; /* 기존 글꼴 크기 유지 */
+    cursor: not-allowed; /* 클릭 불가 커서 */
+    opacity: 0.7; /* 약간의 투명도 추가 */
+}
+
+#file_upload-btn:disabled {
+    cursor: not-allowed; /* 클릭 불가 커서 */
+    opacity: 0.7; /* 약간의 투명도 추가 */
+}
+
+#chat_option-btn:disabled {
+    cursor: not-allowed; /* 클릭 불가 커서 */
+    opacity: 0.7; /* 약간의 투명도 추가 */
+}
+
+#send-btn:disabled {
     cursor: not-allowed; /* 클릭 불가 커서 */
     opacity: 0.7; /* 약간의 투명도 추가 */
 }
@@ -664,7 +669,6 @@ h2 {
     overflow-y: hidden; /* 세로 스크롤 비활성화 */
     border-radius: 8px; /* 둥근 모서리 */
     padding: 0px;
-    /* background-color: #f9f9f9; */
     background-color: #FFFFFF;
     margin-top: 5px;
     height: 60px; /* 높이 고정 */
@@ -847,7 +851,6 @@ h2 {
     height: 100%;
     width: 0%;
     background: linear-gradient(to right, #00E5FF, #00C853);
-    /* background: linear-gradient(to right, #42A5F5, #1565C0); */
     border-radius: 10px;
     transition: width 0.4s ease-in-out;
 }
@@ -891,7 +894,6 @@ h2 {
 
 .quiz-option:hover {
     background: linear-gradient(to right, #42A5F5, #1E88E5);
-    /* background: linear-gradient(to right, #5ebef7, #0088cc); */
 }
 
 /* 📝 로딩 메시지 스타일 */
@@ -905,7 +907,6 @@ h2 {
 
 /* 모달 기본 스타일 */
 #source-modal {
-    /* display: none;  */
     position: fixed;
     z-index: 1000;
     left: 0;
@@ -925,7 +926,6 @@ h2 {
     border-radius: 12px;
     box-shadow: 0px 6px 15px rgba(0, 0, 0, 0.2);
     width: 400px;
-    /* text-align: center; */
     text-align: left;
     position: relative;
     font-family: 'Inter', sans-serif;
@@ -1009,7 +1009,6 @@ h2 {
 /* 로딩 메시지 컨테이너 */
 #loading-message-container {
     display: flex;
-    /* align-items: center; */
     align-items: baseline;
     gap: 8px; /* 텍스트와 스피너 간격 */
 }
