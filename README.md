@@ -78,7 +78,7 @@
 1. [About FinPilot](#-About-FinPilot)
 2. [Key Functions](#-Key-Functions)
 3. [Requirements](#-Requirements)
-4. [How to Get Start in Local](#-How-to-Get-Start-in-Local)
+4. [How to Get Start in Local](#How-to-Get-Start-in-Local)
 5. [File Structure](#-File-Structure)
 6. [Contributors](#-Contributors)
 7. [Contact](#-Contact)
