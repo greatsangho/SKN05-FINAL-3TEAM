@@ -72,7 +72,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             };
 
             // FastAPI 서버로 POST 요청
-            fetch('http://finpilotback.duckdns.org:8000/sessions/', {
+            fetch('https://finpilotback.duckdns.org/sessions/', { 
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
@@ -122,6 +122,292 @@ function hideLoadingSpinner() {
   if (chatContainer) chatContainer.classList.remove("loading"); // 흐림 효과 제거
 }
 
+// --------------------------------------------------------------------------------------------
+// 🚀 1️⃣ 로딩 UI 표시 함수 (화면 흐려짐 + 중앙에 로딩 UI 표시 -> 프로그레스 바 + 금융 명언/퀴즈)
+// --------------------------------------------------------------------------------------------
+function showLoadingUI() {
+  const loadingContainer = document.getElementById("loading-container");
+  const chatContainer = document.querySelector(".chat-container");
+
+  if (!loadingContainer || !chatContainer) {
+      console.error("❌ ERROR: loading-container 또는 chat-container를 찾을 수 없음.");
+      return;
+  }
+
+  console.log("✅ showLoadingUI 실행됨!");
+
+  // 화면 흐려지게 만들기
+  chatContainer.classList.add("loading");
+
+  // 로딩 UI 표시
+  loadingContainer.style.display = "flex";
+  loadingContainer.style.justifyContent = "center";
+  loadingContainer.style.alignItems = "center";
+  loadingContainer.style.position = "absolute";
+  loadingContainer.style.top = "50%";
+  loadingContainer.style.left = "50%";
+  loadingContainer.style.transform = "translate(-50%, -50%)";
+  loadingContainer.style.background = "rgba(255, 255, 255, 0.9)";
+  loadingContainer.style.padding = "20px";
+  loadingContainer.style.borderRadius = "10px";
+  loadingContainer.style.boxShadow = "0px 4px 10px rgba(0, 0, 0, 0.1)";
+
+  startLoadingAnimation(currentSelectedOption);
+  displayRandomFinanceTip();  // 랜덤 금융 명언 표시
+  loadRandomQuiz();  // 금융 퀴즈 로드
+}
+
+let progressInterval = null;
+// ⏳ 2️⃣ 프로그레스 바 업데이트
+function startLoadingAnimation(currentSelectedOption) {
+    const progressBar = document.getElementById("progress-bar");
+    const loadingMessage = document.getElementById("loading-message");
+    const spinner = document.getElementById("loading-spinner_");
+
+    if (!progressBar || !loadingMessage) {
+        console.error("❌ ERROR: progressBar 또는 loadingMessage 요소를 찾을 수 없음.");
+        return;
+    }
+
+    console.log("✅ startLoadingAnimation 실행됨!");
+
+    // ✅ 기존 인터벌 제거 (중복 실행 방지)
+    if (progressInterval) {
+        clearInterval(progressInterval);
+        progressInterval = null;
+    }
+
+    let maxTime, minTime;
+    if (currentSelectedOption === "초안 작성") {
+        maxTime = 60000 * 5; // 5분
+        minTime = 2000; // 2초
+    } else if (currentSelectedOption === "단락 생성") {
+        maxTime = 30000; // 30초
+        minTime = 2000; // 2초
+    } else if (currentSelectedOption === "요약 / 확장") {
+        maxTime = 5000; // 5초
+        minTime = 2000; // 2초
+    } else if (currentSelectedOption === "데이터 시각화 (Web)") {
+        maxTime = 60000 * 2; // 2분 
+        minTime = 2000; // 2초
+    } else {
+        maxTime = 60000 * 2; // 2분
+        minTime = 2000; // 2초
+    }
+
+    const startTime = Date.now();
+    let isResponseReceived = false; // 응답 도착 상태 초기화
+    let estimatedProgress = 1; // ✅ 진행률 초기화
+
+    // ✅ 첫 시작 시 진행 바 초기화
+    progressBar.style.width = "1%";
+    loadingMessage.textContent = `FinPilot이 답변을 준비하는 중.. 1%`;
+    spinner.style.display = "inline-block";
+
+    // ✅ `maxTime`에 정확히 맞춰 업데이트 주기 계산 (최소 100ms 보장)
+    let updateInterval = Math.max(maxTime / 100, 100);
+    let totalSteps = Math.ceil(maxTime / updateInterval); // 총 업데이트 횟수
+    let progressStep = 99 / totalSteps; // 한 번 실행할 때 증가할 진행률
+
+    console.log(`🔄 진행 바 업데이트 주기: ${updateInterval}ms, 총 업데이트 횟수: ${totalSteps}, 1회 증가량: ${progressStep}%`);
+
+    function updateProgress() {
+        if (isResponseReceived) return;
+
+        const elapsedTime = Date.now() - startTime;
+        estimatedProgress = Math.min(progressStep * (elapsedTime / updateInterval), 99);
+
+        if (estimatedProgress <= parseFloat(progressBar.style.width)) return;
+
+        progressBar.style.width = estimatedProgress + "%";
+        loadingMessage.textContent = `FinPilot이 답변을 준비하는 중.. ${Math.floor(estimatedProgress)}%`;
+        console.log(`🟢 진행률 업데이트: ${Math.floor(estimatedProgress)}%`);
+
+        if (elapsedTime >= maxTime) {
+            console.log("🚨 서버 응답이 늦음! 프로그레스 바 100% 유지 중...");
+            clearInterval(progressInterval);
+            progressInterval = null;
+        }
+    }
+
+    // ✅ 새로운 업데이트 인터벌 시작 전에 기존 인터벌을 제거
+    if (progressInterval) {
+        clearInterval(progressInterval);
+        progressInterval = null;
+    }
+    progressInterval = setInterval(updateProgress, updateInterval);
+
+    function completeProgress() {
+        if (isResponseReceived) return;
+        isResponseReceived = true;
+
+        if (progressInterval) {
+            clearInterval(progressInterval);
+            progressInterval = null;
+        }
+
+        const remainingTime = Math.max(minTime - (Date.now() - startTime), 0);
+        setTimeout(() => {              
+            progressBar.style.width = "100%";
+            loadingMessage.textContent = "FinPilot이 마지막 점검을 마치는 중입니다.";
+            spinner.style.display = "none";
+            console.log("✅ 프로그레스 바 100% 도달!");
+
+            estimatedProgress = 1;
+        }, remainingTime);
+    }
+
+    return completeProgress;
+}
+
+// 🎯 3️⃣ 로딩 완료 후 UI 숨기기 (화면 흐림 제거 + 로딩 UI 숨김)
+function hideLoadingUI() {
+  const loadingContainer = document.getElementById("loading-container");
+  const chatContainer = document.querySelector(".chat-container");
+
+  if (!loadingContainer || !chatContainer) {
+      console.error("❌ ERROR: loading-container 또는 chat-container를 찾을 수 없음.");
+      return;
+  }
+
+  console.log("✅ hideLoadingUI 실행됨!");
+
+  // 화면 흐림 제거
+  chatContainer.classList.remove("loading");
+
+  // 로딩 UI 숨기기
+  loadingContainer.style.display = "none";
+}
+
+// 💡 4️⃣ 랜덤 금융 명언/팁 제공
+function displayRandomFinanceTip() {
+  const financeTips = [
+    `<img src="Advice.png" alt="투자" style="width:16px; height:16px;"> 워렌 버핏: 좋은 투자란 기다림의 미학이다.`,
+    `<img src="Advice.png" alt="감정 통제" style="width:16px; height:16px;"> 벤저민 그레이엄: 현명한 투자자는 감정을 통제할 줄 알아야 한다.`,
+    `<img src="Advice.png" alt="기업 투자" style="width:16px; height:16px;"> 피터 린치: 당신이 이해하는 기업에 투자하라.`,
+    `<img src="Advice.png" alt="장기 투자" style="width:16px; height:16px;"> 존 보글: 장기적인 인내심이 가장 중요한 투자 전략이다.`,
+    `<img src="Advice.png" alt="복리" style="width:16px; height:16px;"> 찰리 멍거: 단순한 원칙을 따르면서 복리의 힘을 활용하라.`,
+    `<img src="Advice.png" alt="기회" style="width:16px; height:16px;"> 조지 소로스: 시장은 항상 틀릴 수 있다. 기회를 찾아라.`,
+    `<img src="Advice.png" alt="매수 기회" style="width:16px; height:16px;"> 존 템플턴: 가장 비관적인 시점에서 주식을 사라.`,
+    `<img src="Advice.png" alt="위험 관리" style="width:16px; height:16px;"> 하워드 막스: 위험을 낮추는 것은 수익을 희생하는 것이 아니다.`,
+    `<img src="Advice.png" alt="감정 통제" style="width:16px; height:16px;"> 제시 리버모어: 시장에서 가장 큰 위험은 당신 자신의 감정이다.`,
+    `<img src="Advice.png" alt="리스크 관리" style="width:16px; height:16px;"> 레이 달리오: 모든 투자는 리스크 관리가 핵심이다.`,
+    `<img src="diversified_investment.png" alt="분산 투자" style="width:16px; height:16px;"> 분산 투자: 하나의 자산에 집중하기보다 다양한 자산에 투자하세요.`,
+    `<img src="up_graph.png" alt="장기 투자" style="width:16px; height:16px;"> 장기 투자: 단기 변동성을 신경 쓰지 말고 장기적인 성장에 집중하세요.`,
+    `<img src="down_graph.png" alt="손절매" style="width:16px; height:16px;"> 손절매 전략: 손실을 감당할 수 있는 선에서 미리 정해두세요.`,
+    `<img src="Analysis.png" alt="기업 분석" style="width:16px; height:16px;"> 기업 분석: 재무제표를 확인하고 회사의 기본적인 가치를 분석하세요.`,
+    `<img src="credit.png" alt="신용 관리" style="width:16px; height:16px;"> 신용 관리: 높은 이자를 부담하는 부채를 먼저 갚는 것이 중요합니다.`,
+    `<img src="sad.png" alt="감정적 투자 금지" style="width:16px; height:16px;"> 감정적 투자 금지: 공포와 탐욕을 통제하고 감정적 결정을 피하세요.`,
+    `<img src="money_hand.png" alt="배당 투자" style="width:16px; height:16px;"> 배당 투자: 꾸준한 배당을 지급하는 기업을 찾아보세요.`,
+    `<img src="money.png" alt="시장 조사" style="width:16px; height:16px;"> 시장 조사: 트렌드와 경제 흐름을 꾸준히 파악하세요.`,
+    `<img src="rebalancing.png" alt="리밸런싱" style="width:16px; height:16px;"> 리밸런싱: 포트폴리오를 정기적으로 점검하고 조정하세요.`
+  ];
+
+  const randomTip = financeTips[Math.floor(Math.random() * financeTips.length)];
+  document.getElementById("finance-tip").innerHTML = randomTip;
+
+}
+
+// 🎯 5️⃣ 금융 퀴즈 제공
+function loadRandomQuiz() {
+  const quizData = [
+    {
+        question: "ETF와 뮤추얼펀드의 차이는?",
+        options: ["액티브 vs 패시브 관리", "둘 다 동일", "ETF는 펀드가 아니다"],
+        correct: 0
+    },
+    {
+        question: "다음 중 금융 시장에서 '베어마켓'이 의미하는 것은?",
+        options: ["시장 상승", "시장 하락", "시장 변동 없음"],
+        correct: 1
+    },
+    {
+        question: "다음 중 '주식 분할(Stock Split)'의 효과는?",
+        options: ["주가 상승", "유통 주식 수 증가", "배당 수익 증가"],
+        correct: 1
+    },
+    {
+        question: "다음 중 인플레이션(Inflation)의 정의는?",
+        options: ["물가가 지속적으로 하락하는 현상", "화폐 가치가 상승하는 현상", "물가가 지속적으로 상승하는 현상"],
+        correct: 2
+    },
+    {
+        question: "다음 중 '배당 수익률'을 계산하는 방법은?",
+        options: ["배당금 ÷ 주가 × 100", "주가 ÷ 배당금 × 100", "순이익 ÷ 배당금 × 100"],
+        correct: 0
+    },
+    {
+        question: "다음 중 '채권(Bond)'의 특징이 아닌 것은?",
+        options: ["고정적인 이자를 지급한다", "정부나 기업이 발행할 수 있다", "주식보다 변동성이 크다"],
+        correct: 2
+    },
+    {
+        question: "다음 중 '리스크 분산'을 위해 가장 적절한 전략은?",
+        options: ["한 종목에 집중 투자", "다양한 자산에 투자", "빚을 내서 투자"],
+        correct: 1
+    },
+    {
+        question: "기업의 'PER(주가수익비율)'이 의미하는 것은?",
+        options: ["주가 ÷ 주당순이익", "배당금 ÷ 주가", "자산 ÷ 부채"],
+        correct: 0
+    },
+    {
+        question: "다음 중 중앙은행이 금리를 인상하면 일반적으로 발생하는 효과는?",
+        options: ["대출 금리가 낮아진다", "주식 시장이 상승한다", "경제 성장이 둔화될 가능성이 높다"],
+        correct: 2
+    },
+    {
+        question: "다음 중 '기본적 분석(Fundamental Analysis)'의 주요 요소가 아닌 것은?",
+        options: ["기업의 재무제표 분석", "기술적 차트 분석", "산업 및 거시경제 분석"],
+        correct: 1
+    },
+    {
+        question: "다음 중 '주가가 하락할 때 수익을 내는 투자 전략'은?",
+        options: ["공매도", "배당 투자", "인덱스 펀드 투자"],
+        correct: 0
+    },
+    {
+        question: "다음 중 'S&P 500'이 의미하는 것은?",
+        options: ["세계 500대 기업", "미국 대형주 500개 지수", "미국 500개 은행"],
+        correct: 1
+    },
+    {
+        question: "다음 중 경제 성장과 가장 밀접한 지표는?",
+        options: ["GDP(국내총생산)", "PER(주가수익비율)", "CPI(소비자물가지수)"],
+        correct: 0
+    },
+    {
+        question: "다음 중 '달러 강세'가 미치는 영향으로 옳은 것은?",
+        options: ["수출 기업에 유리하다", "원유 가격이 상승한다", "달러 환율이 상승한다"],
+        correct: 2
+    },
+    {
+        question: "다음 중 '하이일드 채권(High-Yield Bond)'의 특징은?",
+        options: ["신용 등급이 높다", "이자율이 높다", "변동성이 낮다"],
+        correct: 1
+    }
+  ];
+  const randomQuiz = quizData[Math.floor(Math.random() * quizData.length)];
+  document.getElementById("quiz-question").textContent = randomQuiz.question;
+  
+  const options = document.querySelectorAll(".quiz-option");
+  options.forEach((button, index) => {
+      button.textContent = randomQuiz.options[index];
+      button.onclick = () => {
+          if (index === randomQuiz.correct) {
+              alert("🎯 정답입니다!");
+
+              // 🚀 정답을 맞췄으므로 새로운 퀴즈 & 명언/팁 불러오기
+              displayRandomFinanceTip(); // 새로운 금융 명언/팁 로드
+              loadRandomQuiz(); // 새로운 금융 퀴즈 로드
+              
+          } else {
+              alert("⚠ 오답입니다! 다시 시도해보세요.");
+          }
+      };
+  });
+}
+
 // ------------------------
 // "Send" 버튼 클릭 이벤트
 // ------------------------
@@ -149,7 +435,8 @@ document.getElementById("send-btn").addEventListener("click", async () => {
     chatBox.appendChild(userMessage);
 
     // 로딩 스피너 표시
-    showLoadingSpinner();
+    showLoadingUI(); // 🚀 로딩 UI 실행
+    const completeProgress = startLoadingAnimation(currentSelectedOption); // 🚀 프로그레스 바 시작
 
     try {
         const requestData = {
@@ -159,7 +446,7 @@ document.getElementById("send-btn").addEventListener("click", async () => {
             chat_option: currentSelectedOption
         };
 
-        const response = await fetch("http://finpilotback.duckdns.org:8000/qnas/", {
+        const response = await fetch("https://finpilotback.duckdns.org/qnas/", {
             method: 'POST',
             headers: {
                 'Accept': 'application/json',
@@ -311,6 +598,14 @@ document.getElementById("send-btn").addEventListener("click", async () => {
                       <img src="./copy.png" alt="Copy" style="width: 16px; height: 16px;">
                       <span class="tooltip-text">Copy</span>
                   `;
+
+                  // source 버튼 추가
+                  const sourceButton = document.createElement("button");
+                  sourceButton.classList.add("source-btn", "tooltip-container");
+                  sourceButton.innerHTML = `
+                      <img src="./source.png" alt="Source" style="width: 16px; height: 16px;">
+                      <span class="tooltip-text">Source</span>
+                  `;
       
                   // Apply 버튼 클릭 기능 (이미지 삽입)
                   applyButton.addEventListener("click", () => {
@@ -355,11 +650,28 @@ document.getElementById("send-btn").addEventListener("click", async () => {
                       }
                   });
 
+                  // source 버튼 클릭 기능
+                  sourceButton.addEventListener("click", () => {
+                    showSourceModal(image.source);
+
+                    // 이미지 변경
+                    const imgElement = sourceButton.querySelector("img");
+                    imgElement.src = "copy_done.png";
+                    imgElement.alt = "Source finish";
+                        
+                    setTimeout(() => {
+                        imgElement.src = "./source.png";
+                        imgElement.alt = "Source";
+                    }, 1000);
+                  });
+
                   // 스타일 적용
+                  styleButtons(sourceButton);
                   styleButtons(copyButton);
                   styleButtons(applyButton);
 
                   // 버튼을 컨테이너에 추가
+                  buttonContainer.appendChild(sourceButton);
                   buttonContainer.appendChild(copyButton);
                   buttonContainer.appendChild(applyButton);
 
@@ -405,31 +717,33 @@ document.getElementById("send-btn").addEventListener("click", async () => {
             botMessageElement.innerHTML = `
                 <img src="icon_circle.png" alt="FinPilot Icon" width="32" height="32" style="margin-right: 3px; vertical-align: middle;"> 
                 <br><span>${marked.parse(botMessage)}</span>
-                <br><small style="float: right; color: #888;">${askTimeFormatted}</small>`;
+                <br><small style="float: left; color: #888;">${askTimeFormatted}</small>`;
         }
 
         // Apply 버튼 추가
-        const applyButton = document.createElement("button");
-        applyButton.classList.add("apply-btn");
-        applyButton.innerHTML = `<img src="./apply.png" alt="Apply" style="width: 16px; height: 16px;" title="Apply to Docs">`;
-        botMessageElement.appendChild(applyButton);
+        const applyButton_ = document.createElement("button");
+        applyButton_.classList.add("apply-btn");
+        applyButton_.innerHTML = `<img src="./apply.png" alt="Apply" style="width: 16px; height: 16px;" title="Apply to Docs">`;
+        botMessageElement.appendChild(applyButton_);
 
         // Copy 버튼 추가
-        const copyButton = document.createElement("button");
-        copyButton.classList.add("copy-btn");
-        copyButton.innerHTML = `<img src="./copy.png" alt="Copy" style="width: 16px; height: 16px;" title="Copy">`;
-        botMessageElement.appendChild(copyButton);
+        const copyButton_ = document.createElement("button");
+        copyButton_.classList.add("copy-btn");
+        copyButton_.innerHTML = `<img src="./copy.png" alt="Copy" style="width: 16px; height: 16px;" title="Copy">`;
+        botMessageElement.appendChild(copyButton_);
+
+        // source 버튼 추가
+        const sourceButton_ = document.createElement("button");
+        sourceButton_.classList.add("source-btn");
+        sourceButton_.innerHTML = `<img src="./source.png" alt="Source" style="width: 16px; height: 16px;" title="Source">`;
+        botMessageElement.appendChild(sourceButton_);
 
         // Apply 버튼 클릭 기능
-        applyButton.addEventListener("click", () => {
-            if (currentSelectedOption === "데이터 시각화 (Web)" || currentSelectedOption === "데이터 시각화 (Upload)") {
-                // Google Docs에 이미지 삽입 기능
-                result.images.forEach((image) => {
-                    appendImageToGoogleDoc(image.image_data, "image/png");
-                });
-            } else {appendToGoogleDoc(result.answer);}
-    
-            const imgElement = applyButton.querySelector("img");
+        applyButton_.addEventListener("click", () => {
+            appendToGoogleDoc(result.answer);
+            
+            // 이미지 변경
+            const imgElement = applyButton_.querySelector("img");
             imgElement.src = "copy_done.png";
             imgElement.alt = "Applied";
                 
@@ -441,38 +755,11 @@ document.getElementById("send-btn").addEventListener("click", async () => {
         });
 
         // Copy 버튼 클릭 기능
-        copyButton.addEventListener("click", async () => { 
-            if (currentSelectedOption === "초안 작성" || currentSelectedOption === "단락 생성" || currentSelectedOption === "요약 / 확장") {
-                navigator.clipboard.writeText(result.answer).then(() => {
-                    console.log("응답이 클립보드에 복사되었습니다!");
-                })
-            }else{
-                try {
-                    // 이미지 Base64 데이터를 Blob으로 변환
-                    const base64Data = result.images[0].image_data; // 첫 번째 이미지 사용
-                    const byteCharacters = atob(base64Data);
-                    const byteNumbers = new Array(byteCharacters.length);
-                    for (let i = 0; i < byteCharacters.length; i++) {
-                        byteNumbers[i] = byteCharacters.charCodeAt(i);
-                    }
-    
-                    const byteArray = new Uint8Array(byteNumbers);
-                    const blob = new Blob([byteArray], { type: "image/png" });
-    
-                    // 클립보드에 이미지 복사
-                    await navigator.clipboard.write([
-                        new ClipboardItem({
-                            "image/png": blob
-                        })
-                    ]);
-    
-                    console.log("이미지가 클립보드에 복사되었습니다!");
-                } catch (error) {
-                    console.error("❌ 이미지 복사 실패:", error);
-                }
-            }
+        copyButton_.addEventListener("click", async () => { 
+            copyElementToClipboard(botMessageElement);
+
             // 이미지 변경
-            const imgElement = copyButton.querySelector("img");
+            const imgElement = copyButton_.querySelector("img");
             imgElement.src = "copy_done.png";
             imgElement.alt = "Copied";
 
@@ -482,14 +769,33 @@ document.getElementById("send-btn").addEventListener("click", async () => {
             }, 1000);
         });
 
+        // source 버튼 클릭 기능
+        sourceButton_.addEventListener("click", () => {
+          showSourceModal(result.source);
+
+          // 이미지 변경
+          const imgElement = sourceButton_.querySelector("img");
+          imgElement.src = "copy_done.png";
+          imgElement.alt = "Source finish";
+              
+          setTimeout(() => {
+              imgElement.src = "./source.png";
+              imgElement.alt = "Source";
+          }, 1000);
+        });
+
         document.getElementById("chat-box").appendChild(botMessageElement);
         chatBox.scrollTop = chatBox.scrollHeight;
 
     } catch (error) {
         console.error("❌ 오류:", error);
-        alert("서버에서 답변을 가져오는 중 오류 발생.");
+        alert("서버에서 답변을 가져오는 중 오류 발생.", error);
+        hideLoadingUI(); // 오류 발생 시 로딩 UI 제거
     } finally {
-        hideLoadingSpinner();
+        completeProgress(); // 🚀 서버 응답 도착 → 프로그레스 바 100% 도달
+        setTimeout(() => {
+            hideLoadingUI();
+        }, 250); // 💡 UI 전환을 부드럽게 만들기 위해 0.25초 딜레이 추가
     }
 
     document.getElementById("user-input").value = ""; // 메시지 입력창 초기화
@@ -524,140 +830,39 @@ document.getElementById("user-input").addEventListener("keydown", (event) => {
     }
 });
 
-// ----------------------------------------
-// Google Docs에 텍스트 추가 (마크다운 적용)
-// ----------------------------------------
-async function appendToGoogleDoc(markdownContent) {
+// ------------------------------------------
+// Google Docs에 텍스트 추가 (마크다운 적용 x)
+// ------------------------------------------
+function removeMarkdownSyntax(content) {
+  return content.replace(/[#*]/g, ""); // '#'과 '*' 제거
+}
+
+async function appendToGoogleDoc(content) {
   showLoadingSpinner();
   try {
     const accessToken = await getAccessToken();
-
-    // 문서 끝 위치 가져오기
     const docInfoResponse = await fetch(
       `https://docs.googleapis.com/v1/documents/${DOCUMENT_ID}`,
       {
         method: "GET",
-        headers: { Authorization: `Bearer ${accessToken}` },
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
       }
     );
 
     if (!docInfoResponse.ok) {
-      throw new Error("문서 정보 가져오기 실패");
+      const errorText = await docInfoResponse.text();
+      throw new Error(`문서 정보 가져오기 실패: ${errorText}`);
     }
 
     const docInfo = await docInfoResponse.json();
-    let endIndex = docInfo.body.content.length > 1
-      ? docInfo.body.content[docInfo.body.content.length - 1].endIndex - 1
-      : 1;
+    const contentLength = docInfo.body.content.length;
+    console.log("문서 길이:", contentLength);
 
-    // 마크다운을 HTML로 변환 후 텍스트 추출
-    const htmlContent = marked.parse(markdownContent);
-    const tempDiv = document.createElement("div");
-    tempDiv.innerHTML = htmlContent;
+    // 마크다운 기호 제거
+    const cleanedContent = removeMarkdownSyntax(content);
 
-    let requests = [];
-    let currentIndex = endIndex;
-
-    function parseElement(element) {
-      if (element.nodeType === Node.TEXT_NODE) {
-        const text = element.textContent.trim();
-        if (text.length > 0) {
-          requests.push({
-            insertText: {
-              location: { index: currentIndex },
-              text: text + "\n",
-            },
-          });
-
-          currentIndex += text.length + 1;  // 개행 포함
-        }
-      } else if (element.nodeType === Node.ELEMENT_NODE) {
-        element.childNodes.forEach(parseElement);
-
-        // 텍스트 스타일 적용 (제목, 굵기, 기울임)
-        let startIdx = currentIndex - element.innerText.length;
-        let endIdx = currentIndex;
-
-        if (element.tagName === "B" || element.tagName === "STRONG") {
-          requests.push({
-            updateTextStyle: {
-              range: { startIndex: startIdx, endIndex: endIdx },
-              textStyle: { bold: true },
-              fields: "bold",
-            },
-          });
-        } else if (element.tagName === "I" || element.tagName === "EM") {
-          requests.push({
-            updateTextStyle: {
-              range: { startIndex: startIdx, endIndex: endIdx },
-              textStyle: { italic: true },
-              fields: "italic",
-            },
-          });
-        } else if (element.tagName === "H1") {
-          requests.push({
-            updateParagraphStyle: {
-              range: { startIndex: startIdx, endIndex: endIdx },
-              paragraphStyle: { namedStyleType: "HEADING_1" },
-              fields: "namedStyleType",
-            },
-          });
-        } else if (element.tagName === "H2") {
-          requests.push({
-            updateParagraphStyle: {
-              range: { startIndex: startIdx, endIndex: endIdx },
-              paragraphStyle: { namedStyleType: "HEADING_2" },
-              fields: "namedStyleType",
-            },
-          });
-        } else if (element.tagName === "UL") {
-          element.querySelectorAll("li").forEach((li) => {
-            requests.push({
-              insertText: {
-                location: { index: currentIndex },
-                text: "• " + li.innerText + "\n",
-              },
-            });
-            currentIndex += li.innerText.length + 3;
-          });
-        } else if (element.tagName === "OL") {
-          let counter = 1;
-          element.querySelectorAll("li").forEach((li) => {
-            requests.push({
-              insertText: {
-                location: { index: currentIndex },
-                text: `${counter}. ${li.innerText}\n`,
-              },
-            });
-            currentIndex += li.innerText.length + 3;
-            counter++;
-          });
-        } else if (element.tagName === "BLOCKQUOTE") {
-          requests.push({
-            updateParagraphStyle: {
-              range: { startIndex: startIdx, endIndex: endIdx },
-              paragraphStyle: {
-                indentStart: { magnitude: 30, unit: "PT" },
-                borderLeft: {
-                  color: { rgbColor: { red: 0.2, green: 0.2, blue: 0.2 } },
-                  width: { magnitude: 2, unit: "PT" },
-                },
-              },
-              fields: "indentStart,borderLeft",
-            },
-          });
-        }
-      }
-    }
-
-    // HTML 요소를 순회하며 파싱
-    tempDiv.childNodes.forEach(parseElement);
-
-    if (requests.length === 0) {
-      throw new Error("추출된 텍스트가 없습니다.");
-    }
-
-    // Google Docs API 요청 실행
     const response = await fetch(
       `https://docs.googleapis.com/v1/documents/${DOCUMENT_ID}:batchUpdate`,
       {
@@ -666,28 +871,60 @@ async function appendToGoogleDoc(markdownContent) {
           Authorization: `Bearer ${accessToken}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ requests }),
+        body: JSON.stringify({
+          requests: [
+            {
+              insertText: {
+                endOfSegmentLocation: {},
+                text: `${cleanedContent}\n\n`,
+              },
+            },
+          ],
+        }),
       }
     );
 
     if (!response.ok) {
-      throw new Error(`Google Docs 업데이트 실패: ${await response.text()}`);
+      const errorText = await response.text();
+      throw new Error(`Google Docs 업데이트 실패: ${errorText}`);
     }
 
-    console.log("✅ Google Docs 마크다운 적용 성공!");
-    alert("Google Docs에 마크다운 형식으로 적용되었습니다!");
-
+    console.log("✅ Google Docs 업데이트 성공!");
   } catch (error) {
     console.error("❌ Google Docs API 오류:", error);
-    alert(`Google Docs 업데이트 중 문제가 발생했습니다: ${error.message}`);
+    alert(`Google Docs 업데이트 중 문제가 발생했습니다: ${error.message}\n\nGoogle Docs 문서를 열고 다시 시도해주세요.`);
   } finally {
     hideLoadingSpinner();
   }
 }
 
-// ---------------------------------------------------------------------------------
+// -------------------------------
+// 클립보드에 HTML 콘텐츠 복사 함수
+// -------------------------------
+async function copyElementToClipboard(element) {
+  if (!element) {
+      alert("복사할 내용이 없습니다.");
+      return;
+  }
+
+  // 불필요한 요소 (아이콘, 버튼, 시간 등) 제거하고 클립보드에 복사할 내용 추출
+  const clonedElement = element.cloneNode(true);
+
+  // 필요 없는 요소 제거 (버튼, 아이콘, 시간 등)
+  clonedElement.querySelectorAll("button, img[alt='FinPilot Icon'], small").forEach(el => el.remove());
+
+  // 클립보드에 복사할 순수한 HTML 콘텐츠 가져오기
+  const htmlContent = clonedElement.innerHTML;
+  const blob = new Blob([htmlContent], { type: "text/html" });
+
+  await navigator.clipboard.write([
+      new ClipboardItem({ "text/html": blob })
+  ]);
+}
+
+// -------------------------------------------------------------------------------
 // Google Docs에 이미지 추가 (Google Drive에 이미지를 업로드하고 Google Docs에 삽입)
-// ---------------------------------------------------------------------------------
+// -------------------------------------------------------------------------------
 async function appendImageToGoogleDoc(base64Image, imageType = "image/png") {
     showLoadingSpinner();
     try {
@@ -855,9 +1092,51 @@ async function getAccessToken() {
       });
     });
 }
-// ---------------
-//   환영 인사
-// ---------------
+
+// ------------------------------------------------------
+// 📌 출처 버튼 기능 함수 (모달 UI + 출처 리스트 업데이트)
+// ------------------------------------------------------
+function showSourceModal(sourceData) {
+  const sourceModal = document.getElementById("source-modal");
+  const sourceList = document.getElementById("source-list");
+
+  if (!sourceModal || !sourceList) {
+      console.error("❌ ERROR: source-modal 또는 source-list를 찾을 수 없음.");
+      return;
+  }
+
+  // 기존 리스트 초기화 후 새로운 출처 추가
+  sourceList.innerHTML = sourceData
+  .map((url) => {
+    const shortUrl = url.length > 50 ? url.slice(0, 48) + ".." : url; // URL 길이가 50자 초과 시 줄이기
+    const isValidUrl = url.startsWith("http://") || url.startsWith("https://"); // URL 형식 확인
+
+    return `<li>
+      <img src="link.png" alt="Link Icon" style="width: 14px; height: 14px; vertical-align: middle; margin-right: 5px;">
+      ${isValidUrl ? `<a href="${url}" target="_blank" title="${url}">${shortUrl}</a>` : shortUrl}
+    </li>`;
+  })
+  .join("");
+
+  // ✅ 모달 표시 (hidden 클래스 제거)
+  sourceModal.classList.remove("hidden");
+}
+
+// 📌 모달 닫기 기능 (닫기 버튼 및 바깥 클릭 시)
+document.querySelector(".close").addEventListener("click", () => {
+  document.getElementById("source-modal").classList.add("hidden");
+});
+
+window.addEventListener("click", (event) => {
+  const sourceModal = document.getElementById("source-modal");
+  if (event.target === sourceModal) {
+      sourceModal.classList.add("hidden");
+  }
+});
+
+// ------------
+//  환영 인사
+// ------------
 document.addEventListener('DOMContentLoaded', () => {
   // Greeting 요소 가져오기
   const greetingElement = document.getElementById('greeting');
@@ -874,7 +1153,10 @@ document.addEventListener('DOMContentLoaded', () => {
       greetingElement.textContent = `로그인이 필요합니다`;
       greetingElement.style.display = 'block';
       greetingElement.classList.add('login-required'); // 흐림 클래스 추가
-      document.getElementById("user-input").disabled = true;
+      document.getElementById("user-input").disabled = true; // 채팅창 비활성화
+      document.getElementById("file_upload-btn").disabled = true; // 파일첨부 버튼 비활성화
+      document.getElementById("chat_option-btn").disabled = true; // 채팅옵션 버튼 비활성화
+      document.getElementById("send-btn").disabled = true; // 전송 버튼 비활성화
     }
   });
 });
@@ -1016,7 +1298,7 @@ async function sendPdfToServer(file) {
   showLoadingSpinner();
 
   try {
-      const response = await fetch("http://finpilotback.duckdns.org:8000/pdfs/", {
+      const response = await fetch("https://finpilotback.duckdns.org/pdfs/", {
           method: 'POST',
           body: formData
       });
@@ -1027,8 +1309,6 @@ async function sendPdfToServer(file) {
 
       const result = await response.json();
       console.log("서버 응답:", result);
-  
-      //alert(`PDF 파일 '${file.name}'이 서버에 성공적으로 업로드되었습니다.`); // 없앨지 말지 고민 중..
   } catch (error) {
       console.error("서버 전송 실패:", error);
       alert(`PDF 파일 업로드 중 오류 발생: ${file.name}(${error.message})`);
@@ -1055,7 +1335,7 @@ async function sendcsvToServer(file) {
   showLoadingSpinner();
 
   try {
-      const response = await fetch("http://finpilotback.duckdns.org:8000/csvs/", {
+      const response = await fetch("https://finpilotback.duckdns.org/csvs/", {
           method: 'POST',
           body: formData
       });
@@ -1066,7 +1346,6 @@ async function sendcsvToServer(file) {
 
       const result = await response.json();
       console.log("서버 응답:", result);
-      //alert(`CSV 파일 '${file.name}'이 서버에 성공적으로 업로드되었습니다.`); // 없앨지 말지 고민 중..
   } catch (error) {
       console.error("서버 전송 실패:", error);
       alert(`CSV 파일 업로드 중 오류 발생: ${file.name}(${error.message})`);
@@ -1091,7 +1370,7 @@ async function delPdfToServer(fileName) {
     showLoadingSpinner();
 
     try {
-      const response = await fetch("http://finpilotback.duckdns.org:8000/pdfs/", {
+      const response = await fetch("https://finpilotback.duckdns.org/pdfs/", {
         method: 'DELETE',
         headers: {
             "Content-Type": "application/x-www-form-urlencoded",
@@ -1116,7 +1395,6 @@ async function delPdfToServer(fileName) {
     }
 }
 
-
 // FastAPI 서버의 CSV 파일 삭제 함수 (비동기 함수)
 async function delcsvToServer(fileName) {
   const user_email = globalUserEmail;  // 전역 변수에서 사용자 이메일 가져오기
@@ -1133,7 +1411,7 @@ async function delcsvToServer(fileName) {
   showLoadingSpinner();
 
   try {
-    const response = await fetch("http://finpilotback.duckdns.org:8000/csvs/", {
+    const response = await fetch("https://finpilotback.duckdns.org/csvs/", {
       method: 'DELETE',
       headers: {
             "Content-Type": "application/x-www-form-urlencoded",
@@ -1158,9 +1436,9 @@ async function delcsvToServer(fileName) {
   }
 }
 
-// ---------------------
-//    채팅 옵션 선택
-// ---------------------
+// -------------------
+//   채팅 옵션 선택
+// -------------------
 // 드롭다운 버튼 및 메뉴 참조
 const chatOptionButton = document.getElementById('chat_option-btn');
 const chatOptionImage = chatOptionButton.querySelector('img');  // 이미지 요소 참조
@@ -1177,8 +1455,7 @@ const optionImages = {
 };
 
 // 기본값 설정
-// currentSelectedOption을 if문 같은걸 사용해서 각 옵션마다 다른 이벤트를 주면 될듯
-let currentSelectedOption = "단락 생성"; // 디폴트 값
+let currentSelectedOption = "요약 / 확장"; // 디폴트 값
 
 // 기본값 화면 상단 표시
 selectedOptionDiv.innerHTML = `
@@ -1195,6 +1472,17 @@ chatOptionButton.addEventListener('click', () => {
     chatDropdownMenu.classList.toggle('hidden'); // 숨김/표시 전환
 });
 
+// ✅ 바깥 영역 클릭 시 드롭다운 닫기
+window.addEventListener("click", (event) => {
+  if (
+      !chatDropdownMenu.contains(event.target) && // 드롭다운 내부 클릭 X
+      !chatOptionButton.contains(event.target) && // 버튼 클릭 X
+      !chatDropdownMenu.classList.contains('hidden') // 드롭다운이 열려 있을 때만
+  ) {
+      chatDropdownMenu.classList.add('hidden'); // ❗ 'hidden' 클래스 추가 (무조건 닫기)
+  }
+});
+
 // 각 옵션 클릭 시 동작
 const dropdownItems = document.querySelectorAll('.dropdown-item');
 dropdownItems.forEach((item) => {
@@ -1206,7 +1494,6 @@ dropdownItems.forEach((item) => {
         item.classList.add('selected');
 
         // 선택된 옵션 업데이트
-        // const currentSelectedOption = item.textContent.trim(); // 항목의 텍스트 가져오기
         currentSelectedOption = item.textContent.trim(); 
         
         // 화면 상단에 표시
