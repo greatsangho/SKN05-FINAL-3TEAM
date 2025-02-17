@@ -75,13 +75,13 @@
 ---
 
 ## 📌 Table of Content
-1. [About FinPilot](#-About-FinPilot)
-2. [Key Functions](#-Key-Functions)
-3. [Requirements](#-Requirements)
-4. [How to Get Start in Local](#How-to-Get-Start-in-Local)
-5. [File Structure](#-File-Structure)
-6. [Contributors](#-Contributors)
-7. [Contact](#-Contact)
+- [About FinPilot](#-About-FinPilot)
+- [Key Functions](#-Key-Functions)
+- [Requirements](#-Requirements)
+- [How to Get Start in Local](#How-to-Get-Start-in-Local)
+- [File Structure](#-File-Structure)
+- [Contributors](#-Contributors)
+- [Contact](#-Contact)
 
 ---
 
@@ -143,8 +143,8 @@ FinPilot은 LLM을 활용해 Google Docs 환경에서 문서 작성을 지원하
 
 ## 🛠 Requirements
 
-로컬 테스트 전, 아래의 개발 환경을 구축 합니다.:
-- Python 3.10 버젼 이상
+로컬 테스트 전, 아래의 개발 환경을 구축합니다:
+- Python 3.10 버전 이상
 - FastAPI 설치
 - Chrome 브라우저
 - Google Account
@@ -199,11 +199,15 @@ SKN05-FINAL-3TEAM/
 
 | 이름       | GitHub | Gmail | Instagram |
 |------------|--------|--------|------------|
-| 서장호 | [GitHub](https://github.com/wkd-gh) | sjh008272@gmail.com | [@jangho_fin](https://www.instagram.com/wkd_gh/) |
-| 최영민 | [GitHub](https://github.com/MartinusChoi) | martinus.choi@gmail.com | [@member2](https://instagram.com/martinus_choi_) |
-| 허상호 | [GitHub](https://github.com/greatsangho) | greatsangho@gmail.com | [@member3](https://instagram.com/greatsangho) |
+| 서장호 | [GitHub](https://github.com/wkd-gh) | sjh008272@gmail.com | [@wkd_gh](https://www.instagram.com/wkd_gh/) |
+| 최영민 | [GitHub](https://github.com/MartinusChoi) | martinus.choi@gmail.com | [@martinus_choi_](https://instagram.com/martinus_choi_) |
+| 허상호 | [GitHub](https://github.com/greatsangho) | greatsangho@gmail.com | [@greatsangho](https://instagram.com/greatsangho) |
 
 ---
 
 ## 📢 Contact
-문의 사항이 있으면 `Contributors`의 Instagram 또는 Gmail을 통해 연락 주세요!
+문의 사항이 있으면 `Contributors`의 Instagram 또는 Gmail을 통해 연락주세요!
+
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/0d52d318-989f-4ad6-a01c-615d2119034e"  width="640px" />
+</p>
