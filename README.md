@@ -77,11 +77,11 @@
 ## 📌 Table of Content
 1. [About FinPilot](#-About-FinPilot)
 2. [Key Functions](#-Key-Functions)
-3. [필수 조건](#필수-조건)
-4. [시작하기](#시작하기)
-5. [파일 구조](#파일-구조)
-6. [기여자](#기여자)
-7. [커뮤니케이션](#커뮤니케이션)
+3. [Requirements](#-Requirements)
+4. [How to Get Start in Local](#-How-to-Get-Start-in-Local)
+5. [File Structure](#-File-Structure)
+6. [Contributors](#-Contributors)
+7. [Contact](#-Contact)
 
 ---
 
@@ -177,7 +177,7 @@ cd SKN05-FINAL-3TEAM/model/
 
 ---
 
-## 📂 파일 구조
+## 📂 File Structure
 ```
 SKN05-FINAL-3TEAM/ 
 ├── Backend/          # Server
@@ -192,15 +192,16 @@ SKN05-FINAL-3TEAM/
 ---
 
 ## 🤝 Contributors
+
+<a href="https://github.com/SKNETWORKS-FAMILY-AICAMP/SKN05-final-3Team/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=SKNETWORKS-FAMILY-AICAMP/SKN05-final-3Team" />
+</a>
+
 | 이름       | GitHub | Gmail | Instagram |
 |------------|--------|--------|------------|
 | 서장호 | [GitHub](https://github.com/wkd-gh) | sjh008272@gmail.com | [@jangho_fin](https://www.instagram.com/wkd_gh/) |
 | 최영민 | [GitHub](https://github.com/MartinusChoi) | martinus.choi@gmail.com | [@member2](https://instagram.com/martinus_choi_) |
 | 허상호 | [GitHub](https://github.com/greatsangho) | greatsangho@gmail.com | [@member3](https://instagram.com/greatsangho) |
-
-<a href="https://github.com/SKNETWORKS-FAMILY-AICAMP/SKN05-final-3Team/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=SKNETWORKS-FAMILY-AICAMP/SKN05-final-3Team" />
-</a>
 
 ---
 
