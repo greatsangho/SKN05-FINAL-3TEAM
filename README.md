@@ -143,7 +143,7 @@ FinPilot은 LLM을 활용해 Google Docs 환경에서 문서 작성을 지원하
 
 ## 🛠 Requirements
 
-로컬 테스트 전, 아래의 개발 환경을 구축합니다:
+로컬 테스트 전, 아래의 개발 환경을 구축합니다 :
 - Python 3.10 버전 이상
 - FastAPI 설치
 - Chrome 브라우저
