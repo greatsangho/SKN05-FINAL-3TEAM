@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://github.com/user-attachments/assets/2ededb0c-b0e1-4248-acf7-3829b37de094" style="width:100%;" alt="Strapi logo" />
+  <img src="https://github.com/user-attachments/assets/4cb2df1c-2679-405e-8bb2-394684174a7d" style="width:100%;" alt="Strapi logo" />
 </p>
 
 ## **FinPilot: AI 기반 비즈니스 문서 작성 어시스턴트**  
