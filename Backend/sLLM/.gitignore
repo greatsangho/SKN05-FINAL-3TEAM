@@ -1,0 +1,13 @@
+.cache/
+**/__pycache__/**
+
+*.DS_Store
+*.pyc
+*.gguf
+.env
+**/.streamlit/**
+**/.cache/**
+
+*.gguf
+*.venv
+*.cache

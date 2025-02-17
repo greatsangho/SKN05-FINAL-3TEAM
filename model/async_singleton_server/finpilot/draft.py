@@ -149,7 +149,7 @@ class DraftProcess:
             pandas_agent = create_pandas_dataframe_agent(
                 ChatOpenAI(model="gpt-4o"),
                 df_list,
-                verbose=True,
+                verbose=False,
                 agent_type=AgentType.OPENAI_FUNCTIONS,
                 allow_dangerous_code=True,
                 prefix = custom_prefix # (옵션) prompt에 의도한 문장을 추가
@@ -300,10 +300,11 @@ class DraftProcess:
             1. 사용자의 요청에 대해 현재 주어진 목차에 대한 단락을 작성하세요.
             2. 단락 작성 간 필요한 경우 특정 기업에 대한 '주식', '재무재표' 데이터를 수집하세요.
             3. '주식', '재무재표' 데이터를 수집하기 위해 'fetch_stock_data'와 'fetch_financial_data' 도구를 사용할 때에는 반드시 도구의 "folder_name" 인자에 '{session_id}'를 전달하세요.
-            3. 특정 기업에 대한 '주식', '재무재표' 데이터를 수집이 필요하지 않은 경우, 뉴스와 웹 검색 만을 사용하여 단락을 작성하세요.
-            4. 단락 작성 간 충분한 근거를 제시하며 사실에 입각한 내용을 작성하세요.
-            5. 주식, 재무재표, 웹 검색 으로 자료를 수집한 경우 반드시 그 출처를 명시하세요. (매우 중요)
-            6. 형식은 마크다운, 언어는 한국어를 사용하세요.
+            4. 특정 기업에 대한 '주식', '재무재표' 데이터를 수집이 필요하지 않은 경우, 뉴스와 웹 검색 만을 사용하여 단락을 작성하세요.
+            5. 스스로 판단하는 것을 지양하고 항상 수집한 데이터에 입각하여 문서를 작성하세요
+            6. 단락 작성 간 충분한 근거를 제시하며 사실에 입각한 내용을 작성하세요.
+            7. 주식, 재무재표, 웹 검색 으로 자료를 수집한 경우 반드시 그 출처를 명시하세요. (매우 중요)
+            8. 형식은 마크다운, 언어는 한국어를 사용하세요.
             </지침>
 
             사용자 요청과 현재 작성해야할 목차는 다음과 같습니다. :
@@ -334,12 +335,13 @@ class DraftProcess:
         for message in messages:
             if isinstance(message, ToolMessage):
                 if message.name in ["fetch_company_news", "fetch_market_news", "fetch_webpages_scrape"]:
-                    content_dict = json.loads(message.content)
-                    try : 
-                        state["source"].extend(content_dict["source"])
-                    except :
-                        state["source"] = []
-                        state["source"].extend(content_dict["source"])
+                    if message.content:
+                        content_dict = json.loads(str(message.content))
+                        try : 
+                            state["source"].extend(content_dict["source"])
+                        except :
+                            state["source"] = []
+                            state["source"].extend(content_dict["source"])
                 elif message.name == "fetch_stock_data":
                     try : 
                         state["source"].append("주식 정보 참조 (Yahoo Finance)")
