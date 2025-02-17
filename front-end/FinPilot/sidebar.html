@@ -19,7 +19,8 @@
     <div id="selected-option"></div>
 
     <div id="chat-box" class="chat-box">
-      <p id="greeting" class="greeting" style="display: none;"></p> <!-- 로그인 성공 시 사이드바에 환영인사 -->
+      <!-- 로그인 성공 시 사이드바에 환영인사 -->
+      <p id="greeting" class="greeting" style="display: none;"></p> 
     </div>
 
     <!-- 선택된 파일 목록을 표시할 영역 -->
@@ -35,7 +36,7 @@
         <button id="file_upload-btn" class="tooltip">
           <img src="file_upload.png" alt="file upload" width="21" height="21" style="vertical-align: middle;">
         </button>
-        <input type="file" id="file-upload-input" style="display: none;"> <!-- 여기서 multiple 빼면 됨 -->
+        <input type="file" id="file-upload-input" style="display: none;">
 
         <!-- 채팅 옵션 선택 버튼 -->
         <button id="chat_option-btn" class="tooltip">
@@ -48,11 +49,11 @@
                   초안 작성
                   <img class="check-icon" src="check-icon.png" alt="Check Icon">
               </li>
-              <li class="dropdown-item selected">
+              <li class="dropdown-item">
                   단락 생성
                   <img class="check-icon" src="check-icon.png" alt="Check Icon">
               </li>
-              <li class="dropdown-item">
+              <li class="dropdown-item selected">
                   요약 / 확장
                   <img class="check-icon" src="check-icon.png" alt="Check Icon">
               </li>
@@ -75,10 +76,52 @@
       </div>
     </div>
   </div>
-  <!-- 로딩 버퍼링 스피너 -->
+
+  <!-- 기존 버퍼링 스피너 -->
   <div id="loading-spinner" class="spinner"></div>
-  <script type="module" src="sidebar_final.js"></script>
+
+  <!-- 로딩 UI (프로그레스 바 + 금융 명언/팁 + 퀴즈) -->
+  <div id="loading-container">
+    <!-- 프로그레스 바 -->
+    <div id="progress-bar-container">
+        <div id="progress-bar"></div>
+    </div>
+
+    <!-- 📝 로딩 메시지 -->
+    <div id="loading-message-container">
+      <span id="loading-message">FinPilot이 답변을 준비하는 중...</span>
+      <span id="loading-spinner_" class="spinner_"></span>
+    </div>
+
+    <!-- 금융 퀴즈 -->
+    <div id="quiz-container">
+        <p id="quiz-question"></p>
+        <button class="quiz-option" onclick="selectAnswer(0)"></button>
+        <button class="quiz-option" onclick="selectAnswer(1)"></button>
+        <button class="quiz-option" onclick="selectAnswer(2)"></button>
+    </div>
+
+    <!-- 금융 명언/팁 -->
+    <p id="finance-tip"></p>
+  </div>
+
+  <!-- 출처 모달 (초기 숨김) -->
+  <div id="source-modal" class="modal hidden">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h3>
+          <img src="source_h3.png" alt="source_h3 img" style="width: 19px; height: 19px; vertical-align: middle; margin-right: 5px;">
+          Source Information
+        </h3>
+        <!-- <h3>Source Information</h3> -->
+        <p style="font-size: 14px; color: #666;">FinPilot이 제공한 답변의 출처를 확인하세요.</p>
+        <ul id="source-list"></ul>
+    </div>
+  </div>
+
+  <!-- js 삽입 -->_
+  <script type="module" src="sidebar.js"></script>
   <script src="marked.min.js"></script>
-  <script src="turndown.min.js"></script>
+
 </body>
 </html>

@@ -21,7 +21,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
               user_email: data.email, // 이메일
             };
 
-            fetch('http://finpilotback.duckdns.org:8000/users/', {
+            fetch('https://finpilotback.duckdns.org/users/', {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',

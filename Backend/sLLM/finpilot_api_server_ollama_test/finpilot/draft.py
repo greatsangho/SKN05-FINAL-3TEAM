@@ -1,4 +1,4 @@
-from langchain_openai import ChatOpenAI
+from langchain_openai import ChatOpenAI, RemoteRunnable
 from langchain.tools import tool
 from langgraph.prebuilt import create_react_agent
 from langchain.agents.agent_types import AgentType
@@ -31,7 +31,7 @@ class DraftProcess:
         # Web Search API Client
         tavily_client = AsyncTavilyClient(api_key=os.environ["TAVILY_API_KEY"])
         # LLM API Client
-        llm = ChatOpenAI(model='gpt-4o-mini', temperature=0, api_key=os.environ["OPENAI_API_KEY"])
+        llm = RemoteRunnable("https://termite-upward-monthly.ngrok-free.app/llm/")
 
 
         @tool
@@ -148,7 +148,7 @@ class DraftProcess:
             df_list = [pd.read_csv(data_path)]
 
             pandas_agent = create_pandas_dataframe_agent(
-                ChatOpenAI(model="gpt-4o"),
+                RemoteRunnable("https://termite-upward-monthly.ngrok-free.app/llm/"),
                 df_list,
                 verbose=True,
                 agent_type=AgentType.OPENAI_FUNCTIONS,
@@ -264,7 +264,7 @@ class DraftProcess:
 
         ########################## Paragraph Writer ##########################
         self.today = datetime.today().strftime("%Y-%m-%d")
-        self.paragraph_writer = ChatOpenAI(model="gpt-4o", temperature=0, api_key=os.environ["OPENAI_API_KEY"])
+        self.paragraph_writer = RemoteRunnable("https://termite-upward-monthly.ngrok-free.app/llm/")
         
 
 

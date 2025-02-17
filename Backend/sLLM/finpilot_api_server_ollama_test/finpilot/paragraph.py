@@ -368,4 +368,106 @@ class ParagraphProcess:
 
         return [doc for doc in filtered_documents if doc is not None]
     
-    
+# ...existing code...
+
+# class LengthControlProcess:
+#     def __init__(self):
+#         # Use RemoteRunnable instead of ChatOpenAI
+#         llm = RemoteRunnable("https://termite-upward-monthly.ngrok-free.app/llm/")
+
+#         ########### Structured Answer Data Model ###########
+#         class GradeDocuments(BaseModel):
+#             """
+#             Binary score for relevance check on retrieved documents.
+#             """
+
+#             relevance_score : str = Field(
+#                 description="Document are relevant to the question, 'yes' or 'no'"
+#             )
+
+#         class GradeHallucination(BaseModel):
+#             """
+#             Binary Score for hallucination present in generation answer.
+#             """
+
+#             hallucination_score : str = Field(
+#                 description="Answer is grounded in the facts, 'yes' or 'no'"
+#             )
+
+#         class AnswerGrader(BaseModel):
+#             """
+#             Binary Score to assess answer address question.
+#             """
+
+#             answer_score : str = Field(
+#                 description="Answer address the question, 'yes' or 'no'"
+#             )
+        
+#         grader_structured_llm = llm.with_structured_output(GradeDocuments)
+#         hallucination_structured_llm = llm.with_structured_output(GradeHallucination)
+#         answer_structured_llm = llm.with_structured_output(AnswerGrader)
+
+#         grader_system_prompt = """
+#             You are a grader assessing relevance of a retrieved document to a user question. \n 
+
+#             It does not need to be a stringent test. The goal is to filter out erroneous retrievals. \n
+
+#             If the document contains keyword(s) or semantic meaning related to the user question, grade it as relevant. \n
+
+#             Give a binary score 'yes' or 'no' score to indicate whether the document is relevant to the question.
+#         """
+#         hallucination_system_prompt = """
+#             You are a grader assessing whether an LLM generation is grounded in / supported by a set of retrieved facts. \n 
+
+#             Give a binary score 'yes' or 'no'. 'Yes' means that the answer is grounded in / supported by the set of facts.
+#         """
+#         answer_system_prompt = """
+#             You are a grader assessing whether an answer addresses / resolves a question \n 
+            
+#             Give a binary score 'yes' or 'no'. Yes' means that the answer resolves the question.
+#         """
+#         improve_system_prompt = """
+#             You a question re-writer that converts an input question to a better version that is optimized for vectorstore retrieval. \n
+            
+#             Look at the input and try to reason about the underlying semantic intent / meaning.
+#         """
+
+#         grade_prompt = ChatPromptTemplate.from_messages(
+#             [
+#                 ("system", grader_system_prompt),
+#                 ("human", "Retreived documents : \n\n {documents} \n\n User question : {question}")
+#             ]
+#         )
+#         write_prompt = hub.pull("rlm/rag-prompt")
+#         hallucination_prompt = ChatPromptTemplate.from_messages(
+#             [
+#                 ("system", hallucination_system_prompt),
+#                 ("human", "Set of facts : \n\n {documents} \n\n LLM generation : {generation}")
+#             ]
+#         )
+#         answer_prompt = ChatPromptTemplate.from_messages(
+#             [
+#                 ("system", answer_system_prompt),
+#                 ("human", "User question : \n\n {question} \n\n LLM generation : {generation}")
+#             ]
+#         )
+#         improve_prompt = ChatPromptTemplate.from_messages(
+#             [
+#                 ("system", improve_system_prompt),
+#                 ("human", "Here is the initial question : \n\n {question} \n Formulation an improved question")
+#             ]
+#         )
+
+#         self.retrieval_grader = grade_prompt | grader_structured_llm
+#         self.writer = write_prompt | llm | StrOutputParser()
+#         self.hallucination_grader = hallucination_prompt | hallucination_structured_llm
+#         self.answer_grader = answer_prompt | answer_structured_llm
+#         self.query_improver = improve_prompt | llm
+
+#         self.web_search_tool = TavilySearchResults(k=3)
+
+#         self.retrieve = vector_store.as_retriever(
+#             dynamic_update=True
+#         )
+
+#     # Add methods similar to ParagraphProcess if needed
