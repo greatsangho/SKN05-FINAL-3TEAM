@@ -8,7 +8,7 @@
 > 비즈니스 문서 작성을 쉽고 효율적으로 도와주는 스마트 가이드!
 
 `FinPilot` 프로젝트에 오신 것을 환영합니다! 
-이 프로젝트는 Google Docs 환경에서 사용자가 더 효율적으로 문서를 작성하고 관리할 수 있도록 설계된 LLM 어시스턴트 서비스를 개발하는 것을 목표로 시작되었습니다. `Chrome Extension`과 `LangGraph` 기반의 LLM 애플리케이션인 `FinPilot`을 통합하여 문서 초안 작성, 단락 생성, 요약 및 확장,  데이터 분석/시각화 등의 기능을 제공합니다.
+이 프로젝트는 Google Docs 환경에서 사용자가 더 효율적으로 문서를 작성하고 관리할 수 있도록 설계된 LLM 어시스턴트 서비스를 개발하는 것을 목표로 시작되었습니다. <br>`Chrome Extension`과 `LangGraph` 기반의 LLM 애플리케이션인 `FinPilot`을 통합하여 문서 초안 작성, 단락 생성, 요약 및 확장,  데이터 분석/시각화 등의 기능을 제공합니다.
 
 [![Web Store](https://img.shields.io/badge/Chrome%20Web%20Store-v.1.0.6-blue)](https://chromewebstore.google.com/detail/finpilot/hpdfbpijlbahkobocmggbdlbajicbkda?hl=ko&utm_source=ext_sidebar) 
 [![YouTube](https://img.shields.io/badge/YouTube-Introduce-red)](https://www.youtube.com/watch?v=QYsDuSCmkFs)
@@ -76,7 +76,7 @@
 
 ## 📌 Table of Content
 1. [About FinPilot](#-About-FinPilot)
-2. [Key Functions](#_Key-Functions)
+2. [Key Functions](#-Key-Functions)
 3. [필수 조건](#필수-조건)
 4. [시작하기](#시작하기)
 5. [파일 구조](#파일-구조)
@@ -100,7 +100,7 @@ FinPilot은 LLM을 활용해 Google Docs 환경에서 문서 작성을 지원하
 
 ## 🚀 Key Functions
 
-### '초안 작성'
+### 1. '초안 작성'
 사용자가 요청한 문서의 초안을 작성합니다. FinPilot은 사람의 문서 작성 과정에 착안하여 문서에 대한 목차를 구성한 후, 각 목차에 대한 내용을 작성해나가는 방식으로 초안을 작성합니다. 각 목차의 내용을 작성하는 과정에서 필요에 따라 주식, 재무제표, 뉴스, 웹 데이터 등의 자료를 스스로 판단하여 수집하며, 이를 바탕으로 작성합니다.
 <p align="center">
   <img src="https://github.com/user-attachments/assets/5fdad88f-c9c7-4b7b-8866-7420348bd88e" width="450px" />
@@ -108,7 +108,7 @@ FinPilot은 LLM을 활용해 Google Docs 환경에서 문서 작성을 지원하
 </p>
 
 
-### '단락 생성'
+### 2. '단락 생성'
 특정 주제에 대한 단락을 생성합니다. 작성된 초안에 대해 내용을 보완하고 싶을 때 유용하게 사용될 수 있습니다. 단락 생성 과정에서 참조하기를 원하는 PDF 파일을 업로드하면 FinPilot은 사용자에 요청에 대해 해당 문서의 내용을 참조하여 생성합니다. 만약 PDF 파일이 제공되지 않아도, 웹 검색을 통해 스스로 관련된 자료를 찾아서 적절한 단락을 생성합니다. 내부적으로 Self-RAG와 Corrective RAG의 아키텍처를 채택하여 환각 현상을 방지하고 요청에 대한 적절한 답변을 제공합니다.
 
 <p align="center">
@@ -118,21 +118,21 @@ FinPilot은 LLM을 활용해 Google Docs 환경에서 문서 작성을 지원하
 
 
 
-### '요약 및 확장'
+### 3. '요약 및 확장'
 문서의 특정 부분을 요약하거나 확장합니다. 문서의 주요 내용을 헤치지 않으면서 쉽고 빠르게 문서의 분량을 조절할 수 있습니다.
 <p align="center">
   <img src="https://github.com/user-attachments/assets/be7b1344-4b3a-40ff-a452-1e1987c2e8c5"  width="450px" />
 </p>
 
 
-### '웹 데이터 기반 시각화'
+### 4. '웹 데이터 기반 시각화'
 웹 검색 결과를 기반으로 데이터를 분석하고 시각화 합니다. FinPilot은 수집한 데이터를 시각화 할 수 있는 Python Code를 생성하고 이를 실행하는 방식으로 적절한 그래프를 생성합니다.
 <p align="center">
   <img src="https://github.com/user-attachments/assets/4d6daf20-5b1b-41a2-a4bc-317e6b486911"  width="450px" />
   <img src="https://github.com/user-attachments/assets/533a208c-d32f-4ff6-9939-0acb3aa0bf72" width="640px" />
 </p>
 
-### '업로드 데이터 기반 시각화'
+### 5. '업로드 데이터 기반 시각화'
 사용자가 업로드한 CSV 데이터를 활용해 데이터를 분석하고 시각화 합니다. FinPilot은 데이터를 Pandas DataFrame으로 처리하여 다양한 시각에서 분석하고 시각화 할 수 있는 Python Code를 생성하고 실행합니다.
 <p align="center">
   <img src="https://github.com/user-attachments/assets/321c38c8-53b7-4b4f-8304-15853aac6aad"  width="450px" />
@@ -142,57 +142,67 @@ FinPilot은 LLM을 활용해 Google Docs 환경에서 문서 작성을 지원하
 ---
 
 ## 🛠 Requirements
-- Google Chrome
-- OpenAI API 키
-- Google OAuth 2.0 인증 정보
+
+로컬 테스트 전, 아래의 개발 환경을 구축 합니다.:
+- Python 3.10 버젼 이상
+- FastAPI 설치
+- Chrome 브라우저
+- Google Account
+- Google Docs
+- LangGraph와 `requirements.txt`에 명시된 기타 모듈
 
 ---
 
 ## ⚡How to Get Start in Local
+
 ### Chrome 확장 프로그램 테스트
-1. 이 저장소를 다운로드하거나 클론합니다.
-2. Chrome에서 `chrome://extensions/` 페이지를 엽니다.
-3. **개발자 모드**를 활성화합니다.
-4. **압축 해제된 확장 프로그램 로드** 버튼을 클릭하고 `FinPilot` 폴더를 선택합니다.
-5. 확장 프로그램을 고정하여 사용을 시작합니다!
+1. 현 Repository를 `git clone` 합니다.
+```
+git clone https://github.com/SKNETWORKS-FAMILY-AICAMP/SKN05-FINAL-3TEAM.git
+```
+2. `front-end` 폴더에 진입하여 해당 폴더의 `README.md` 를 따라 테스트 합니다.
+```
+cd SKN05-FINAL-3TEAM/front-end/
+```
 
 ### FinPilot API 테스트
-1. OpenAI API 키를 발급받습니다.
-2. `src/sidebar.js` 파일에 API 키를 입력합니다.
-3. 확장 프로그램을 다시 로드한 후 AI 기능을 테스트합니다.
+1. 현 Repository를 `git clone` 합니다.
+```
+git clone https://github.com/SKNETWORKS-FAMILY-AICAMP/SKN05-FINAL-3TEAM.git
+```
+2. `model` 폴더에 진입하여 해당 폴더의 `README.md` 를 따라 테스트 합니다.
+```
+cd SKN05-FINAL-3TEAM/model/
+```
 
 ---
 
 ## 📂 파일 구조
 ```
-FinPilot/
-├── src/
-│   ├── background.js
-│   ├── content.js
-│   ├── popup.js
-│   ├── sidebar.js
-│   ├── styles.css
-│   ├── manifest.json
-└── assets/
+SKN05-FINAL-3TEAM/ 
+├── Backend/          # Server
+├── models/           # LLM Application
+├── Docs/             # Project Documents
+├── front-end/        # Chrome Extension
+├── release/          # Release Version of Server
+├── .gitignore        # .gitignore
+└── README.md         # README.md
 ```
 
 ---
 
-## 👥 Contributors
+## 🤝 Contributors
 | 이름       | GitHub | Gmail | Instagram |
 |------------|--------|--------|------------|
-| 서장호 | [GitHub](https://github.com/jangho-seo) | jangho@gmail.com | [@jangho_fin](https://instagram.com/jangho_fin) |
-| 팀원 2 | [GitHub](https://github.com/member2) | member2@gmail.com | [@member2](https://instagram.com/member2) |
-| 팀원 3 | [GitHub](https://github.com/member3) | member3@gmail.com | [@member3](https://instagram.com/member3) |
-| 팀원 4 | [GitHub](https://github.com/member4) | member4@gmail.com | [@member4](https://instagram.com/member4) |
+| 서장호 | [GitHub](https://github.com/wkd-gh) | sjh008272@gmail.com | [@jangho_fin](https://www.instagram.com/wkd_gh/) |
+| 최영민 | [GitHub](https://github.com/MartinusChoi) | martinus.choi@gmail.com | [@member2](https://instagram.com/martinus_choi_) |
+| 허상호 | [GitHub](https://github.com/greatsangho) | greatsangho@gmail.com | [@member3](https://instagram.com/greatsangho) |
+
+<a href="https://github.com/SKNETWORKS-FAMILY-AICAMP/SKN05-final-3Team/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=SKNETWORKS-FAMILY-AICAMP/SKN05-final-3Team" />
+</a>
 
 ---
 
-## 📢 Communication
-[![Discord](https://img.shields.io/badge/Discord-참여하기-blue)](https://slack.com/FinPilot)
-[![Notion](https://img.shields.io/badge/Notion-프로젝트%20문서-lightgrey)](https://notion.so/FinPilot)
-
---
-
-## Contact
-문의 사항이 있으면 Slack 또는 이메일을 통해 연락 주세요!
+## 📢 Contact
+문의 사항이 있으면 `Contributors`의 Instagram 또는 Gmail을 통해 연락 주세요!
