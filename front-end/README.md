@@ -163,8 +163,8 @@ front-end/                     # Frontend 폴더
 ### Installation Steps
 1. **Repository Clone**
    ```bash
-   git clone -b frontend https://github.com/SKNETWORKS-FAMILY-AICAMP/SKN05-FINAL-3TEAM.git
-   cd main/front-end
+   git clone https://github.com/SKNETWORKS-FAMILY-AICAMP/SKN05-FINAL-3TEAM.git
+   cd SKN05-FINAL-3TEAM/front-end
    ```
 
 2. **Chrome Extension 로드**
