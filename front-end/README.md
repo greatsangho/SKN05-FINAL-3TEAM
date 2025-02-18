@@ -177,6 +177,8 @@ front-end/                     # Frontend 폴더
 ## 🚀 How to Run
 
 1. **Extension 실행**:
+   - Chrome 브라우저에서 우측 상단 FinPilot 확장 아이콘 클릭
+   - 설명에 따라서 로그인까지 진행
    - Google Docs 페이지에서 문서 열기
    - Chrome 브라우저에서 우측 상단 FinPilot 확장 아이콘 우클릭
    - 측면 패널 열기 선택
