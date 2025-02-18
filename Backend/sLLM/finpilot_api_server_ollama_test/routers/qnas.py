@@ -69,16 +69,18 @@ async def create_qna(qna: schemas.QnACreate, db: Session = Depends(get_db)):
                 return new_qna  # 프론트엔드로 그대로 전달
             
         except Exception as e:
+            # Default value for qna_response to avoid UnboundLocalError
+            
             if "데이터 시각화" in qna.chat_option and 'recursion' in str(e).lower():
                 qna_response = {
-                "images": [
-                    {
-                    "file_name": "error.png",
-                    "image_data": error_image,
-                    "source": [],
-                    "exception": str(e),
-                    }
-                ]
+                    "images": [
+                        {
+                            "file_name": "error.png",
+                            "image_data": error_image,
+                            "source": [],
+                            "exception": str(e),
+                        }
+                    ]
                 }
             elif 'recursion' in str(e).lower():
                 qna_response = {
@@ -87,24 +89,45 @@ async def create_qna(qna: schemas.QnACreate, db: Session = Depends(get_db)):
                     "ask_time": datetime.now(timezone.utc),
                     "exception": str(e),
                 }
+            
             else:
-                HTTPException(status_code=500, detail=str(e))  # 서버 에러 처리
+                qna_response = {
+                "answer": "서버에서 예상치 못한 오류가 발생했습니다.",
+                "images": [
+                    {
+                        "file_name": "error.png",
+                        "image_data": error_image,
+                        "source": [],
+                        "exception": str(e),
+                    }
+                ],
+                "source": [],
+                "ask_time": datetime.now(timezone.utc),
+                "exception": str(e),
+            }
             return qna_response
-        return answer
 
     except ValueError as ve:
         raise HTTPException(status_code=400, detail=str(ve))  # 잘못된 입력 처리
     except Exception as e:
+        # Default value for qna_response to avoid UnboundLocalError
+        qna_response = {
+            "answer": "서버에서 예상치 못한 오류가 발생했습니다.",
+            "source": [],
+            "ask_time": datetime.now(timezone.utc),
+            "exception": str(e),
+        }
+
         if "데이터 시각화" in qna.chat_option and 'recursion' in str(e).lower():
             qna_response = {
-            "images": [
-                {
-                "file_name": "error.png",
-                "image_data": error_image,
-                "source": [],
-                "exception": str(e),
-                }
-            ]
+                "images": [
+                    {
+                        "file_name": "error.png",
+                        "image_data": error_image,
+                        "source": [],
+                        "exception": str(e),
+                    }
+                ]
             }
         elif 'recursion' in str(e).lower():
             qna_response = {
@@ -113,6 +136,5 @@ async def create_qna(qna: schemas.QnACreate, db: Session = Depends(get_db)):
                 "ask_time": datetime.now(timezone.utc),
                 "exception": str(e),
             }
-        else:
-            HTTPException(status_code=500, detail=str(e))  # 서버 에러 처리
+
         return qna_response

@@ -1,4 +1,4 @@
-from langchain_openai import ChatOpenAI, RemoteRunnable
+# from langchain_openai import ChatOpenAI
 from langchain.tools import tool
 from langgraph.prebuilt import create_react_agent
 from langchain.agents.agent_types import AgentType
@@ -8,12 +8,12 @@ from langchain_core.messages import ToolMessage
 from langchain_community.document_loaders import WebBaseLoader
 from datetime import datetime
 import numpy as np
-
+from langserve import RemoteRunnable
 
 from tavily import AsyncTavilyClient
 
 from typing import List, Annotated
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from operator import add
 
 import yfinance as yf
@@ -30,8 +30,10 @@ class DraftProcess:
     def __init__(self):
         # Web Search API Client
         tavily_client = AsyncTavilyClient(api_key=os.environ["TAVILY_API_KEY"])
+        self.today = datetime.today().strftime("%Y-%m-%d")
         # LLM API Client
         llm = RemoteRunnable("https://termite-upward-monthly.ngrok-free.app/llm/")
+        self.paragraph_writer = RemoteRunnable("https://termite-upward-monthly.ngrok-free.app/llm/")
 
 
         @tool
@@ -226,24 +228,30 @@ class DraftProcess:
             }
         
         self.tools = [fetch_stock_data, fetch_financial_data, analyze_csv_data, fetch_company_news, fetch_market_news, fetch_webpages_scrape]
-        
 
-        ########################## Outliner ##########################
         class OutlineModel(BaseModel):
-            outlines : Annotated[List[str], add]
+            """
+            Schema for the output structure of the document outline.
+            """
+            outlines: List[str] = Field(..., description="A list of outlines for the document.")
 
-        outliner_llm = llm.with_structured_output(OutlineModel)
+        # Pydantic 모델을 사용한 응답 검증
+        self.OutlineModel = OutlineModel
+
+        # 시스템 프롬프트 정의
         outliner_system_prompt = """
             당신은 훌륭한 분석가 입니다. 당신은 사용자가 요청한 문서 초안에 대해 목차를 만들어야 합니다.
             이를 위해 다음의 지침에 따라 초안의 목차를 작성하세요 :
 
             <지침>
             1. 사용자가 요청한 문서 초안에 대해 서론-본론-결론의 흐름이 분명하도록 목차를 작성하세요. 서론, 본론, 결론 이라는 단어를 사용할 필요는 없습니다.
-            2. 주식, 재무재표, 뉴스, 웹 검색 등의 데이터 수집을 통해 신빙성있는 문서를 작성할 수 있도록 목차를 작성하세요
+            2. 주식, 재무재표, 뉴스, 웹 검색 등의 데이터 수집을 통해 신빙성있는 문서를 작성할 수 있도록 목차를 작성하세요.
             3. 목차는 소제목까지 포함하여 최대 10개의 목차까지만 작성하세요.
             4. 가독성을 위해 번호를 반드시 부여하세요.
             </지침>
         """
+
+        # 프롬프트 템플릿 정의
         outliner_prompt = ChatPromptTemplate.from_messages(
             [
                 ("system", outliner_system_prompt),
@@ -254,46 +262,87 @@ class DraftProcess:
                     </요청>
                     
                     이에 따라 문서의 목차를 작성해주세요.
-                """
-                )
+                """)
             ]
         )
 
-        self.outliner = outliner_prompt | outliner_llm
+        # Outliner 연결 (프롬프트와 LLM)
+        self.outliner_prompt = outliner_prompt
+        self.llm = llm
 
+    async def generate_outline(self, question: str):
+        """
+        Generate a document outline based on the user's question.
+        """
+        # 프롬프트 입력 생성
+        prompt_input = {"question": question}
 
-        ########################## Paragraph Writer ##########################
-        self.today = datetime.today().strftime("%Y-%m-%d")
-        self.paragraph_writer = RemoteRunnable("https://termite-upward-monthly.ngrok-free.app/llm/")
+        # RemoteRunnable 호출
+        response = await self.llm.invoke(prompt_input)
+
+        # 응답이 dict가 아니라면, 딕셔너리로 변환
+        if not isinstance(response, dict):
+            # 리스트나 튜플이면 "outlines" 키로 변환
+            response = {"outlines": list(response)}
+
+        # Pydantic 모델로 응답 검증 (keyword arguments 방식)
+        try:
+            validated_response = self.OutlineModel(**response)
+            return validated_response.outlines
+        except Exception as e:
+            print(f"Validation failed: {e}")
+            return None
+
+    async def make_outline_node(self, state):
+        """
+        Node to create outlines and update the state.
+        """
+        question = state["question"]
+
+        # Generate outlines
+        response = await self.generate_outline(question)
+
+        if response:
+            state["outlines"] = response[::-1]  # Reverse the order of outlines
+            print("[Graph Log] Created outlines:")
+            print(f"{state['outlines']}")
+        
+        return state
+
+    #     ########################## Paragraph Writer ##########################
+    #     self.today = datetime.today().strftime("%Y-%m-%d")
+    #     self.paragraph_writer = RemoteRunnable("https://termite-upward-monthly.ngrok-free.app/llm/")
         
 
 
-    async def make_outline_node(self, state):
-        question = state["question"]
+    # async def make_outline_node(self, state):
+    #     question = state["question"]
 
-        response = await self.outliner.ainvoke({"question" : question})
+    #     response = await self.outliner.ainvoke({"question" : question})
 
-        state["outlines"] = response.outlines[::-1]
+    #     state["outlines"] = response.outlines[::-1]
 
-        print("[Graph Log] Created outlines :")
-        print(f"{state['outlines']}")
+    #     print("[Graph Log] Created outlines :")
+    #     print(f"{state['outlines']}")
 
-        return state
+    #     return state
     
-    async def write_draft_paragraph_node(self, state) :
+    async def write_draft_paragraph_node(self, state):
+        """
+        문서 초안 작성 노드: 주어진 목차에 따라 문단을 작성하고 상태를 업데이트합니다.
+        """
         question = state["question"]
         outlines = state["outlines"]
         session_id = state["session_id"]
-        
+
+        # 현재 작성할 목차 가져오기
         outline = outlines.pop()
-
-        today = datetime.today().strftime("%Y-%m-%d")
-
         print(f"[Graph Log] Current Outline Title : {outline}")
 
         data_dir = f'./data/{session_id}/'
+        # 초안 작성 프롬프트 생성
         draft_prompt = f"""
-            오늘은 {today} 입니다.
+            오늘은 {self.today} 입니다.
             당신은 훌륭한 분석가 입니다. 당신은 사용자가 요청한 문서의 초안을 작성해야합니다.
             이를 위해 다음의 지침에 따라 초안의 목차에 대한 단락을 최신 정보를 활용하여 작성하세요 :
             
@@ -301,10 +350,10 @@ class DraftProcess:
             1. 사용자의 요청에 대해 현재 주어진 목차에 대한 단락을 작성하세요.
             2. 단락 작성 간 필요한 경우 특정 기업에 대한 '주식', '재무재표' 데이터를 수집하세요.
             3. '주식', '재무재표' 데이터를 수집하기 위해 'fetch_stock_data'와 'fetch_financial_data' 도구를 사용할 때에는 반드시 도구의 "folder_name" 인자에 '{session_id}'를 전달하세요.
-            3. 특정 기업에 대한 '주식', '재무재표' 데이터를 수집이 필요하지 않은 경우, 뉴스와 웹 검색 만을 사용하여 단락을 작성하세요.
-            4. 단락 작성 간 충분한 근거를 제시하며 사실에 입각한 내용을 작성하세요.
-            5. 주식, 재무재표, 웹 검색 으로 자료를 수집한 경우 반드시 그 출처를 명시하세요. (매우 중요)
-            6. 형식은 마크다운, 언어는 한국어를 사용하세요.
+            4. 특정 기업에 대한 '주식', '재무재표' 데이터를 수집이 필요하지 않은 경우, 뉴스와 웹 검색 만을 사용하여 단락을 작성하세요.
+            5. 단락 작성 간 충분한 근거를 제시하며 사실에 입각한 내용을 작성하세요.
+            6. 주식, 재무재표, 웹 검색 으로 자료를 수집한 경우 반드시 그 출처를 명시하세요. (매우 중요)
+            7. 형식은 마크다운, 언어는 한국어를 사용하세요.
             </지침>
 
             사용자 요청과 현재 작성해야할 목차는 다음과 같습니다. :
