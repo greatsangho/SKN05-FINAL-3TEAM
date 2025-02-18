@@ -1,0 +1,10 @@
+/config/
+*.pyc
+*.env
+*venv
+*.venv
+*.pycharm
+*.vscode
+*__pycache__
+*.bak
+*ChromaDB/
