@@ -219,4 +219,4 @@ SKN05-FINAL-3TEAM/
 
 <p align="center">
   <img src="https://github.com/user-attachments/assets/0d52d318-989f-4ad6-a01c-615d2119034e"  width="640px" />
-</p>
+</p> 
