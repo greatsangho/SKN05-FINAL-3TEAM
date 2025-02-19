@@ -6,8 +6,10 @@ from joblib import Parallel, delayed
 
 from langchain_core.prompts import ChatPromptTemplate
 from pydantic import BaseModel, Field
-from langchain_openai import ChatOpenAI
 from langchain_core.messages import HumanMessage, AIMessage
+from langserve import RemoteRunnable
+# add optional
+from typing import Optional
 
 # Writer
 from langchain import hub
@@ -35,62 +37,55 @@ def cvt_2_doc(doc):
 
 class ParagraphProcess:
     def __init__(self, vector_store : Chroma):
-        llm = ChatOpenAI(
-            model = "gpt-4o-mini",
-            api_key=os.getenv("OPENAI_API_KEY"),
-            temperature=0
-        )
+        # Use RemoteRunnable instead of ChatOpenAI
+        llm = RemoteRunnable("https://termite-upward-monthly.ngrok-free.app/llm/")
 
-        ########### Structured Answer Data Model ###########
+        ########### Pydantic Models ###########
         class GradeDocuments(BaseModel):
-            """
-            Binary score for relevance check on retrieved documents.
-            """
-
-            relevance_score : str = Field(
-                description="Document are relevant to the question, 'yes' or 'no'"
-            )
+            relevance_score: str = Field(..., description="Document is relevant to the question, 'yes' or 'no'")
 
         class GradeHallucination(BaseModel):
-            """
-            Binary Score for hallunination present in generation answer.
-            """
-
-            hallucination_score : str = Field(
-                description="Answer is grounded in the facts, 'yes' or 'no'"
-            )
+            hallucination_score: str = Field(..., description="Answer is grounded in the facts, 'yes' or 'no'")
 
         class AnswerGrader(BaseModel):
-            """
-            Binary Score to assess answer address question.
-            """
-
-            answer_score : str = Field(
-                description="Answer address the question, 'yes' or 'no'"
-            )
+            answer_score: str = Field(..., description="Answer addresses the question, 'yes' or 'no'")
+        ########### Response Validation ###########
+        def validate_response(response: str, model: BaseModel) -> Optional[BaseModel]:
+            try:
+                if isinstance(response, str):
+                    # 문자열 응답을 딕셔너리로 강제 변환
+                    response_dict = {list(model.model_fields.keys())[0]: response}
+                else:
+                    response_dict = response
+                return model(**response_dict)
+            except Exception as e:
+                print(f"[ERROR] Validation failed: {e}")
+                return None
+            
+        self.GradeDocuments = GradeDocuments
+        self.GradeHallucination = GradeHallucination
+        self.AnswerGrader = AnswerGrader
         
-        grader_structured_llm = llm.with_structured_output(GradeDocuments)
-        hallucination_structured_llm = llm.with_structured_output(GradeHallucination)
-        answer_structured_llm = llm.with_structured_output(AnswerGrader)
-
+        # grader_system_prompt = """
+        #     You are a grader assessing relevance of a retrieved document to a user question. \n 
+        #     It does not need to be a stringent test. The goal is to filter out erroneous retrievals. \n
+        #     If the document contains keyword(s) or semantic meaning related to the user question, grade it as relevant. \n
+        #     Give a binary score 'yes' or 'no' score to indicate whether the document is relevant to the question.
+        # """
         grader_system_prompt = """
-            You are a grader assessing relevance of a retrieved document to a user question. \n 
-
-            It does not need to be a stringent test. The goal is to filter out erroneous retrievals. \n
-
-            If the document contains keyword(s) or semantic meaning related to the user question, grade it as relevant. \n
-
-            Give a binary score 'yes' or 'no' score to indicate whether the document is relevant to the question.
+            You are a grader assessing relevance of a retrieved document to a user question. 
+            Respond STRICTLY in JSON format with ONE key: 'relevance_score' ('yes' or 'no').
+            Example: {"relevance_score": "yes"}
+            DO NOT INCLUDE ANY OTHER TEXT.
         """
+
         hallucination_system_prompt = """
             You are a grader assessing whether an LLM generation is grounded in / supported by a set of retrieved facts. \n 
-
             Give a binary score 'yes' or 'no'. 'Yes' means that the answer is grounded in / supported by the set of facts.
         """
         answer_system_prompt = """
             You are a grader assessing whether an answer addresses / resolves a question \n 
-            
-            Give a binary score 'yes' or 'no'. Yes' means that the answer resolves the question.
+            Give a binary score 'yes' or 'no'. Yes means that the answer resolves the question.
         """
         improve_system_prompt = """
             You a question re-writer that converts an input question to a better version that is optimized for vectorstore retrieval. \n
@@ -98,12 +93,11 @@ class ParagraphProcess:
             Look at the input and try to reason about the underlying semantic intent / meaning.
         """
 
-        grade_prompt = ChatPromptTemplate.from_messages(
-            [
-                ("system", grader_system_prompt),
-                ("human", "Retreived documents : \n\n {documents} \n\n User question : {question}")
-            ]
-        )
+        grade_prompt = ChatPromptTemplate.from_messages([
+            ("system", grader_system_prompt),
+            ("human", "Retrieved documents:\n\n{documents}\n\nUser question: {question}")  # 오타 수정 및 변수 정리
+        ])
+
         write_prompt = hub.pull("rlm/rag-prompt")
         hallucination_prompt = ChatPromptTemplate.from_messages(
             [
@@ -124,11 +118,21 @@ class ParagraphProcess:
             ]
         )
 
-        self.retrieval_grader = grade_prompt | grader_structured_llm
-        self.writer = write_prompt | llm | StrOutputParser()
-        self.hallucination_grader = hallucination_prompt | hallucination_structured_llm
-        self.answer_grader = answer_prompt | answer_structured_llm
-        self.query_improver = improve_prompt | llm
+        from langchain_core.output_parsers import JsonOutputParser
+
+        # GradeDocuments용 파서 추가
+        grade_documents_parser = JsonOutputParser(pydantic_object=self.GradeDocuments)
+
+        # 체인 재구성 (LLM + 파서 포함)
+        self.retrieval_grader = (
+            grade_prompt 
+            | llm 
+            | grade_documents_parser  # JSON 응답을 Pydantic 모델로 변환
+        )
+        self.writer = grade_prompt | llm # | StrOutputParser()
+        self.hallucination_grader = hallucination_prompt | self.GradeHallucination
+        self.answer_grader = answer_prompt | self.AnswerGrader
+        self.query_improver = improve_prompt | llm # | StrOutputParser()
 
         self.web_search_tool = TavilySearchResults(k=3)
 
@@ -350,10 +354,18 @@ class ParagraphProcess:
             return "not supported"
     
     async def document_filter(self, question, doc):
-        score = await self.retrieval_grader.ainvoke(
-            {"question" : question, "documents" : doc.page_content}
-        )
-        relevance_grade = score.relevance_score
+        try:
+            response = await self.retrieval_grader.ainvoke(
+                {"question": question, "documents": doc.page_content}
+            )
+            # 응답이 딕셔너리인지 확인
+            if isinstance(response, dict):
+                relevance_grade = response.get("relevance_score", "no")
+            else:
+                relevance_grade = response.relevance_score  # Pydantic 모델인 경우
+        except Exception as e:
+            print(f"[ERROR] Validation failed: {e}")
+            relevance_grade = "no"  # 실패 시 기본값 처리
 
         if relevance_grade == "yes":
             print("[Relevance Grader Log] GRADE : DOCUMENT RELEVANT")
@@ -368,106 +380,3 @@ class ParagraphProcess:
 
         return [doc for doc in filtered_documents if doc is not None]
     
-# ...existing code...
-
-# class LengthControlProcess:
-#     def __init__(self):
-#         # Use RemoteRunnable instead of ChatOpenAI
-#         llm = RemoteRunnable("https://termite-upward-monthly.ngrok-free.app/llm/")
-
-#         ########### Structured Answer Data Model ###########
-#         class GradeDocuments(BaseModel):
-#             """
-#             Binary score for relevance check on retrieved documents.
-#             """
-
-#             relevance_score : str = Field(
-#                 description="Document are relevant to the question, 'yes' or 'no'"
-#             )
-
-#         class GradeHallucination(BaseModel):
-#             """
-#             Binary Score for hallucination present in generation answer.
-#             """
-
-#             hallucination_score : str = Field(
-#                 description="Answer is grounded in the facts, 'yes' or 'no'"
-#             )
-
-#         class AnswerGrader(BaseModel):
-#             """
-#             Binary Score to assess answer address question.
-#             """
-
-#             answer_score : str = Field(
-#                 description="Answer address the question, 'yes' or 'no'"
-#             )
-        
-#         grader_structured_llm = llm.with_structured_output(GradeDocuments)
-#         hallucination_structured_llm = llm.with_structured_output(GradeHallucination)
-#         answer_structured_llm = llm.with_structured_output(AnswerGrader)
-
-#         grader_system_prompt = """
-#             You are a grader assessing relevance of a retrieved document to a user question. \n 
-
-#             It does not need to be a stringent test. The goal is to filter out erroneous retrievals. \n
-
-#             If the document contains keyword(s) or semantic meaning related to the user question, grade it as relevant. \n
-
-#             Give a binary score 'yes' or 'no' score to indicate whether the document is relevant to the question.
-#         """
-#         hallucination_system_prompt = """
-#             You are a grader assessing whether an LLM generation is grounded in / supported by a set of retrieved facts. \n 
-
-#             Give a binary score 'yes' or 'no'. 'Yes' means that the answer is grounded in / supported by the set of facts.
-#         """
-#         answer_system_prompt = """
-#             You are a grader assessing whether an answer addresses / resolves a question \n 
-            
-#             Give a binary score 'yes' or 'no'. Yes' means that the answer resolves the question.
-#         """
-#         improve_system_prompt = """
-#             You a question re-writer that converts an input question to a better version that is optimized for vectorstore retrieval. \n
-            
-#             Look at the input and try to reason about the underlying semantic intent / meaning.
-#         """
-
-#         grade_prompt = ChatPromptTemplate.from_messages(
-#             [
-#                 ("system", grader_system_prompt),
-#                 ("human", "Retreived documents : \n\n {documents} \n\n User question : {question}")
-#             ]
-#         )
-#         write_prompt = hub.pull("rlm/rag-prompt")
-#         hallucination_prompt = ChatPromptTemplate.from_messages(
-#             [
-#                 ("system", hallucination_system_prompt),
-#                 ("human", "Set of facts : \n\n {documents} \n\n LLM generation : {generation}")
-#             ]
-#         )
-#         answer_prompt = ChatPromptTemplate.from_messages(
-#             [
-#                 ("system", answer_system_prompt),
-#                 ("human", "User question : \n\n {question} \n\n LLM generation : {generation}")
-#             ]
-#         )
-#         improve_prompt = ChatPromptTemplate.from_messages(
-#             [
-#                 ("system", improve_system_prompt),
-#                 ("human", "Here is the initial question : \n\n {question} \n Formulation an improved question")
-#             ]
-#         )
-
-#         self.retrieval_grader = grade_prompt | grader_structured_llm
-#         self.writer = write_prompt | llm | StrOutputParser()
-#         self.hallucination_grader = hallucination_prompt | hallucination_structured_llm
-#         self.answer_grader = answer_prompt | answer_structured_llm
-#         self.query_improver = improve_prompt | llm
-
-#         self.web_search_tool = TavilySearchResults(k=3)
-
-#         self.retrieve = vector_store.as_retriever(
-#             dynamic_update=True
-#         )
-
-#     # Add methods similar to ParagraphProcess if needed
