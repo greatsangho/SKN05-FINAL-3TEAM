@@ -15,6 +15,8 @@
 `FinPilot`에 오신 것을 환영합니다. <br>
 이 프로젝트는 Google Docs 환경에서 사용자가 더 효율적으로 문서를 작성하고 관리할 수 있도록 설계된 LLM 어시스턴트 서비스를 개발하는 것을 목표로 시작되었습니다. <br><br>`Chrome Extension`과 `LangGraph` 기반의 LLM 애플리케이션인 `FinPilot`으로 문서의 초안 작성, 단락 생성, 요약 및 확장,  데이터 분석/시각화 등 다양한 기능을 경험해보세요. <br><br>
 
+😊기능별 자세한 개발 과정 및 구조는 각 폴더 안에 설명되어 있습니다.
+
 <div align="center">
     
 [![Web Store](https://img.shields.io/badge/Chrome%20Web%20Store-v.1.0.6-blue)](https://chromewebstore.google.com/detail/finpilot/hpdfbpijlbahkobocmggbdlbajicbkda?hl=ko&utm_source=ext_sidebar)  [![YouTube](https://img.shields.io/badge/YouTube-Introduce-red)](https://www.youtube.com/watch?v=QYsDuSCmkFs)  [![Notion](https://img.shields.io/badge/Notion-FinPilot%20Home-lightgrey)](https://alluring-cerise-57f.notion.site/FinPilot-Home-1655128db47f80cabc52e0568a116d94)  [![최종 발표 자료](https://img.shields.io/badge/Document-Final_Presentation-orange)](https://github.com/SKNETWORKS-FAMILY-AICAMP/SKN05-FINAL-3TEAM/blob/main/Docs/SKN05_3Team_%EC%B5%9C%EC%A2%85%EB%B0%9C%ED%91%9C%EC%9E%90%EB%A3%8C.pdf)  
